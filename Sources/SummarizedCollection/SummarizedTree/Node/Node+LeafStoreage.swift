@@ -48,11 +48,6 @@ extension Node {
         }
         
         @inlinable
-        var slotCount: Slot {
-            Slot(slots.count)
-        }
-
-        @inlinable
         func rd<R>(_ body: (LeafHandle) throws -> R) rethrows -> R {
             try body(.init(storage: self))
         }
@@ -87,17 +82,13 @@ extension Node.LeafHandle {
     public typealias Summary = Node.Summary
 
     @inlinable
-    var slotCount: Slot {
-        Slot(storage.slots.count)
+    var header: Node.Header {
+        storage.header
     }
 
     @inlinable
-    var slotCapacity: Slot {
-        Slot(storage.header.slotCapacity)
-    }
-
-    var slotsAvailible: Slot {
-        slotCapacity - slotCount
+    var slotCount: Slot {
+        Slot(storage.slots.count)
     }
     
     @inlinable
@@ -141,7 +132,7 @@ extension Node.LeafHandle {
         let total = slotCount + handle.slotCount
         let partitionIndex = distribute.partitionIndex(
             total: total,
-            capacity: slotCapacity
+            capacity: header.slotCapacity
         )
         
         if partitionIndex < slotCount {
@@ -161,7 +152,7 @@ extension Node.LeafHandle {
     }
     
     mutating func slotsMergeOrDistribute(with handle: inout Self, distribute: Distribute, ctx: inout Context) -> Bool {
-        if slotsAvailible < handle.slotCount {
+        if header.slotsAvailible < handle.slotCount {
             slotsAppend(handle, ctx: &ctx)
             return true
         } else {

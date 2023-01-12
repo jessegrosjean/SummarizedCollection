@@ -51,7 +51,7 @@ extension Node {
                     handle.didChangeSlots()
                     
                     splitChildren.mut { handle in
-                        handle.height = splitNode.height + 1
+                        handle.header.height = splitNode.height + 1
                         handle.slotInsert(splitNode, at: 0, ctx: &ctx)
                     }
                     

@@ -33,17 +33,3 @@ extension SummarizedTree: IdentifiedCollection where Element: Identifiable {
         return index(startIndex, offsetBy: offset)
     }
 }
-
-extension Node where Element: Identifiable {
-    typealias ID = Element.ID
-    
-    subscript(id id: ID) -> Context.Element? {
-        for each in elements {
-            if each.id == id {
-                return each
-            }
-        }
-        return nil
-    }
-
-}

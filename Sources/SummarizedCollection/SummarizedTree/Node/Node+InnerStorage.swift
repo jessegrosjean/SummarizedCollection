@@ -47,11 +47,6 @@ extension Node {
             self.slots = storage.slots
             self.header = storage.header
         }
-
-        @inlinable
-        var slotCount: Slot {
-            Slot(slots.count)
-        }
         
         @inlinable
         func rd<R>(_ body: (InnerHandle) throws -> R) rethrows -> R {
@@ -111,35 +106,20 @@ extension Node.InnerHandle {
     typealias Slot = Context.Slot
     
     @inlinable
-    var height: UInt8 {
+    var header: Node.Header {
         get {
-            storage.header.height
+            storage.header
         }
-        nonmutating set {
-            storage.header.height = newValue
+        _modify {
+            yield &storage.header
         }
     }
-    
+
     @inlinable
     var slotCount: Slot {
         Slot(storage.slots.count)
     }
     
-    @inlinable
-    var slotCapacity: Slot {
-        Slot(storage.header.slotCapacity)
-    }
-
-    @inlinable
-    var slotsAvailible: Slot {
-        slotCapacity - slotCount
-    }
-
-    var slotsUnderflowing: Bool {
-        slotCount < (slotCapacity / 2)
-    }
-    
-
     @inlinable
     var slots: ContiguousArray<Node> {
         storage.slots
@@ -188,18 +168,13 @@ extension Node.InnerHandle {
         storage.slots.append(contentsOf: appendingFrom.storage.slots)
         didChangeSlots()
     }
-
-    mutating func slotRemove(at slot: Slot, ctx: inout Context) {
-        storage.slots.remove(at: Int(slot))
-        didChangeSlots()
-    }
     
     @inlinable
     mutating func slotsDistribute(with handle: inout Self, distribute: Distribute, ctx: inout Context) {
         let total = slotCount + handle.slotCount
         let partitionIndex = distribute.partitionIndex(
             total: total,
-            capacity: slotCapacity
+            capacity: header.slotCapacity
         )
         
         if partitionIndex < slotCount {
@@ -220,7 +195,7 @@ extension Node.InnerHandle {
     
     @inlinable
     mutating func slotsMergeOrDistribute(with handle: inout Self, distribute: Distribute, ctx: inout Context) -> Bool {
-        if slotsAvailible < handle.slotCount {
+        if header.slotsAvailible < handle.slotCount {
             slotsAppend(handle, ctx: &ctx)
             return true
         } else {

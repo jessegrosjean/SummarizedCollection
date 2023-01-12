@@ -58,7 +58,7 @@ extension Node {
                 }
             }
             
-            if slotsAvailible >= concatChildren.slotCount {
+            if slotsAvailible >= concatChildren.header.slotCount {
                 mutInner { $0.slotsAppend(concatChildren, ctx: &ctx) }
             } else {
                 var overflow: Node = .init(inner: concatChildren)

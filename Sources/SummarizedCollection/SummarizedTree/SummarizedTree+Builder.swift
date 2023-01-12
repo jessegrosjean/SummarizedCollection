@@ -3,10 +3,7 @@ extension SummarizedTree {
     public struct Builder {
         
         @usableFromInline
-        var root: SummarizedTree<Context>
-
-        @usableFromInline
-        var context: Context = .init(root: nil)
+        var root: SummarizedTree
 
         @usableFromInline
         var leafSize = Int(Context.leafCapacity)

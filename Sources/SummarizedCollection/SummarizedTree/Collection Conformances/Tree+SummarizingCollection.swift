@@ -75,7 +75,7 @@ extension SummarizedTree: SummarizedCollection {
 
     public func formIndex(before index: inout Index) {
         precondition(!isEmpty && index.offset != 0, "Attempt to advance out of collection bounds.")
-        formIndex(&index, offsetBy: -1)
+        index.previous()
     }
 
     public func index(before i: Index) -> Index {

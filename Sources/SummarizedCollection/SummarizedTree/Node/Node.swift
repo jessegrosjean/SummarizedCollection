@@ -123,7 +123,7 @@ public struct Node<Context: SummarizedTreeContext> {
         self.init(inner: .create() { handle in
             handle.slotAppend(child1, ctx: &ctx)
             handle.slotAppend(child2, ctx: &ctx)
-            handle.height = height + 1
+            handle.header.height = height + 1
         })
     }
 
