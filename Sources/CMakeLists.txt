@@ -1,2 +1,0 @@
-add_subdirectory(SummarizedCollection)
-add_subdirectory(_CollectionsUtilities)

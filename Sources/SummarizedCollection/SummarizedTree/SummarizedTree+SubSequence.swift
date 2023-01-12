@@ -139,6 +139,12 @@ extension SummarizedTree.SubSequence: RangeReplaceableCollection {
     }
     
     public mutating func replaceSubrange<C>(_ subrange: Range<Index>, with newElements: C) where C : Collection, Element == C.Element {
+        // Don't know if this is right...
+        // Deal with it when some code actually uses it...
+        if true {
+            fatalError()
+        }
+        
         let startOffset = startIndex.offset
         let endOffset = endIndex.offset
         let replaceStartOffset = subrange.lowerBound.offset

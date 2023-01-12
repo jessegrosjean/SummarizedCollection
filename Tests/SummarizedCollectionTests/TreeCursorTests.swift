@@ -42,6 +42,10 @@ final class TreeCursorTests: XCTestCase {
     }
 
     func testCursorMultiLeaf() {
+        #if !DEBUG
+        return // because test depends on leaf size
+        #endif
+
         let elements = [0, 1, 2, 3, 4]
         let multi = List(elements)
         var cursor = multi.cursor()

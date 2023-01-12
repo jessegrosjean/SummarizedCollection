@@ -49,7 +49,6 @@ let package = Package(
         .target(
             name: "SummarizedCollection",
             dependencies: ["_CollectionsUtilities"],
-            exclude: ["CMakeLists.txt"],
             swiftSettings: settings),
 
         .testTarget(
@@ -70,7 +69,6 @@ let package = Package(
 
         .target(
             name: "_CollectionsUtilities",
-            exclude: ["CMakeLists.txt"],
             swiftSettings: settings),
         
         .executableTarget(

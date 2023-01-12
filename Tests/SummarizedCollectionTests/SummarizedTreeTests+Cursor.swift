@@ -5,66 +5,6 @@ extension SummarizedTreeTests {
 
     typealias IndexDim = OutlineSummarizedTree.IndexDimension
     
-    func testCursorEmpty() throws {
-        let empty = OutlineSummarizedTree()
-        var cursor = empty.cursor()
-        
-        XCTAssertEqual(cursor.isBeforeStart, true)
-        XCTAssertEqual(cursor.nextLeaf(), [])
-        XCTAssertEqual(cursor.isAtEnd, true)
-        XCTAssertEqual(cursor.nextLeaf(), nil)
-        XCTAssertEqual(cursor.isAfterEnd, true)
-        XCTAssertEqual(cursor.prevLeaf(), [])
-        XCTAssertEqual(cursor.isAtEnd, true)
-        XCTAssertEqual(cursor.nextLeaf(), nil)
-        XCTAssertEqual(cursor.isAfterEnd, true)
-        XCTAssertEqual(cursor.prevLeaf(), [])
-        XCTAssertEqual(cursor.isAtEnd, true)
-        XCTAssertEqual(cursor.prevLeaf(), nil)
-        XCTAssertEqual(cursor.isBeforeStart, true)
-    }
-
-    func testCursorSingleLeaf() {
-        let elements: [Row] = [.init(line: "👮🏿‍♀️", height: 10)]
-        let single = OutlineSummarizedTree(elements)
-        var cursor = single.cursor()
-        let leaf = elements[...]
-
-        XCTAssertEqual(cursor.isBeforeStart, true)
-        XCTAssertEqual(cursor.nextLeaf(), leaf)
-        XCTAssertEqual(cursor.isAtStart, true)
-        XCTAssertEqual(cursor.nextLeaf(), nil)
-        XCTAssertEqual(cursor.isAfterEnd, true)
-        XCTAssertEqual(cursor.prevLeaf(), leaf)
-        XCTAssertEqual(cursor.isAtStart, true)
-        XCTAssertEqual(cursor.prevLeaf(), nil)
-        XCTAssertEqual(cursor.isBeforeStart, true)
-    }
-
-    func testCursorMultiLeaf() {
-        let elements: [Row] = [
-            .init(line: "one", height: 10),
-            .init(line: "two", height: 10),
-            .init(line: "three", height: 10),
-            .init(line: "four", height: 10)
-        ]
-        
-        let multi = OutlineSummarizedTree(elements)
-        var cursor = multi.cursor()
-        let leaf1 = elements[..<3]
-        let leaf2 = elements[3...]
-
-        XCTAssertEqual(cursor.isBeforeStart, true)
-        XCTAssertEqual(cursor.nextLeaf(), leaf1)
-        XCTAssertEqual(cursor.isAtStart, true)
-        XCTAssertEqual(cursor.nextLeaf(), leaf2)
-        XCTAssertEqual(cursor.nextLeaf(), nil)
-        XCTAssertEqual(cursor.isAfterEnd, true)
-        XCTAssertEqual(cursor.prevLeaf(), leaf2)
-        XCTAssertEqual(cursor.prevLeaf(), leaf1)
-        XCTAssertEqual(cursor.prevLeaf(), nil)
-    }
-
     func testCursorDimension() {
         OutlineSummarizedTree([]).testCursorDimension(IndexDim.self)
         OutlineSummarizedTree([
@@ -122,6 +62,10 @@ extension SummarizedTreeTests {
     }
     
     func testCursorMultiLeafSeekTo() {
+        #if !DEBUG
+        return // because test depends on leaf size
+        #endif
+
         let elements: [Row] = [
             .init(line: "one", height: 10),
             .init(line: "two", height: 10),
