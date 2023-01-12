@@ -283,6 +283,7 @@ extension SummarizedTree.Cursor {
     // MARK: Position
     
     @inlinable
+    @inline(__always)
     public var index: Int {
         position.nodeStart.count + position.offset
     }
@@ -821,12 +822,12 @@ extension SummarizedTree.Cursor {
 
     @inlinable
     public func ensureValid(for root: Node, version: Int) {
-        precondition(self.root == .init(root) && self.version == version)
+        precondition(self.version == version && self.root == .init(root))
     }
     
     @inlinable
     public func ensureValid(with cursor: Cursor) {
-        precondition(root == cursor.root && version == cursor.version)
+        precondition(version == cursor.version && root == cursor.root)
     }
 
 }

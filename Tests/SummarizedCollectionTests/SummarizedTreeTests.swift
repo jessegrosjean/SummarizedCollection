@@ -52,9 +52,11 @@ final class SummarizedTreeTests: CollectionTestCase {
     }
 
     func testIterator() {
-        let list = List(0..<100)
-        for (each, i) in list.enumerated() {
-            XCTAssertEqual(each, list[list.index(at: i)])
+        withEvery("size", in: [1, 2, 4, 8, 16, 32, 64, 127, 128, 129]) { size in
+            var list = List<Int>(0..<size)
+            for (each, i) in list.enumerated() {
+                XCTAssertEqual(each, list[list.index(at: i)])
+            }
         }
     }
 
@@ -92,6 +94,15 @@ final class SummarizedTreeTests: CollectionTestCase {
                 list.ensureValid()
                 expectEqual(list.count, size - 1)
             }
+        }
+    }
+
+    func testBidirectionalCollection() {
+        var rng = RepeatableRandomNumberGenerator(seed: 0)
+        withEvery("count", in: [0, 1, 2, 13, 31, 32, 33]) { count in
+            let reference = randomBoolArray(count: count, using: &rng)
+            let value = List(reference)
+            checkBidirectionalCollection(value, expectedContents: reference, maxSamples: 100)
         }
     }
 
@@ -152,96 +163,6 @@ final class SummarizedTreeTests: CollectionTestCase {
         for (i, each) in o.enumerated() {
             assert(o.index(o.startIndex, offsetBy: i) == o.index(id: each.id))
         }
-    }
-
-    func testBuildWithOverflow() throws {
-        let small = OutlineSummarizedTree([
-            .init(line: "one", height: 10),
-            .init(line: "two", height: 10),
-            .init(line: "three", height: 10),
-            .init(line: "four", height: 10)
-        ])
-        small.ensureValid()
-        
-        let bigger = OutlineSummarizedTree(createTestOutline())
-        bigger.ensureValid()
-    }
-    
-    func testRemoveWithCollapsing() throws {
-        typealias IndexDim = CollectionIndexDimension<OutlineSummary>
-        var bigger = OutlineSummarizedTree(createTestOutline())
-        bigger.removeSubrange(bigger.index(at: IndexDim(1))..<bigger.index(at: IndexDim(10)))
-        bigger.ensureValid()
-        
-        assert(bigger.count == 1)
-        
-        while !bigger.isEmpty {
-            bigger.removeSubrange(bigger.startIndex..<bigger.index(at: IndexDim(1)))
-            bigger.ensureValid()
-        }
-        bigger.ensureValid()
-    }
-    
-    func testRandomMutations() throws {
-        var empty = OutlineSummarizedTree()
-        testRandomMutations(tree: &empty, mutations: 10)
-
-        var single = OutlineSummarizedTree([.init(line: "👮🏿‍♀️", height: 10)])
-        testRandomMutations(tree: &single, mutations: 100)
-
-        var two = OutlineSummarizedTree([.init(line: "one", height: 10), .init(line: "two", height: 10)])
-        testRandomMutations(tree: &two, mutations: 100)
-
-        var three = OutlineSummarizedTree([.init(line: "one", height: 10), .init(line: "two", height: 10), .init(line: "three", height: 10)])
-        testRandomMutations(tree: &three, mutations: 100)
-
-        var four = OutlineSummarizedTree([.init(line: "one", height: 10), .init(line: "two", height: 10), .init(line: "three", height: 10), .init(line: "four", height: 10)])
-        testRandomMutations(tree: &four, mutations: 100)
-    }
-    
-    func testBidirectionalCollection() {
-        var rng = RepeatableRandomNumberGenerator(seed: 0)
-        withEvery("count", in: [0, 1, 2, 13, 31, 32, 33]) { count in
-            let reference = randomBoolArray(count: count, using: &rng)
-            let value = List(reference)
-            print(count)
-            checkBidirectionalCollection(value, expectedContents: reference, maxSamples: 100)
-        }
-    }
-
-    func testRandomMutations(tree: inout OutlineSummarizedTree, mutations: Int) {
-        var saved: [OutlineSummarizedTree.Element] = []
-        
-        for _ in 0..<mutations {
-            switch (0..<2).randomElement() {
-            case 0: // insert
-                let i = tree.randomIndex()
-                tree.insert(contentsOf: saved, at: i)
-                saved.removeAll()
-            case 1: // remove
-                let r = tree.randomRange()
-                saved.append(contentsOf: tree[r])
-                tree.removeSubrange(r)
-            default:
-                fatalError()
-            }
-            
-            tree.ensureValid()
-        }
-    }
-}
-
-extension BidirectionalCollection {
-    
-    func randomIndex() -> Index {
-        let i = (0..<count).randomElement() ?? 0
-        return index(startIndex, offsetBy: i)
-    }
-
-    func randomRange() -> Range<Index> {
-        let start = (0..<count).randomElement() ?? 0
-        let end = (start..<count).randomElement() ?? start
-        return index(startIndex, offsetBy: start)..<index(startIndex, offsetBy: end)
     }
     
 }

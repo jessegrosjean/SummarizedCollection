@@ -107,10 +107,6 @@ benchmark.add(
     }
 }
 
-
-
-
-/*
 benchmark.add(
   title: "Array<Int> splits",
   input: Int.self
@@ -155,6 +151,5 @@ benchmark.add(
         blackHole(array)
     }
 }
-*/
 
 benchmark.main()
