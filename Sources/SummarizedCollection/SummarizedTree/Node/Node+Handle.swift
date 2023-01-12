@@ -69,9 +69,9 @@ extension Node {
     @inlinable
     mutating func updateFromStorage() {
         if isInner {
-            _header = .init(inner: inner.header, slotCount: inner.slotCount)
+            _header = inner.header
         } else {
-            _header = .init(leaf: leaf.header, slotCount: leaf.slotCount)
+            _header = leaf.header
         }
     }
     

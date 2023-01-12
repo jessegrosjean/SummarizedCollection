@@ -1,28 +1,4 @@
 extension Node {
-    
-    @usableFromInline
-    struct InnerHeader {
-        
-        @usableFromInline
-        var summary: Summary
-
-        @usableFromInline
-        var height: UInt8
-
-        //@usableFromInline
-        //var slotCount: Slot
-
-        @usableFromInline
-        var slotCapacity: Slot
-
-        @inlinable
-        init(slotCapacity: Slot) {
-            self.summary = .zero
-            self.height = 1
-            //self.slotCount = 0
-            self.slotCapacity = slotCapacity
-        }
-    }
 
     @usableFromInline
     struct InnerHandle {
@@ -40,7 +16,7 @@ extension Node {
     final class InnerStorage {
 
         @usableFromInline
-        var header: InnerHeader
+        var header: Node.Header
         
         @usableFromInline
         var slots: ContiguousArray<Node>
@@ -58,10 +34,12 @@ extension Node {
             assert(slots.count <= Context.innerCapacity)
             self.slots = slots
             self.slots.reserveCapacity(Int(Context.innerCapacity))
-            self.header = .init(slotCapacity: Context.innerCapacity)
-            self.header.summary = slots.reduce(.zero) { $0 + $1.summary }
-            self.header.height = (slots.first?.height ?? 0) + 1
-            //self.header.slotCount = Slot(slots.count)
+            self.header = .init(
+                height:(slots.first?.height ?? 0) + 1,
+                summary: slots.reduce(.zero) { $0 + $1.summary },
+                slotCount: Slot(slots.count),
+                slotCapacity: Context.innerCapacity
+            )
         }
 
         @inlinable
@@ -253,8 +231,9 @@ extension Node.InnerHandle {
 
     @inlinable
     mutating func didChangeSlots() {
-        storage.header.summary = storage.slots.reduce(.zero) { $0 + $1.summary }
         storage.header.height = (storage.slots.first?.height ?? 0) + 1
+        storage.header.summary = storage.slots.reduce(.zero) { $0 + $1.summary }
+        storage.header.slotCount = Slot(storage.slots.count)
     }
 
 }

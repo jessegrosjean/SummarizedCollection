@@ -4,7 +4,7 @@ extension SummarizedTree {
         
         public typealias Element = Context.Element
         public typealias Summary = Context.Summary
-        public typealias TreeNode = Context.ContextNode
+        public typealias Node = Context.ContextNode
         public typealias IndexDimension = CollectionIndexDimension<Summary>
         
         @usableFromInline
@@ -22,13 +22,13 @@ extension SummarizedTree {
             }
             
             @inlinable
-            mutating func moveFoward(_ node: TreeNode) {
+            mutating func moveFoward(_ node: Node) {
                 nodeStart += node.summary
                 offset = 0
             }
             
             @inlinable
-            mutating func moveBackward(_ node: TreeNode) {
+            mutating func moveBackward(_ node: Node) {
                 nodeStart -= node.summary
                 offset = 0
             }
@@ -53,15 +53,15 @@ extension SummarizedTree {
         @usableFromInline
         struct StackItem {
             
-            let _node: TreeNode
+            let _node: Node
             var _childIndex: UInt16
             
-            init(node: TreeNode, childIndex: Int) {
+            init(node: Node, childIndex: Int) {
                 _node = node
                 _childIndex = UInt16(childIndex)
             }
             
-            var node: TreeNode {
+            var node: Node {
                 _node
             }
             
@@ -74,7 +74,7 @@ extension SummarizedTree {
                 }
             }
             
-            mutating func nextChild() -> TreeNode? {
+            mutating func nextChild() -> Node? {
                 if childIndex + 1 < node.slotCount {
                     _childIndex += 1
                     return node.rdInner { $0.slots[Int(childIndex)] }
@@ -91,7 +91,7 @@ extension SummarizedTree {
         }
         
         @usableFromInline
-        var root: TreeNode
+        var root: Node
         
         @usableFromInline
         var version: Int
@@ -106,7 +106,7 @@ extension SummarizedTree {
         var atEnd = false
         
         init(
-            root: TreeNode,
+            root: Node,
             version: Int
         ) {
             self.root = root
@@ -524,7 +524,7 @@ extension SummarizedTree.Cursor {
         } else {
             while !stack.isEmpty {
                 let i = stack.depth - 1
-                let newSubtree: TreeNode? = {
+                let newSubtree: Node? = {
                     if stack[i].node.isInner {
                         return stack[i].nextChild()
                     } else {
@@ -546,7 +546,7 @@ extension SummarizedTree.Cursor {
         }
     }
 
-    public mutating func descendToFirstLeaf(_ node: TreeNode) {
+    public mutating func descendToFirstLeaf(_ node: Node) {
         var node = node
         while true {
             push(node: node, childIndex: 0)
@@ -558,7 +558,7 @@ extension SummarizedTree.Cursor {
         }
     }
         
-    public mutating func descendToLastLeaf(_ node: TreeNode) {
+    public mutating func descendToLastLeaf(_ node: Node) {
         var node = node
         while true {
             if node.isInner {
@@ -654,7 +654,7 @@ extension SummarizedTree.Cursor {
         var node = stack.pop().node
         
         while true {
-            var nextNode: TreeNode?
+            var nextNode: Node?
             
             if node.isInner {
                 for (i, child) in node.children.enumerated() {
@@ -755,11 +755,11 @@ extension SummarizedTree.Cursor {
         atEnd = root.isEmpty
     }
 
-    mutating func push(node: TreeNode, childIndex: Int) {
+    mutating func push(node: Node, childIndex: Int) {
         stack.append(.init(node: node, childIndex: childIndex))
     }
 
-    public func ensureValid(for root: TreeNode, version: Int) {
+    public func ensureValid(for root: Node, version: Int) {
         precondition(self.root == root && self.version == version)
     }
     

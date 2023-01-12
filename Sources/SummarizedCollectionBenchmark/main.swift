@@ -7,7 +7,7 @@ benchmark.addSimple(
   title: "TreeList<Int> init from range",
   input: Int.self
 ) { size in
-    blackHole(TreeList(0 ..< size))
+    blackHole(List(0 ..< size))
 }
 
 benchmark.add(
@@ -15,7 +15,7 @@ benchmark.add(
   input: Int.self
 ) { size in
     return { timer in
-        var tree = TreeList(0 ..< size)
+        var tree = List(0 ..< size)
         timer.measure {
             while tree.count > 1 {
                 tree = tree.split(tree.count / 2)
@@ -31,9 +31,9 @@ benchmark.add(
   input: Int.self
 ) { size in
     return { timer in
-        var tree = TreeList(0 ..< size)
+        var tree = List(0 ..< size)
 
-        var splits: [TreeList<Int>] = []
+        var splits: [List<Int>] = []
         while tree.count > 1 {
             splits.append(tree.split(tree.count / 2))
         }

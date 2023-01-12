@@ -1,6 +1,6 @@
 @testable import SummarizedCollection
 
-struct OutlineContext: TreeContext {
+struct OutlineContext: SummarizedTreeContext {
     
     typealias Slot = UInt16
     typealias Summary = OutlineSummary

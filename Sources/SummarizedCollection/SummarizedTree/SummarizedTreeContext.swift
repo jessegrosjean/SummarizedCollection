@@ -1,4 +1,4 @@
-public protocol TreeContext {
+public protocol SummarizedTreeContext {
     
     associatedtype Slot: FixedWidthInteger & UnsignedInteger
     associatedtype Summary: CollectionSummary
@@ -18,7 +18,7 @@ public protocol TreeContext {
 
 }
 
-extension TreeContext where Element: Identifiable {
+extension SummarizedTreeContext where Element: Identifiable {
 
     subscript(leafContaining id: Element.ID) -> ContextNode? {
         nil
@@ -26,7 +26,7 @@ extension TreeContext where Element: Identifiable {
 
 }
 
-extension TreeContext {
+extension SummarizedTreeContext {
 
     @inlinable
     static var innerCapacity: Slot {

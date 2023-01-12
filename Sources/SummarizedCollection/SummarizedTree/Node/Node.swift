@@ -1,4 +1,4 @@
-public struct Node<Context: TreeContext> {
+public struct Node<Context: SummarizedTreeContext> {
     
     public typealias Element = Context.Element
     public typealias Summary = Context.Summary
@@ -7,16 +7,16 @@ public struct Node<Context: TreeContext> {
     @usableFromInline
     struct Header {
         @usableFromInline
-        let height: UInt8
+        var height: UInt8
         
         @usableFromInline
-        let summary: Summary
+        var summary: Summary
 
         @usableFromInline
-        let slotCount: Slot
+        var slotCount: Slot
 
         @usableFromInline
-        let slotCapacity: Slot
+        var slotCapacity: Slot
 
         @inlinable
         var slotsAvailible: Slot { slotCapacity - slotCount }
@@ -25,19 +25,11 @@ public struct Node<Context: TreeContext> {
         var slotsUnderflowing: Bool { slotCount < (slotCapacity / 2) }
         
         @inlinable
-        init(inner: InnerHeader, slotCount: Slot) {
-            height = inner.height
-            summary = inner.summary
-            self.slotCount = slotCount // inner.slotCount
-            slotCapacity = inner.slotCapacity
-        }
-        
-        @inlinable
-        init(leaf: LeafHeader, slotCount: Slot) {
-            height = 0
-            summary = leaf.summary
-            self.slotCount = slotCount // leaf.slotCount
-            slotCapacity = leaf.slotCapacity
+        init(height: UInt8 = 0, summary: Summary = .zero, slotCount: Slot = .zero, slotCapacity: Slot) {
+            self.height = height
+            self.summary = summary
+            self.slotCount = slotCount
+            self.slotCapacity = slotCapacity
         }
     }
 
@@ -99,7 +91,7 @@ public struct Node<Context: TreeContext> {
     @inlinable
     init() {
         _leaf = .create()
-        _header = .init(leaf: _leaf.unsafelyUnwrapped.header, slotCount: 0)
+        _header = _leaf.unsafelyUnwrapped.header
     }
 
     @inlinable
@@ -110,7 +102,7 @@ public struct Node<Context: TreeContext> {
     @inlinable
     init(inner: InnerStorage) {
         _inner = inner
-        _header = .init(inner: inner.header, slotCount: inner.slotCount)
+        _header = inner.header
     }
 
     @inlinable
@@ -121,7 +113,7 @@ public struct Node<Context: TreeContext> {
     @inlinable
     init(leaf: LeafStorage) {
         _leaf = leaf
-        _header = .init(leaf: leaf.header, slotCount: leaf.slotCount)
+        _header = leaf.header
     }
 
     @inlinable
@@ -139,10 +131,10 @@ public struct Node<Context: TreeContext> {
     init(copying node: Self) {
         if node.isInner {
             _inner = node.inner.copy()
-            _header = .init(inner: node.inner.header, slotCount: node.slotCount)
+            _header = node.inner.header //.init(inner: node.inner.header, slotCount: node.slotCount)
         } else {
             _leaf = node.leaf.copy()
-            _header = .init(leaf: node.leaf.header, slotCount: node.leaf.slotCount)
+            _header = node.leaf.header
         }
     }
 

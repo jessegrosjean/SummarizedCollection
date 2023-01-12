@@ -3,10 +3,10 @@ import XCTest
 
 final class TreeCursorTests: XCTestCase {
 
-    typealias IndexDim = TreeList<Int>.IndexDimension
+    typealias IndexDim = List<Int>.IndexDimension
     
     func testCursorEmpty() throws {
-        let empty = TreeList<Int>()
+        let empty = List<Int>()
         var cursor = empty.cursor()
         
         XCTAssertEqual(cursor.isBeforeStart, true)
@@ -26,7 +26,7 @@ final class TreeCursorTests: XCTestCase {
 
     func testCursorSingleLeaf() {
         let elements = [0]
-        let single = TreeList(elements)
+        let single = List(elements)
         var cursor = single.cursor()
         let leaf = elements[...]
 
@@ -43,7 +43,7 @@ final class TreeCursorTests: XCTestCase {
 
     func testCursorMultiLeaf() {
         let elements = [0, 1, 2, 3, 4]
-        let multi = TreeList(elements)
+        let multi = List(elements)
         var cursor = multi.cursor()
         let leaf1 = elements[..<3]
         let leaf2 = elements[3...]

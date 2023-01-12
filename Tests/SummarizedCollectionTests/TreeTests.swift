@@ -4,27 +4,27 @@ import XCTest
 final class TreeTests: XCTestCase {
         
     func testEmpty() throws {
-        let tree = TreeList<Int>()
+        let tree = List<Int>()
         tree.ensureValid()
         XCTAssertEqual(tree.count, 0)
     }
 
     func testSingle() throws {
-        let tree = TreeList([0])
+        let tree = List([0])
         tree.ensureValid()
         XCTAssertEqual(tree.count, 1)
     }
     
     func testMany() throws {
         let elements = Array(repeating: 0, count: 100)
-        let tree = TreeList(elements)
+        let tree = List(elements)
         tree.ensureValid()
         XCTAssertEqual(tree.count, elements.count)
     }
 
     func testConcat() throws {
-        var tree1 = TreeList<Int>([0])
-        let tree2 = TreeList<Int>([1])
+        var tree1 = List<Int>([0])
+        let tree2 = List<Int>([1])
         
         tree1.concat(tree2)
 
@@ -36,7 +36,7 @@ final class TreeTests: XCTestCase {
     }
 
     func testSplitEmpty() {
-        var tree = TreeList<Int>()
+        var tree = List<Int>()
         let split = tree.split(0)
         XCTAssertEqual(tree.count, 0)
         XCTAssertEqual(split.count, 0)
@@ -45,7 +45,7 @@ final class TreeTests: XCTestCase {
     }
 
     func testSplitSingle() {
-        var tree = TreeList([0])
+        var tree = List([0])
         let split = tree.split(0)
         XCTAssertEqual(tree.count, 0)
         XCTAssertEqual(split.count, 1)
@@ -54,7 +54,7 @@ final class TreeTests: XCTestCase {
     }
 
     func testSplitLeaf() {
-        var tree = TreeList([0, 1, 2])
+        var tree = List([0, 1, 2])
         let split = tree.split(1)
         XCTAssertEqual(tree.count, 1)
         XCTAssertEqual(split.count, 2)
@@ -63,7 +63,7 @@ final class TreeTests: XCTestCase {
     }
 
     func testSplitBranch() {
-        var tree = TreeList([0, 1, 2, 3])
+        var tree = List([0, 1, 2, 3])
         let split = tree.split(2)
         XCTAssertEqual(tree.count, 2)
         XCTAssertEqual(split.count, 2)
@@ -76,7 +76,7 @@ final class TreeTests: XCTestCase {
         for i in 0..<100 {
             list.append(i)
 
-            let tree = TreeList(list)
+            let tree = List(list)
             for i in 0..<tree.count {
                 var t = tree
                 let split = t.split(i)
@@ -89,7 +89,7 @@ final class TreeTests: XCTestCase {
     }
     
     func testInsertRange() {
-        var tree = TreeList([0, 1, 2, 3])
+        var tree = List([0, 1, 2, 3])
         tree.insert(contentsOf: [9, 9, 9, 9, 9], at: tree.index(tree.startIndex, offsetBy: 3))
         XCTAssertEqual(tree.count, 9)
 

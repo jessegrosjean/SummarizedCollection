@@ -1,4 +1,4 @@
-public struct SummarizedTree<Context: TreeContext> {
+public struct SummarizedTree<Context: SummarizedTreeContext> {
     
     public typealias Context = Context
     public typealias Element = Context.Element

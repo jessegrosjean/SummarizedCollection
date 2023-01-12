@@ -1,24 +1,4 @@
 extension Node {
-    
-    @usableFromInline
-    struct LeafHeader {
-        
-        @usableFromInline
-        var summary: Summary
-
-        //@usableFromInline
-        //var slotCount: Slot
-
-        @usableFromInline
-        var slotCapacity: Slot
-        
-        @inlinable
-        init(slotCapacity: Slot) {
-            self.summary = .zero
-            //self.slotCount = 0
-            self.slotCapacity = slotCapacity
-        }
-    }
 
     @usableFromInline
     struct LeafHandle {
@@ -36,7 +16,7 @@ extension Node {
     final class LeafStorage {
         
         @usableFromInline
-        var header: LeafHeader
+        var header: Node.Header
 
         @usableFromInline
         var slots: ContiguousArray<Element>
@@ -53,9 +33,12 @@ extension Node {
             assert(slots.count <= Context.leafCapacity)
             self.slots = slots
             self.slots.reserveCapacity(Int(Context.leafCapacity))
-            self.header = .init(slotCapacity: Context.leafCapacity)
-            self.header.summary = .summarize(elements: slots)
-            //self.header.slotCount = Slot(slots.count)
+            self.header = .init(
+                height: 0,
+                summary: .summarize(elements: slots),
+                slotCount: Slot(slots.count),
+                slotCapacity: Context.leafCapacity
+            )
         }
 
         @inlinable
@@ -189,7 +172,9 @@ extension Node.LeafHandle {
     
     @inlinable
     mutating func didChangeSlots() {
+        storage.header.height = 0
         storage.header.summary = Summary.summarize(elements: storage.slots)
+        storage.header.slotCount = Slot(storage.slots.count)
     }
         
 }

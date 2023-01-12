@@ -1,11 +1,14 @@
-/*public struct ListContext<Element>: SummarizedTreeContextProtocol {
+public struct ListContext<Element>: SummarizedTreeContext {
 
+    public typealias Slot = UInt16
     public typealias Summary = ListSummary<Element>
-    
+
+    public static var maintainsBackpointers: Bool { false }
+
     @inlinable
     public subscript(parent node: ContextNode) -> ContextNode? {
-        get { node.parent }
-        set { node.parent = newValue }
+        get { nil }
+        set {}
     }
 
     @inlinable
@@ -42,4 +45,3 @@ public struct ListSummary<Element>: CollectionSummary {
 }
 
 public typealias List<Element> = SummarizedTree<ListContext<Element>>
-*/
