@@ -160,6 +160,7 @@ extension SummarizedTree.Node: Equatable {
     
     public typealias Node = SummarizedTree.Node
 
+    @inlinable
     public static func ==(lhs: Node, rhs: Node) -> Bool {
         lhs._leaf === rhs._leaf && lhs._inner === rhs._inner
     }

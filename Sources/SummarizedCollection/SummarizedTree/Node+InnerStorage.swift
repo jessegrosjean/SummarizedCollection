@@ -205,7 +205,7 @@ extension SummarizedTree.Node.InnerHandle {
     
     @inlinable
     mutating func slotsMergeOrDistribute(with handle: inout Self, distribute: Distribute, ctx: inout Context) -> Bool {
-        if header.slotsAvailible < handle.slotCount {
+        if header.slotsAvailible >= handle.slotCount {
             slotsAppend(handle, ctx: &ctx)
             return true
         } else {

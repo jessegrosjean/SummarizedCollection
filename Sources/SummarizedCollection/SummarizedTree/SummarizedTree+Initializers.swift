@@ -7,9 +7,9 @@ extension SummarizedTree {
 
     @inlinable
     init(root: Node) {
-        self.version = root.objectIdentifier.hashValue
-        self.context = .init(root: root)
         self.root = root
+        self.context = .init(root: root)
+        self.version = root.objectIdentifier.hashValue
     }
 
     @inlinable

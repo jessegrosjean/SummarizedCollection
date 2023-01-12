@@ -153,7 +153,7 @@ extension SummarizedTree.Node.InnerHandle {
                 didStuff = slotsMergeOrDistribute(slot1: last - 1, slot2: last, ctx: &ctx) || didStuff
             }
             
-            if !storage.slots[Int(last)].zipFixRight(ctx: &ctx) {
+            if !storage.slots[storage.slots.count - 1].zipFixRight(ctx: &ctx) {
                 break
             }
         }
@@ -166,22 +166,18 @@ extension SummarizedTree.Node.InnerHandle {
         assert(slot1 == slot2 - 1)
         assert(slot2 < slotCount)
 
-        //storage.slots[Int(slot1)].mutInner(with: &storage.slots[Int(slot2)], body: { h1, h2 in
-            
-        //})
-        
-        return false
+        let removeSlot2 = storage.slots.withUnsafeMutableBufferPointer { buffer in
+            let s1 = Int(slot1)
+            let s2 = Int(slot2)
 
-        /*
-        var removeSlot2 = false
-        
-        if header.height > 1 {
-            removeSlot2 = storage.slots[Int(slot1)].mutInner(with: &storage.slots[Int(slot2)]) { h1, h2 in
-                h1.slotsMergeOrDistribute(with: &h2, distribute: .even, ctx: &ctx)
-            }
-        } else {
-            removeSlot2 = storage.slots[Int(slot1)].mutLeaf(with: &storage.slots[Int(slot2)]) { h1, h2 in
-                h1.slotsMergeOrDistribute(with: &h2, distribute: .even, ctx: &ctx)
+            if header.height > 1 {
+                return buffer[s1].mutInner(with: &buffer[s2]) { h1, h2 in
+                    h1.slotsMergeOrDistribute(with: &h2, distribute: .even, ctx: &ctx)
+                }
+            } else {
+                return buffer[s1].mutLeaf(with: &buffer[s2]) { h1, h2 in
+                    h1.slotsMergeOrDistribute(with: &h2, distribute: .even, ctx: &ctx)
+                }
             }
         }
         
@@ -190,7 +186,7 @@ extension SummarizedTree.Node.InnerHandle {
             return true
         } else {
             return false
-        }*/
+        }
     }
 
 }

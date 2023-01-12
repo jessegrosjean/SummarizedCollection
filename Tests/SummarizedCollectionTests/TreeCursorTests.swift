@@ -4,7 +4,7 @@ import XCTest
 final class TreeCursorTests: XCTestCase {
 
     typealias IndexDim = List<Int>.IndexDimension
-    
+        
     func testCursorEmpty() throws {
         let empty = List<Int>()
         var cursor = empty.cursor()

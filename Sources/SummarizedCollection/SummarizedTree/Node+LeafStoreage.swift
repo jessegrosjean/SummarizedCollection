@@ -164,7 +164,7 @@ extension SummarizedTree.Node.LeafHandle {
     
     @inlinable
     mutating func slotsMergeOrDistribute(with handle: inout Self, distribute: Distribute, ctx: inout Context) -> Bool {
-        if header.slotsAvailible < handle.slotCount {
+        if header.slotsAvailible >= handle.slotCount {
             slotsAppend(handle, ctx: &ctx)
             return true
         } else {
@@ -178,6 +178,7 @@ extension SummarizedTree.Node.LeafHandle {
         storage.header.height = 0
         storage.header.summary = Summary.summarize(elements: storage.slots)
         storage.header.slotCount = Slot(storage.slots.count)
+        assert(storage.header.slotCount <= Context.leafCapacity)
     }
         
 }
