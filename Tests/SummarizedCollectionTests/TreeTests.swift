@@ -75,16 +75,7 @@ final class TreeTests: XCTestCase {
         var list: [Int] = []
         for i in 0..<100 {
             list.append(i)
-
-            let tree = List(list)
-            for i in 0..<tree.count {
-                var t = tree
-                let split = t.split(i)
-                assert(t.count == i)
-                assert(split.count == tree.count - i)
-                t.ensureValid()
-                split.ensureValid()
-            }
+            List(list).testSplitAndConcat(List.IndexDimension.self)
         }
     }
     
@@ -92,7 +83,6 @@ final class TreeTests: XCTestCase {
         var tree = List([0, 1, 2, 3])
         tree.insert(contentsOf: [9, 9, 9, 9, 9], at: tree.index(tree.startIndex, offsetBy: 3))
         XCTAssertEqual(tree.count, 9)
-
     }
 
 }

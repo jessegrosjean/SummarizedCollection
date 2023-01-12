@@ -174,6 +174,12 @@ extension SummarizedTree.Node.InnerHandle {
     }
     
     @inlinable
+    mutating func slotRemove(at slot: Slot, ctx: inout Context) {
+        storage.slots.remove(at: Int(slot))
+        didChangeSlots()
+    }
+
+    @inlinable
     mutating func slotsDistribute(with handle: inout Self, distribute: Distribute, ctx: inout Context) {
         let total = slotCount + handle.slotCount
         let partitionIndex = distribute.partitionIndex(

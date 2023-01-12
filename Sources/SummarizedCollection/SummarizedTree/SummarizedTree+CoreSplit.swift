@@ -130,19 +130,15 @@ extension SummarizedTree.Node.InnerHandle {
     mutating func zipFixLeft(ctx: inout Context) -> Bool {
         var didStuff = false
         
-        /*
         while true {
             if slotCount > 1 && storage.slots[0].slotsUnderflowing {
-                didStuff = storage.slots[0].mutInner(with: &storage.slots[1]) { h1, h2 in
-                    h1.slotsMergeOrDistribute(with: &h2, distribute: .even, ctx: &ctx)
-                }
+                didStuff = slotsMergeOrDistribute(slot1: 0, slot2: 1, ctx: &ctx) || didStuff
             }
             
             if !storage.slots[0].zipFixLeft(ctx: &ctx) {
                 break
             }
         }
-        */
                 
         return didStuff
     }
@@ -151,22 +147,43 @@ extension SummarizedTree.Node.InnerHandle {
     mutating func zipFixRight(ctx: inout Context) -> Bool {
         var didStuff = false
         
-        /*
         while true {
-            let last = Int(slotCount - 1)
-            if slotCount > 1 && storage.slots[last].slotsUnderflowing {
-                didStuff = storage.slots[last - 1].mutInner(with: &storage.slots[last]) { h1, h2 in
-                    h1.slotsMergeOrDistribute(with: &h2, distribute: .even, ctx: &ctx)
-                }
+            let last = slotCount - 1
+            if slotCount > 1 && storage.slots[Int(last)].slotsUnderflowing {
+                didStuff = slotsMergeOrDistribute(slot1: last - 1, slot2: last, ctx: &ctx) || didStuff
             }
             
-            if !storage.slots[last].zipFixRight(ctx: &ctx) {
+            if !storage.slots[Int(last)].zipFixRight(ctx: &ctx) {
                 break
             }
         }
-        */
                 
         return didStuff
+    }
+    
+    @inlinable
+    mutating func slotsMergeOrDistribute(slot1: Slot, slot2: Slot, ctx: inout Context) -> Bool {
+        assert(slot1 == slot2 - 1)
+        assert(slot2 < slotCount)
+
+        var removeSlot2 = false
+        
+        if header.height > 1 {
+            removeSlot2 = storage.slots[Int(slot1)].mutInner(with: &storage.slots[Int(slot2)]) { h1, h2 in
+                h1.slotsMergeOrDistribute(with: &h2, distribute: .even, ctx: &ctx)
+            }
+        } else {
+            removeSlot2 = storage.slots[Int(slot1)].mutLeaf(with: &storage.slots[Int(slot2)]) { h1, h2 in
+                h1.slotsMergeOrDistribute(with: &h2, distribute: .even, ctx: &ctx)
+            }
+        }
+        
+        if removeSlot2 {
+            slotRemove(at: slot2, ctx: &ctx)
+            return true
+        } else {
+            return false
+        }
     }
 
 }

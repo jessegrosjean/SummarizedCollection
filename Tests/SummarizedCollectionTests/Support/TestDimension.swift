@@ -33,19 +33,27 @@ extension SummarizedTree {
         }
     }
 
-}
- 
-/*
-public func testSplit<N, D>(node: N, dimension: D.Type) where N: NodeProtocol, D: Dimension, N.Summary == D.Summary {
-    let cursor = node.cursor
-    while let index = cursor.seekNext(dimension) {
-        var newNode = node
-        let split = newNode.split(index)
-        assert(node.count == newNode.count + split.count)
-        testNode(node: newNode)
-        testNode(node: split)
+    public func testSplitAndConcat<D>(_ d: D.Type) where D: CollectionDimension, D.Summary == Summary {
+        var cursor = cursor()
+        while let index = cursor.seekNext(d) {
+            var newTree = self
+            let split = newTree.split(index)
+            
+            assert(count == newTree.count + split.count)
+
+            newTree.ensureValid()
+            split.ensureValid()
+            
+            newTree.concat(split)
+            assert(count == newTree.count)
+            newTree.ensureValid()
+        }
     }
+    
 }
+
+
+/*
 
 public func testReplace<N, D>(node: N, dimension: D.Type) where N: NodeProtocol, D: Dimension, N.Summary == D.Summary {
     
@@ -57,32 +65,6 @@ public func testInsert<N, D>(node: N, dimension: D.Type) where N: NodeProtocol, 
 
 public func testRemove<N, D>(node: N, dimension: D.Type) where N: NodeProtocol, D: Dimension, N.Summary == D.Summary {
     
-}
-
-public func testNode<N>(node: N) where N: NodeProtocol {
-    if node.height == 0 {
-        assert(node.isLeaf)
-        assert(node.summary == N.Summary.init(elements: node.elements.inner))
-        testNodeChildren(children: node.children, allowUnderflowing: node.children.count == 1)
-    } else {
-        assert(node.isInner)
-        assert(!node.children.isEmpty)
-    }
-}
-
-
-func testNodeChildren<N>(children: NodeChildren<N>, allowUnderflowing: Bool) where N: NodeProtocol {
-    var summary = N.Summary.zero
-    let height = children.inner.first!.height
-    for each in children.inner {
-        if !allowUnderflowing || children.count > 1 {
-            assert(!each.summary.isEmpty)
-            assert(!each.isUnderflowing)
-        }
-        assert(each.height == height)
-        summary += each.summary
-    }
-    assert(summary == children.summary)
 }
 
 */
