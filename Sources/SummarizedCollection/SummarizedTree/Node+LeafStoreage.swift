@@ -48,11 +48,13 @@ extension SummarizedTree.Node {
         }
         
         @inlinable
+        @inline(__always)
         func rd<R>(_ body: (LeafHandle) throws -> R) rethrows -> R {
             try body(.init(storage: self))
         }
 
         @inlinable
+        @inline(__always)
         func mut<R>(_ body: (inout LeafHandle) throws -> R) rethrows -> R {
             var handle = LeafHandle(storage: self)
             return try body(&handle)
@@ -93,6 +95,7 @@ extension SummarizedTree.Node.LeafHandle {
     }
     
     @inlinable
+    @inline(__always)
     var slots: ContiguousArray<Element> {
         storage.slots
     }

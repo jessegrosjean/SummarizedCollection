@@ -102,6 +102,7 @@ extension SummarizedTree {
         @usableFromInline
         var atEnd = false
         
+        @inlinable
         init(
             root: Node,
             version: Int
@@ -130,6 +131,7 @@ extension SummarizedTree.Cursor {
     // MARK: Elements
     
     @inlinable
+    @inline(__always)
     public mutating func element() -> Element? {
         let leaf = leaf()
         let offset = position.offset
@@ -424,6 +426,7 @@ extension SummarizedTree.Cursor {
     // MARK: Leaves
 
     @inlinable
+    @inline(__always)
     public mutating func leaf() -> ArraySlice<Element> {
         if isBeforeStart {
             resetToStart()
@@ -434,6 +437,7 @@ extension SummarizedTree.Cursor {
     }
     
     @inlinable
+    @inline(__always)
     public func uncheckedLeaf() -> ArraySlice<Element> {
         assert(!isBeforeStart)
         assert(!isAfterEnd)
@@ -851,6 +855,7 @@ extension SummarizedTree.Cursor.Stack {
     @usableFromInline
     typealias StackItem = Cursor.StackItem
     
+    @inlinable
     init(repeating initialValue: StackItem, depth: Int8 = 0) {
         self.depth = depth
         self.values = (
@@ -882,6 +887,7 @@ extension SummarizedTree.Cursor.Stack {
     }
     
     @inlinable
+    @inline(__always)
     var last: StackItem {
         get {
             assert(depth > 0, "Out of bounds access in fixed sized array")
@@ -895,6 +901,7 @@ extension SummarizedTree.Cursor.Stack {
     }
     
     @inlinable
+    @inline(__always)
     subscript(_ position: Int8) -> StackItem {
         get {
             assert(position <= depth && depth <= Self.capacity, "Out of bounds access in fixed sized array.")

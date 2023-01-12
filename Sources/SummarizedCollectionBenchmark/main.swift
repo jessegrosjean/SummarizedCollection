@@ -50,7 +50,7 @@ benchmark.add(
 }
 
 benchmark.add(
-  title: "TreeList<Int> iterate",
+  title: "TreeList<Int> iterate with formIndex",
   input: Int.self
 ) { size in
     return { timer in
@@ -62,6 +62,45 @@ benchmark.add(
             while i < end {
                 tree.formIndex(after: &i)
             }
+        }
+        
+        blackHole(tree)
+    }
+}
+
+benchmark.add(
+  title: "TreeList<Int> iterate with iterator",
+  input: Int.self
+) { size in
+    return { timer in
+        let tree = List(0 ..< size)
+
+        timer.measure {
+            for _ in tree {
+            }
+        }
+        
+        blackHole(tree)
+    }
+}
+
+benchmark.add(
+  title: "TreeList<Int>.Subsequence iterate with iterator",
+  input: Int.self
+) { size in
+    return { timer in
+        let tree = List(0 ..< size)
+        
+        if size > 1 {
+            let sub = tree[tree.index(after: tree.startIndex)..<tree.index(before: tree.endIndex)]
+            var count = 0
+            timer.measure {
+                for _ in sub {
+                    count += 1
+                }
+            }
+            
+            assert(count == size - 2)
         }
         
         blackHole(tree)

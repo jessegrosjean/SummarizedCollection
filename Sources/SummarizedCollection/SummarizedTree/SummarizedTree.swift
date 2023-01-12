@@ -14,11 +14,7 @@ public struct SummarizedTree<Context: SummarizedTreeContext> {
     var root: Node
 
     @inlinable
-    public var isEmpty: Bool {
-        root.summary.count == 0
-    }
-
-    @inlinable
+    @inline(__always)
     public var height: UInt8 {
         root.height
     }

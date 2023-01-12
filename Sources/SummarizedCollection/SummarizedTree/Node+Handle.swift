@@ -19,16 +19,19 @@ enum Distribute {
 extension SummarizedTree.Node {
     
     @inlinable
+    @inline(__always)
     func rdInner<R>(_ body: (InnerHandle) throws -> R) rethrows -> R {
         try inner.rd { try body($0) }
     }
     
     @inlinable
+    @inline(__always)
     func rdLeaf<R>(_ body: (LeafHandle) throws -> R) rethrows -> R {
         try leaf.rd { try body($0) }
     }
 
     @inlinable
+    @inline(__always)
     mutating func mutInner<R>(
         isUnique: Bool? = nil,
         body: (inout InnerHandle) throws -> R
@@ -39,6 +42,7 @@ extension SummarizedTree.Node {
     }
 
     @inlinable
+    @inline(__always)
     mutating func mutInner<R>(with node: inout Self, body: (inout InnerHandle, inout InnerHandle) throws -> R) rethrows -> R {
         try mutInner { handle in
             try node.mutInner { nodeHandle in
@@ -48,6 +52,7 @@ extension SummarizedTree.Node {
     }
     
     @inlinable
+    @inline(__always)
     mutating func mutLeaf<R>(
         isUnique: Bool? = nil,
         body: (inout LeafHandle) throws -> R
@@ -58,6 +63,7 @@ extension SummarizedTree.Node {
     }
 
     @inlinable
+    @inline(__always)
     mutating func mutLeaf<R>(with node: inout Self, body: (inout LeafHandle, inout LeafHandle) throws -> R) rethrows -> R {
         try mutLeaf { handle in
             try node.mutLeaf { nodeHandle in
@@ -67,6 +73,7 @@ extension SummarizedTree.Node {
     }
     
     @inlinable
+    @inline(__always)
     mutating func updateFromStorage() {
         if isInner {
             _header = inner.header

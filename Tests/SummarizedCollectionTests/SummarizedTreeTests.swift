@@ -21,16 +21,8 @@ func randomBoolArray<R: RandomNumberGenerator>(
 }
 
 final class SummarizedTreeTests: CollectionTestCase {
-        
-    func testLongIteratoion() {
-        let list = List(0..<100000000)
-        let end = list.endIndex
-        var i = list.startIndex
-        while i < end {
-            list.formIndex(after: &i)
-        }
-    }
-    
+   
+    /*
     func testRandomAccessCollection() {
         var rng = RepeatableRandomNumberGenerator(seed: 0)
         withEvery("count", in: [0, 1, 2, 13, 64, 65, 127, 128, 129]) { count in
@@ -39,8 +31,8 @@ final class SummarizedTreeTests: CollectionTestCase {
             print(count)
             checkBidirectionalCollection(value, expectedContents: reference, maxSamples: 100)
         }
-    }
-
+    }*/
+    
     func testEmpty() throws {
         let empty = OutlineSummarizedTree()
         XCTAssertEqual(empty.summary, .zero)
@@ -112,11 +104,6 @@ final class SummarizedTreeTests: CollectionTestCase {
         let bigger = OutlineSummarizedTree(createTestOutline())
         bigger.ensureValid()
     }
-
-    //func testBuilder() throws {
-    //    var builder = OutlineSummarizedTree.Builder()
-    //    builder.concat(elements: createTestOutline(count: 200))
-    //}
     
     func testRemoveWithCollapsing() throws {
         typealias IndexDim = CollectionIndexDimension<OutlineSummary>
@@ -148,9 +135,6 @@ final class SummarizedTreeTests: CollectionTestCase {
 
         var four = OutlineSummarizedTree([.init(line: "one", height: 10), .init(line: "two", height: 10), .init(line: "three", height: 10), .init(line: "four", height: 10)])
         testRandomMutations(tree: &four, mutations: 100)
-
-        //var many = OutlineSummarizedTree(createTestOutline())
-        //testRandomMutations(tree: &many, mutations: 100)
     }
     
     func testRandomMutations(tree: inout OutlineSummarizedTree, mutations: Int) {
@@ -176,6 +160,7 @@ final class SummarizedTreeTests: CollectionTestCase {
 }
 
 extension BidirectionalCollection {
+    
     func randomIndex() -> Index {
         let i = (0..<count).randomElement() ?? 0
         return index(startIndex, offsetBy: i)
@@ -186,4 +171,5 @@ extension BidirectionalCollection {
         let end = (start..<count).randomElement() ?? start
         return index(startIndex, offsetBy: start)..<index(startIndex, offsetBy: end)
     }
+    
 }

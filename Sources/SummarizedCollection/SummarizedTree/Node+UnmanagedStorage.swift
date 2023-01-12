@@ -69,6 +69,7 @@ extension SummarizedTree.Node {
         }
 
         @inlinable
+        @inline(__always)
         func child(at slot: Slot) -> Node {
             if case .inner(let inner) = self {
                 return inner._withUnsafeGuaranteedRef { $0.rd { $0[slot] } }
@@ -77,6 +78,7 @@ extension SummarizedTree.Node {
         }
 
         @inlinable
+        @inline(__always)
         var elements: ArraySlice<Element> {
             if case .leaf(let leaf) = self {
                 return leaf._withUnsafeGuaranteedRef { $0.rd { $0.slots[...] } }
@@ -85,6 +87,7 @@ extension SummarizedTree.Node {
         }
         
         @inlinable
+        @inline(__always)
         func element(at slot: Slot) -> Element {
             if case .leaf(let leaf) = self {
                 return leaf._withUnsafeGuaranteedRef { $0.rd { $0[slot] } }

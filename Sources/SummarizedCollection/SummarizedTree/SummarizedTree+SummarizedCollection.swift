@@ -1,11 +1,19 @@
 extension SummarizedTree: SummarizedCollection {
         
     @inlinable
+    @inline(__always)
     public var count: Int {
         summary.count
     }
     
     @inlinable
+    @inline(__always)
+    public var isEmpty: Bool {
+        root.summary.count == 0
+    }
+
+    @inlinable
+    @inline(__always)
     public var summary: Summary {
         root.summary
     }
@@ -40,6 +48,7 @@ extension SummarizedTree: SummarizedCollection {
         return point
     }
 
+    @inlinable
     public var startIndex: Index {
         if count == 0 {
             return endIndex
@@ -50,18 +59,21 @@ extension SummarizedTree: SummarizedCollection {
         return .init(cursor: cursor)
     }
     
+    @inlinable
     public var endIndex: Index {
         var cursor = Cursor(root: root, version: version)
         cursor.resetToEnd()
         return .init(cursor: cursor)
     }
 
+    @inlinable
     public func distance(from start: Index, to end: Index) -> Int {
         start.ensureValid(with: end)
         start.ensureValid(in: self)
         return end.offset - start.offset
     }
 
+    @inlinable
     public func index(after i: Index) -> Index {
         var newIndex = i
         formIndex(after: &newIndex)
@@ -75,6 +87,7 @@ extension SummarizedTree: SummarizedCollection {
         index.next()
     }
 
+    @inlinable
     public func index(before i: Index) -> Index {
         var newIndex = i
         formIndex(before: &newIndex)
@@ -103,6 +116,25 @@ extension SummarizedTree: SummarizedCollection {
         i.seek(forward: IndexDimension(distance))
     }
 
+    @inlinable
+    public func index(_ i: Index, offsetBy distance: Int) -> Index {
+        var newIndex = i
+        formIndex(&newIndex, offsetBy: distance)
+        return newIndex
+    }
+
+    @inlinable
+    public func index<D>(
+        _ i: Self.Index,
+        offsetBy distance: D
+    ) -> Index where D: CollectionDimension, D.Summary == Summary {
+        var newIndex = i
+        formIndex(&newIndex, offsetBy: distance)
+        return newIndex
+    }
+    
+
+    @inlinable
     public func formIndex<D>(_ i: inout Index, offsetBy distance: D) where D: CollectionDimension, D.Summary == Summary {
         i.ensureValid(in: self)
         
@@ -116,25 +148,13 @@ extension SummarizedTree: SummarizedCollection {
         i.seek(forward: distance)
     }
 
-    public func index(_ i: Index, offsetBy distance: Int) -> Index {
-        var newIndex = i
-        formIndex(&newIndex, offsetBy: distance)
-        return newIndex
-    }
-
-    public func index<D>(
-        _ i: Self.Index,
-        offsetBy distance: D
-    ) -> Index where D: CollectionDimension, D.Summary == Summary {
-        var newIndex = i
-        formIndex(&newIndex, offsetBy: distance)
-        return newIndex
-    }
-    
+    @inlinable
     public func index<D>(at distance: D) -> Index where D: CollectionDimension, D.Summary == Summary {
         index(startIndex, offsetBy: distance)
     }
 
+    @inlinable
+    @inline(__always)
     public subscript(index: Index) -> Element {
         _read {
             index.ensureValid(in: self)
