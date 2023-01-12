@@ -4,7 +4,97 @@ import XCTest
 import _CollectionsTestSupport
 
 final class SummarizedTreeTests: CollectionTestCase {
-       
+        
+    func testInit() {
+        withEvery("size", in: 0..<100) { size in
+            let list = List(0..<size)
+            list.ensureValid()
+            XCTAssertEqual(list.count, size)
+        }
+    }
+
+    func testIndexAtOffset() {
+        withEvery("count", in: [1, 2, 4, 8, 16, 32, 64]) { count in
+            let list = List<Int>(0..<count)
+            for i in 0..<count {
+                let index = list.index(at: i)
+                expectEqual(list[index], i)
+            }
+        }
+    }
+    
+    func testIndexOffsetByForward() {
+        withEvery("count", in: [1, 2, 4, 8, 16, 32, 64]) { count in
+            let list = List<Int>(0..<count)
+            withEvery("baseIndex", in: 0...count) { baseIndex in
+                withEvery("distance", in: 0...(count - baseIndex)) { distance in
+                    var index = list.index(at: baseIndex)
+                    list.formIndex(&index, offsetBy: distance)
+                    let expectedIndex = list.index(at: baseIndex + distance)
+                    expectEqual(index, expectedIndex)
+                }
+            }
+        }
+    }
+    
+    func testIndexOffsetByBackward() {
+        withEvery("count", in: [1, 2, 4, 8, 16, 32, 64]) { count in
+            let list = List<Int>(0..<count)
+            withEvery("baseIndex", in: 0...count) { baseIndex in
+                withEvery("distance", in: 0...baseIndex) { distance in
+                    var index = list.index(at: baseIndex)
+                    list.formIndex(&index, offsetBy: -distance)
+                    let expectedIndex = list.index(at: baseIndex - distance)
+                    expectEqual(index, expectedIndex)
+                }
+            }
+        }
+    }
+
+    func testIterator() {
+        let list = List(0..<100)
+        for (each, i) in list.enumerated() {
+            XCTAssertEqual(each, list[list.index(at: i)])
+        }
+    }
+
+    func testSplit() {
+        withEvery("size", in: [1, 2, 4, 8, 16, 32, 64, 127, 128, 129]) { size in
+            withEvery("index", in: 0..<size) { index in
+                var list = List<Int>(0..<size)
+                let split = list.split(index)
+                list.ensureValid()
+                split.ensureValid()
+                expectEqual(list.count + split.count, size)
+            }
+        }
+    }
+
+    func testConcat() {
+        withEvery("size", in: [1, 2, 4, 8, 16, 32, 64, 127, 128, 129]) { size in
+            withEvery("index", in: 0..<size) { index in
+                var list = List<Int>(0..<size)
+                let split = list.split(index)
+                var new = List<Int>()
+                new.concat(list)
+                new.concat(split)
+                new.ensureValid()
+                expectEqual(new.count, size)
+            }
+        }
+    }
+
+    func testSingleDeletion() {
+        withEvery("size", in: [1, 2, 4, 8, 16, 32, 64, 128]) { size in
+            withEvery("index", in: 0..<size) { index in
+                var list = List<Int>(0..<size)
+                list.remove(at: list.index(at: index))
+                list.ensureValid()
+                expectEqual(list.count, size - 1)
+            }
+        }
+    }
+
     func testEmpty() throws {
         let empty = OutlineSummarizedTree()
         XCTAssertEqual(empty.summary, .zero)

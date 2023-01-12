@@ -4,6 +4,12 @@ public struct CollectionPoint<
 > where B.Summary == O.Summary {
     public var base: B
     public var offset: O
+    
+    @inlinable
+    init(base: B, offset: O) {
+        self.base = base
+        self.offset = offset
+    }
 }
 
 extension CollectionPoint: Comparable {

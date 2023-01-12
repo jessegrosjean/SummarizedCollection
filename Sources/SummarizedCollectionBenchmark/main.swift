@@ -92,7 +92,7 @@ benchmark.add(
         let tree = List(0 ..< size)
         
         if size > 1 {
-            let sub = tree[tree.index(after: tree.startIndex)..<tree.index(before: tree.endIndex)]
+            let sub = tree[tree.index(at: 1)..<tree.index(at: tree.count - 1)]
             var count = 0
             timer.measure {
                 for _ in sub {

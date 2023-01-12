@@ -1,4 +1,4 @@
-public protocol IdentifiedCollection: BidirectionalCollection where Element: Identifiable {
+public protocol IdentifiedCollection: Collection where Element: Identifiable {
     
     typealias ID = Element.ID
     

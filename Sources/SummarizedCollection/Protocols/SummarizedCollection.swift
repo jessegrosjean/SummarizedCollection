@@ -22,26 +22,7 @@ public protocol SummarizedCollection: BidirectionalCollection {
     where
         B.Summary == Summary,
         D.Summary == Summary
-
-    /*
-
-    func pointToPoint<B1, O1, B2, O2>(
-        point: CollectionPoint<B1, O1>
-    ) -> CollectionPoint<B2, O2>
-    where
-        B1: CollectionDimension, B1.Summary == Summary,
-        O1: CollectionDimension, O1.Summary == Summary,
-        B2: CollectionDimension, B2.Summary == Summary,
-        O2: CollectionDimension, O2.Summary == Summary
-
-    func pointRangeToDimensionRange<B, O, D>(
-        points: Range<CollectionPoint<B, O>>
-    ) -> Range<D>
-    where
-        B.Summary == Summary,
-        D: CollectionDimension, D.Summary == Summary
-    */
-    
+ 
 }
 
 extension SummarizedCollection {
