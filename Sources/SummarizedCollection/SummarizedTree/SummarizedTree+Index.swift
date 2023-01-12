@@ -40,10 +40,12 @@ extension SummarizedTree {
             _ = cursor.seek(forward: dimension)
         }
         
+        @inlinable
         func ensureValid(in tree: SummarizedTree) {
             cursor.ensureValid(for: tree.root, version: tree.version)
         }
         
+        @inlinable
         func ensureValid(with index: Index) {
             cursor.ensureValid(with: index.cursor)
         }
@@ -53,10 +55,12 @@ extension SummarizedTree {
 
 extension SummarizedTree.Index: Comparable {
     
+    @inlinable
     public static func ==(lhs: Self, rhs: Self) -> Bool {
         lhs.cursor == rhs.cursor
     }
     
+    @inlinable
     public static func <(lhs: Self, rhs: Self) -> Bool {
         lhs.cursor < rhs.cursor
     }

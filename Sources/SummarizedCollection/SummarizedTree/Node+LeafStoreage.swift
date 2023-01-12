@@ -97,6 +97,7 @@ extension SummarizedTree.Node.LeafHandle {
         storage.slots
     }
 
+    @inlinable
     subscript(_ slot: Slot) -> Element {
         get {
             assert(0 <= slot && slot < slotCount)

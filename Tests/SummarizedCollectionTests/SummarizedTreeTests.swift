@@ -1,8 +1,46 @@
 import XCTest
 @testable import SummarizedCollection
 
-final class SummarizedTreeTests: XCTestCase {
+import _CollectionsTestSupport
+
+func randomBoolArray<R: RandomNumberGenerator>(
+  count: Int, using rng: inout R
+) -> [Bool] {
+    let wordCount = (count + UInt.bitWidth - 1) / UInt.bitWidth
+    var array: [Bool] = []
+    array.reserveCapacity(wordCount * UInt.bitWidth)
+    for _ in 0 ..< wordCount {
+        var word: UInt = rng.next()
+        for _ in 0 ..< UInt.bitWidth {
+            array.append(word & 1 == 1)
+            word &>>= 1
+        }
+    }
+    array.removeLast(array.count - count)
+    return array
+}
+
+final class SummarizedTreeTests: CollectionTestCase {
         
+    func testLongIteratoion() {
+        let list = List(0..<100000000)
+        let end = list.endIndex
+        var i = list.startIndex
+        while i < end {
+            list.formIndex(after: &i)
+        }
+    }
+    
+    func testRandomAccessCollection() {
+        var rng = RepeatableRandomNumberGenerator(seed: 0)
+        withEvery("count", in: [0, 1, 2, 13, 64, 65, 127, 128, 129]) { count in
+            let reference = randomBoolArray(count: count, using: &rng)
+            let value = List(reference)
+            print(count)
+            checkBidirectionalCollection(value, expectedContents: reference, maxSamples: 100)
+        }
+    }
+
     func testEmpty() throws {
         let empty = OutlineSummarizedTree()
         XCTAssertEqual(empty.summary, .zero)

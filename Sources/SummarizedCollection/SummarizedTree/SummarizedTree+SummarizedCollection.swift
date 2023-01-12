@@ -1,5 +1,6 @@
 extension SummarizedTree: SummarizedCollection {
         
+    @inlinable
     public var count: Int {
         summary.count
     }
@@ -61,21 +62,17 @@ extension SummarizedTree: SummarizedCollection {
         return end.offset - start.offset
     }
 
-    public func formIndex(after index: inout Index) {
-        index.ensureValid(in: self)
-        precondition(index.offset < count, "Attempt to advance out of collection bounds.")
-        index.next()
-    }
-
     public func index(after i: Index) -> Index {
         var newIndex = i
         formIndex(after: &newIndex)
         return newIndex
     }
 
-    public func formIndex(before index: inout Index) {
-        precondition(!isEmpty && index.offset != 0, "Attempt to advance out of collection bounds.")
-        index.previous()
+    @inlinable
+    public func formIndex(after index: inout Index) {
+        index.ensureValid(in: self)
+        precondition(index.offset < count, "Attempt to advance out of collection bounds.")
+        index.next()
     }
 
     public func index(before i: Index) -> Index {
@@ -84,6 +81,13 @@ extension SummarizedTree: SummarizedCollection {
         return newIndex
     }
 
+    @inlinable
+    public func formIndex(before index: inout Index) {
+        precondition(!isEmpty && index.offset != 0, "Attempt to advance out of collection bounds.")
+        index.previous()
+    }
+
+    @inlinable
     public func formIndex(_ i: inout Index, offsetBy distance: Int) {
         i.ensureValid(in: self)
         

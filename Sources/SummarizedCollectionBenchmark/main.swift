@@ -49,6 +49,28 @@ benchmark.add(
     }
 }
 
+benchmark.add(
+  title: "TreeList<Int> iterate",
+  input: Int.self
+) { size in
+    return { timer in
+        let tree = List(0 ..< size)
+
+        timer.measure {
+            let end = tree.endIndex
+            var i = tree.startIndex
+            while i < end {
+                tree.formIndex(after: &i)
+            }
+        }
+        
+        blackHole(tree)
+    }
+}
+
+
+
+
 /*
 benchmark.add(
   title: "Array<Int> splits",

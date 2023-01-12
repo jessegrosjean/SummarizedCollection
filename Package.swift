@@ -3,6 +3,33 @@
 
 import PackageDescription
 
+var settings: [SwiftSetting] = [
+
+  // Enables internal consistency checks at the end of initializers and
+  // mutating operations. This can have very significant overhead, so enabling
+  // this setting invalidates all documented performance guarantees.
+  //
+  // This is mostly useful while debugging an issue with the implementation of
+  // the hash table itself. This setting should never be enabled in production
+  // code.
+//  .define("COLLECTIONS_INTERNAL_CHECKS"),
+
+  // Hashing collections provided by this package usually seed their hash
+  // function with the address of the memory location of their storage,
+  // to prevent some common hash table merge/copy operations from regressing to
+  // quadratic behavior. This setting turns off this mechanism, seeding
+  // the hash function with the table's size instead.
+  //
+  // When used in conjunction with the SWIFT_DETERMINISTIC_HASHING environment
+  // variable, this enables reproducible hashing behavior.
+  //
+  // This is mostly useful while debugging an issue with the implementation of
+  // the hash table itself. This setting should never be enabled in production
+  // code.
+//  .define("COLLECTIONS_DETERMINISTIC_HASHING"),
+
+]
+
 let package = Package(
     name: "SummarizedCollection",
     platforms: [
@@ -10,30 +37,42 @@ let package = Package(
         .iOS(.v14)
     ],
     products: [
-        // Products define the executables and libraries a package produces, and make them visible to other packages.
-        .library(
-            name: "SummarizedCollection",
-            targets: ["SummarizedCollection"]),
-        .executable(
-            name: "SummarizedCollectionBenchmark",
-            targets: ["SummarizedCollectionBenchmark"]
-        ),
+        .library(name: "SummarizedCollection", targets: ["SummarizedCollection"]),
+        .executable(name: "SummarizedCollectionBenchmark", targets: ["SummarizedCollectionBenchmark"]),
     ],
     dependencies: [
-        // Dependencies declare other packages that this package depends on.
-        // .package(url: /* package url */, from: "1.0.0"),
         .package(url: "https://github.com/peripheryapp/periphery", from: "2.0.0"),
         .package(url: "https://github.com/apple/swift-collections-benchmark", from: "0.0.3"),
     ],
     targets: [
-        // Targets are the basic building blocks of a package. A target can define a module or a test suite.
-        // Targets can depend on other targets in this package, and on products in packages this package depends on.
+        
         .target(
             name: "SummarizedCollection",
-            dependencies: []),
+            dependencies: ["_CollectionsUtilities"],
+            exclude: ["CMakeLists.txt"],
+            swiftSettings: settings),
+
         .testTarget(
             name: "SummarizedCollectionTests",
-            dependencies: ["SummarizedCollection"]),
+            dependencies: ["SummarizedCollection", "_CollectionsTestSupport"],
+            swiftSettings: settings),
+
+        .target(
+            name: "_CollectionsTestSupport",
+            dependencies: ["_CollectionsUtilities"],
+            swiftSettings: settings,
+            linkerSettings: [
+                .linkedFramework(
+                    "XCTest",
+                    .when(platforms: [.macOS, .iOS, .watchOS, .tvOS])),
+            ]
+        ),
+
+        .target(
+            name: "_CollectionsUtilities",
+            exclude: ["CMakeLists.txt"],
+            swiftSettings: settings),
+        
         .executableTarget(
             name: "SummarizedCollectionBenchmark",
             dependencies: [

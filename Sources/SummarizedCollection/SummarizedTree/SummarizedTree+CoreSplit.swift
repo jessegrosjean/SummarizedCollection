@@ -166,6 +166,13 @@ extension SummarizedTree.Node.InnerHandle {
         assert(slot1 == slot2 - 1)
         assert(slot2 < slotCount)
 
+        //storage.slots[Int(slot1)].mutInner(with: &storage.slots[Int(slot2)], body: { h1, h2 in
+            
+        //})
+        
+        return false
+
+        /*
         var removeSlot2 = false
         
         if header.height > 1 {
@@ -183,7 +190,7 @@ extension SummarizedTree.Node.InnerHandle {
             return true
         } else {
             return false
-        }
+        }*/
     }
 
 }
