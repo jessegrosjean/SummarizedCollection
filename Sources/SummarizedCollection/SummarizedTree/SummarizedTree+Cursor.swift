@@ -4,7 +4,7 @@ extension SummarizedTree {
         
         public typealias Element = Context.Element
         public typealias Summary = Context.Summary
-        public typealias Node = Context.ContextNode
+        public typealias Node = SummarizedTree.Node
         public typealias IndexDimension = CollectionIndexDimension<Summary>
         
         @usableFromInline

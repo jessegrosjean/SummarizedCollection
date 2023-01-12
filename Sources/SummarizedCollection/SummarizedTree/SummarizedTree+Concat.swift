@@ -6,7 +6,7 @@ extension SummarizedTree {
     }
     
     @inlinable
-    mutating func concat(_ node: Node<Context>) {
+    mutating func concat(_ node: Node) {
         guard !node.isEmpty else {
             return
         }
@@ -35,7 +35,7 @@ extension SummarizedTree {
 
 }
 
-extension Node {
+extension SummarizedTree.Node {
     
     @inlinable
     mutating func concat(_ node: Self, ctx: inout Context) -> Self? {

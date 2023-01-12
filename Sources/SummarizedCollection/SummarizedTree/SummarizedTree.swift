@@ -11,7 +11,7 @@ public struct SummarizedTree<Context: SummarizedTreeContext> {
     var context: Context
     
     @usableFromInline
-    var root: Node<Context>
+    var root: Node
 
     @inlinable
     public var isEmpty: Bool {

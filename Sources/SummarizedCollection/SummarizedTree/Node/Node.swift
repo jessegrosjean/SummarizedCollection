@@ -1,47 +1,54 @@
-public struct Node<Context: SummarizedTreeContext> {
-    
-    public typealias Element = Context.Element
-    public typealias Summary = Context.Summary
-    public typealias Slot = Context.Slot
+extension SummarizedTree {
 
-    @usableFromInline
-    struct Header {
-        @usableFromInline
-        var height: UInt8
+    public struct Node {
+        
+        public typealias Element = Context.Element
+        public typealias Summary = Context.Summary
+        public typealias Slot = Context.Slot
         
         @usableFromInline
-        var summary: Summary
-
-        @usableFromInline
-        var slotCount: Slot
-
-        @usableFromInline
-        var slotCapacity: Slot
-
-        @inlinable
-        var slotsAvailible: Slot { slotCapacity - slotCount }
-
-        @inlinable
-        var slotsUnderflowing: Bool { slotCount < (slotCapacity / 2) }
-        
-        @inlinable
-        init(height: UInt8 = 0, summary: Summary = .zero, slotCount: Slot = .zero, slotCapacity: Slot) {
-            self.height = height
-            self.summary = summary
-            self.slotCount = slotCount
-            self.slotCapacity = slotCapacity
+        struct Header {
+            @usableFromInline
+            var height: UInt8
+            
+            @usableFromInline
+            var summary: Summary
+            
+            @usableFromInline
+            var slotCount: Slot
+            
+            @usableFromInline
+            var slotCapacity: Slot
+            
+            @inlinable
+            var slotsAvailible: Slot { slotCapacity - slotCount }
+            
+            @inlinable
+            var slotsUnderflowing: Bool { slotCount < (slotCapacity / 2) }
+            
+            @inlinable
+            init(height: UInt8 = 0, summary: Summary = .zero, slotCount: Slot = .zero, slotCapacity: Slot) {
+                self.height = height
+                self.summary = summary
+                self.slotCount = slotCount
+                self.slotCapacity = slotCapacity
+            }
         }
+        
+        @usableFromInline
+        var _header: Header
+        
+        @usableFromInline
+        var _inner: InnerStorage?
+        
+        @usableFromInline
+        var _leaf: LeafStorage?
     }
+    
+}
 
-    @usableFromInline
-    var _header: Header
-
-    @usableFromInline
-    var _inner: InnerStorage?
-
-    @usableFromInline
-    var _leaf: LeafStorage?
- 
+extension SummarizedTree.Node {
+    
     @inlinable
     var inner: InnerStorage { _inner.unsafelyUnwrapped }
 
@@ -149,8 +156,10 @@ public struct Node<Context: SummarizedTreeContext> {
     
 }
 
-extension Node: Equatable {
+extension SummarizedTree.Node: Equatable {
     
+    public typealias Node = SummarizedTree.Node
+
     public static func ==(lhs: Node, rhs: Node) -> Bool {
         lhs._leaf === rhs._leaf && lhs._inner === rhs._inner
     }

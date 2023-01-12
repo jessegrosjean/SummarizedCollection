@@ -32,7 +32,7 @@ extension SummarizedTree {
 
 }
 
-extension Node {
+extension SummarizedTree.Node {
     
     @inlinable
     mutating func split(_ index: Int, ctx: inout Context) -> Self {
@@ -85,7 +85,7 @@ extension Node {
     
 }
 
-extension Node.InnerHandle {
+extension SummarizedTree.Node.InnerHandle {
 
     @usableFromInline
     struct Child {

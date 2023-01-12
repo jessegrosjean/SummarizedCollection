@@ -6,20 +6,20 @@ public struct ListContext<Element>: SummarizedTreeContext {
     public static var maintainsBackpointers: Bool { false }
 
     @inlinable
-    public subscript(parent node: ContextNode) -> ContextNode? {
+    public subscript(parent node: TreeNode) -> TreeNode? {
         get { nil }
         set {}
     }
 
     @inlinable
-    public mutating func mapElements<C>(_ elements: C, to leaf: ContextNode) where C : Collection, C.Element == Element {
+    public mutating func mapElements<C>(_ elements: C, to leaf: TreeNode) where C : Collection, C.Element == Element {
     }
     
     @inlinable
-    public mutating func unmapElements<C>(_ elements: C, from leaf: ContextNode) where C : Collection, C.Element == Element {
+    public mutating func unmapElements<C>(_ elements: C, from leaf: TreeNode) where C : Collection, C.Element == Element {
     }
     
-    public init(root: ContextNode?) {
+    public init(root: TreeNode?) {
     }
 
 }

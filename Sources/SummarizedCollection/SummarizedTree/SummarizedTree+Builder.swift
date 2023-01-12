@@ -17,7 +17,7 @@ extension SummarizedTree {
         }
         
         @inlinable
-        public mutating func concat(node: Node<Context>) {
+        public mutating func concat(node: Node) {
             root.concat(node)
         }
         
@@ -28,14 +28,14 @@ extension SummarizedTree {
         
         @inlinable
         public mutating func concat(elements: ContiguousArray<Element>) {
-            var stack: [ContiguousArray<Node<Context>>] = []
+            var stack: [ContiguousArray<Node>] = []
             let count = elements.count
             var i = 0
 
             while i < count {
                 let j = Swift.min(i + leafSize, count)
                 
-                var node: Node<Context> = .init(leaf: .init(elements[i..<j]))
+                var node: Node = .init(leaf: .init(elements[i..<j]))
                 while true {
                     if stack.last?.last?.height != node.height {
                         stack.append([])

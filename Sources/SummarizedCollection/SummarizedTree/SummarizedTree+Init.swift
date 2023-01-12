@@ -6,7 +6,7 @@ extension SummarizedTree {
     }
 
     @inlinable
-    init(root: Node<Context>) {
+    init(root: Node) {
         self.version = root.objectIdentifier.hashValue
         self.context = .init(root: root)
         self.root = root

@@ -1,5 +1,5 @@
 //#if DEBUG
-extension Node: CustomDebugStringConvertible {
+extension SummarizedTree.Node: CustomDebugStringConvertible {
     
     static func debugNode(node: Node, indent: Int, result: inout String) {
         result.append(String(repeating: "  ", count: indent))
@@ -28,7 +28,7 @@ extension Node: CustomDebugStringConvertible {
 }
 //#endif
 
-extension Node {
+extension SummarizedTree.Node {
     
     func ensureValid(parent: Node?, ctx: Context) {
         if let parent = ctx[parent: self] {

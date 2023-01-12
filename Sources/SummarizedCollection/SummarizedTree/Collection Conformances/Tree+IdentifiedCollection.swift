@@ -32,4 +32,5 @@ extension SummarizedTree: IdentifiedCollection where Element: Identifiable {
         
         return index(startIndex, offsetBy: offset)
     }
+    
 }

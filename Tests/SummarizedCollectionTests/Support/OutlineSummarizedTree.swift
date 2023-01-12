@@ -7,18 +7,18 @@ struct OutlineContext: SummarizedTreeContext {
     
     static var maintainsBackpointers: Bool { false }
     
-    subscript(parent node: ContextNode) -> ContextNode? {
+    subscript(parent node: TreeNode) -> TreeNode? {
         get { nil }
         set { }
     }
     
-    mutating func mapElements<C>(_ elements: C, to leaf: ContextNode) where C : Collection, C.Element == Summary.Element {
+    mutating func mapElements<C>(_ elements: C, to leaf: TreeNode) where C : Collection, C.Element == Summary.Element {
     }
     
-    mutating func unmapElements<C>(_ elements: C, from leaf: ContextNode) where C : Collection, C.Element == Summary.Element {
+    mutating func unmapElements<C>(_ elements: C, from leaf: TreeNode) where C : Collection, C.Element == Summary.Element {
     }
 
-    public init(root: ContextNode?) {
+    public init(root: TreeNode?) {
     }
 
 }

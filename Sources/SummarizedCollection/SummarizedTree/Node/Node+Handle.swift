@@ -16,7 +16,7 @@ enum Distribute {
 
 }
 
-extension Node {
+extension SummarizedTree.Node {
     
     @inlinable
     func rdInner<R>(_ body: (InnerHandle) throws -> R) rethrows -> R {

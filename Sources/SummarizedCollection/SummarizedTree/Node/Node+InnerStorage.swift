@@ -1,4 +1,4 @@
-extension Node {
+extension SummarizedTree.Node {
 
     @usableFromInline
     struct InnerHandle {
@@ -77,7 +77,9 @@ extension Node {
     
 }
 
-extension Node.InnerStorage {
+extension SummarizedTree.Node.InnerStorage {
+    
+    public typealias Node = SummarizedTree.Node
     
     @inlinable
     static func create() -> Self {
@@ -100,8 +102,10 @@ extension Node.InnerStorage {
 
 }
 
-extension Node.InnerHandle {
+extension SummarizedTree.Node.InnerHandle {
         
+    public typealias Node = SummarizedTree.Node
+
     @usableFromInline
     typealias Slot = Context.Slot
     
