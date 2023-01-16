@@ -53,7 +53,7 @@ final class SummarizedCollectionTests: XCTestCase {
     func testIndexOfID() throws {
         let o = OutlineArray(inner: createTestOutline())
         for (i, each) in o.enumerated() {
-            assert(i == o.index(id: each.id))
+            assert(i == o.offset(id: each.id))
         }
     }
 }

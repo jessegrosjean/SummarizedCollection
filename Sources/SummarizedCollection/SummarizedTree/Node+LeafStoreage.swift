@@ -12,8 +12,7 @@ extension SummarizedTree.Node {
         }
     }
     
-    @usableFromInline
-    final class LeafStorage {
+    public final class LeafStorage {
         
         @usableFromInline
         var header: Node.Header
@@ -83,6 +82,7 @@ extension SummarizedTree.Node.LeafHandle {
     public typealias Node = SummarizedTree.Node
     public typealias Element = Node.Element
     public typealias Summary = Node.Summary
+    public typealias SubSequence = SummarizedTree.SubSequence
 
     @inlinable
     var header: Node.Header {
@@ -137,7 +137,7 @@ extension SummarizedTree.Node.LeafHandle {
         storage.slots.remove(at: Int(slot))
         didChangeSlots()
     }
-
+    
     @inlinable
     mutating func slotsDistribute(with handle: inout Self, distribute: Distribute, ctx: inout Context) {
         let total = slotCount + handle.slotCount

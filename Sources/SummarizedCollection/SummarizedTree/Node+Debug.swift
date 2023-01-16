@@ -31,15 +31,13 @@ extension SummarizedTree.Node: CustomDebugStringConvertible {
 extension SummarizedTree.Node {
     
     func ensureValid(parent: Node?, ctx: Context) {
-        if let parent = ctx[parent: self] {
-            assert(parent.isInner)
-            parent.rdInner { handle in
-                assert(handle.slots.contains(self))
+        if let contextParent = ctx[parentOf: self.objectIdentifier] {
+            assert(contextParent.slots.contains(self))
+            if ctx.maintainsBackpointers {
+                assert(parent?.inner === contextParent)
             }
-        }
-
-        if Context.maintainsBackpointers {
-            assert(parent == ctx[parent: self])
+        } else if ctx.maintainsBackpointers {
+            assert(parent == nil)
         }
         
         if isLeaf {
@@ -61,9 +59,6 @@ extension SummarizedTree.Node {
                 for each in handle.slots {
                     each.ensureValid(parent: self, ctx: ctx)
                     childrenSummary += each.summary
-                    if Context.maintainsBackpointers {
-                        assert(ctx[parent: each] == self)
-                    }
                 }
                 assert(summary == childrenSummary)
             }

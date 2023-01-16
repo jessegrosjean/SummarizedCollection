@@ -15,7 +15,7 @@ extension SummarizedTree {
             root.zipFixRight(ctx: &context)
             splitNode.zipFixLeft(ctx: &context)
         
-            var splitTree = SummarizedTree(root: splitNode)
+            var splitTree = SummarizedTree(root: splitNode, maintainBackpointersIfAble: false)
             splitTree.pullUpSingularNodes()
             pullUpSingularNodes()
             
@@ -41,7 +41,7 @@ extension SummarizedTree.Node {
                 let child = handle.findChild(containing: index)
                 
                 if index == child.start {
-                    return Self(inner: handle.slotSplit(at: child.index, ctx: &ctx))
+                    return .init(inner: handle.slotSplit(at: child.index, ctx: &ctx))
                 } else if index == child.end {
                     return .init(inner: handle.slotSplit(at: child.index + 1, ctx: &ctx))
                 } else {

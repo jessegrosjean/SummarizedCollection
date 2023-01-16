@@ -2,16 +2,16 @@ public protocol IdentifiedCollection: Collection where Element: Identifiable {
     
     typealias ID = Element.ID
     
-    func index(id: ID) -> Index?
+    func offset(id: ID) -> Int?
     
 }
 
 extension IdentifiedCollection {
 
-    public func index(id: ID) -> Index? {
+    public func offset(id: ID) -> Int? {
         for (i, each) in enumerated() {
             if each.id == id {
-                return index(startIndex, offsetBy: i)
+                return i
             }
         }
         return nil

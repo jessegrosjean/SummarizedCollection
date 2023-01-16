@@ -53,7 +53,7 @@ final class SummarizedTreeTests: CollectionTestCase {
 
     func testIterator() {
         withEvery("size", in: [1, 2, 4, 8, 16, 32, 64, 127, 128, 129]) { size in
-            var list = List<Int>(0..<size)
+            let list = List<Int>(0..<size)
             for (each, i) in list.enumerated() {
                 XCTAssertEqual(each, list[list.index(at: i)])
             }
@@ -82,6 +82,25 @@ final class SummarizedTreeTests: CollectionTestCase {
                 new.concat(split)
                 new.ensureValid()
                 expectEqual(new.count, size)
+            }
+        }
+    }
+
+    func testReplace() {
+        withEvery("size", in: [1, 2, 4, 8, 16]) { size in
+            let template = List<Int>(0..<size)
+            withEvery("start", in: 0..<size) { start in
+                withEvery("end", in: start..<size) { end in
+                    withEvery("insert", in: [0, 1, 2, 3, 5, 9]) { insert in
+                        var list = template
+                        let removed = list.replace(start..<end, with: 0..<insert)
+                        let removedCount = removed.count
+                        XCTAssertEqual(removedCount, end - start)
+                        XCTAssertEqual(list.count, (template.count - removedCount) + insert)
+                        list.ensureValid()
+                        removed.ensureValid()
+                    }
+                }
             }
         }
     }
@@ -157,12 +176,5 @@ final class SummarizedTreeTests: CollectionTestCase {
             charDim += .init(1)
         }
     }
-    
-    func testIndexOfID() throws {
-        let o = OutlineSummarizedTree(createTestOutline())
-        for (i, each) in o.enumerated() {
-            assert(o.index(o.startIndex, offsetBy: i) == o.index(id: each.id))
-        }
-    }
-    
+        
 }

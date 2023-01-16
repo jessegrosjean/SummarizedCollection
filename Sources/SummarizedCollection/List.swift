@@ -1,25 +1,11 @@
 public struct ListContext<Element>: SummarizedTreeContext {
-
+    
     public typealias Slot = UInt16
     public typealias Summary = ListSummary<Element>
 
-    public static var maintainsBackpointers: Bool { false }
+    public var maintainsBackpointers: Bool { false }
 
-    @inlinable
-    public subscript(parent node: TreeNode) -> TreeNode? {
-        get { nil }
-        set {}
-    }
-
-    @inlinable
-    public mutating func mapElements<C>(_ elements: C, to leaf: TreeNode) where C : Collection, C.Element == Element {
-    }
-    
-    @inlinable
-    public mutating func unmapElements<C>(_ elements: C, from leaf: TreeNode) where C : Collection, C.Element == Element {
-    }
-    
-    public init(root: TreeNode?) {
+    public init(root: TreeNode?, maintainBackpointersIfAble: Bool) {
     }
 
 }

@@ -13,7 +13,7 @@ extension SummarizedTree {
 
         @inlinable
         public init() {
-            root = .init()
+            root = .init(root: .init(), maintainBackpointersIfAble: false)
         }
         
         @inlinable
@@ -62,7 +62,7 @@ extension SummarizedTree {
         
         public mutating func build() -> SummarizedTree<Context> {
             let result = root
-            root = .init()
+            root = .init(root: .init(), maintainBackpointersIfAble: false)
             return result
         }
 

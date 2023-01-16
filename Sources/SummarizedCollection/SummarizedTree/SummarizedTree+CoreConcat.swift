@@ -10,9 +10,9 @@ extension SummarizedTree {
         guard !node.isEmpty else {
             return
         }
-        
+                
         if isEmpty {
-            var copy = SummarizedTree(root: node)
+            var copy = SummarizedTree(root: node, maintainBackpointersIfAble: false)
             swap(&self, &copy)
             return
         }
@@ -22,7 +22,7 @@ extension SummarizedTree {
         if h1 < h2 {
             node.rdInner { handle in
                 for i in 0..<handle.slotCount {
-                    concat(.init(root: handle[i]))
+                    concat(.init(root: handle[i], maintainBackpointersIfAble: false))
                 }
             }
         } else {
@@ -66,7 +66,7 @@ extension SummarizedTree.Node {
                 return overflow
             }
         } else {
-            if slotsAvailible > node.slotCount {
+            if slotsAvailible >= node.slotCount {
                 mutLeaf { $0.slotsAppend(node.leaf, ctx: &ctx) }
             } else if slotsUnderflowing {
                 var node = node

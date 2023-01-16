@@ -12,8 +12,7 @@ extension SummarizedTree.Node {
         }
     }
     
-    @usableFromInline
-    final class InnerStorage {
+    public final class InnerStorage {
 
         @usableFromInline
         var header: Node.Header
@@ -47,7 +46,7 @@ extension SummarizedTree.Node {
             self.slots = storage.slots
             self.header = storage.header
         }
-        
+                
         @inlinable
         func rd<R>(_ body: (InnerHandle) throws -> R) rethrows -> R {
             try body(.init(storage: self))
@@ -217,8 +216,12 @@ extension SummarizedTree.Node.InnerHandle {
     @inlinable
     mutating func didChangeSlots() {
         storage.header.height = (storage.slots.first?.height ?? 0) + 1
-        storage.header.summary = storage.slots.reduce(.zero) { $0 + $1.summary }
         storage.header.slotCount = Slot(storage.slots.count)
+        storage.header.summary = .zero
+        
+        for each in storage.slots {
+            storage.header.summary += each.summary
+        }
     }
 
 }

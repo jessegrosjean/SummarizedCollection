@@ -50,12 +50,15 @@ extension SummarizedTree {
 extension SummarizedTree.Node {
     
     @inlinable
-    var inner: InnerStorage { _inner.unsafelyUnwrapped }
+    @inline(__always)
+    public var inner: InnerStorage { _inner.unsafelyUnwrapped }
 
     @inlinable
-    var leaf: LeafStorage { _leaf.unsafelyUnwrapped }
+    @inline(__always)
+    public var leaf: LeafStorage { _leaf.unsafelyUnwrapped }
 
     @inlinable
+    @inline(__always)
     var count: Int { _header.summary.count }
 
     @inlinable
@@ -77,6 +80,7 @@ extension SummarizedTree.Node {
     var slotsUnderflowing: Bool { _header.slotsUnderflowing }
 
     @inlinable
+    @inline(__always)
     var isInner: Bool { _inner != nil }
     
     @inlinable
@@ -85,6 +89,7 @@ extension SummarizedTree.Node {
     }
     
     @inlinable
+    @inline(__always)
     var isLeaf: Bool { _leaf != nil }
 
     @inlinable
@@ -146,6 +151,7 @@ extension SummarizedTree.Node {
     }
 
     @inlinable
+    @inline(__always)
     var objectIdentifier: ObjectIdentifier {
         if isInner {
             return ObjectIdentifier(inner)
