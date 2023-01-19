@@ -24,7 +24,7 @@ extension SummarizedTree.Node {
         init() {
             self.slots = []
             self.slots.reserveCapacity(Int(Context.innerCapacity))
-            self.header = .init(slotCapacity: Context.innerCapacity)
+            self.header = .init(slotCapacity: Slot(slots.capacity))
             self.header.height = 1
         }
 
@@ -37,7 +37,7 @@ extension SummarizedTree.Node {
                 height:(slots.first?.height ?? 0) + 1,
                 summary: slots.reduce(.zero) { $0 + $1.summary },
                 slotCount: Slot(slots.count),
-                slotCapacity: Context.innerCapacity
+                slotCapacity: Slot(slots.capacity)
             )
         }
 
@@ -48,22 +48,26 @@ extension SummarizedTree.Node {
         }
                 
         @inlinable
+        @inline(__always)
         func rd<R>(_ body: (InnerHandle) throws -> R) rethrows -> R {
             try body(.init(storage: self))
         }
 
         @inlinable
+        @inline(__always)
         func mut<R>(_ body: (inout InnerHandle) throws -> R) rethrows -> R {
             var handle = InnerHandle(storage: self)
             return try body(&handle)
         }
 
         @inlinable
+        @inline(__always)
         func append(_ node: Node, ctx: inout Context) {
             mut { $0.slotAppend(node, ctx: &ctx) }
         }
 
         @inlinable
+        @inline(__always)
         func append(_ storage: InnerStorage, ctx: inout Context) {
             mut { handle in
                 storage.rd { storageHandle in
@@ -218,10 +222,24 @@ extension SummarizedTree.Node.InnerHandle {
         storage.header.height = (storage.slots.first?.height ?? 0) + 1
         storage.header.slotCount = Slot(storage.slots.count)
         storage.header.summary = .zero
+                
         
-        for each in storage.slots {
-            storage.header.summary += each.summary
+        /*storage.slots.withUnsafeBufferPointer { p in
+            for i in 0..<p.count {
+                p.baseAddress!.advanced(by: i).
+                let unmaned: Unmanaged<Node> = .passUnretained(p.baseAddress!.advanced(by: i).pointee)
+                storage.header.summary = unmaned.takeUnretainedValue().summary
+                
+            }
+        }*/
+        
+        for i in storage.slots.indices {
+            storage.header.summary += storage.slots[i].summary
         }
+        
+        //for each in storage.slots {
+        //    storage.header.summary += each.summary
+        //}
     }
 
 }

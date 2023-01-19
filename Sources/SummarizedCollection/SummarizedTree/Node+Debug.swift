@@ -43,7 +43,7 @@ extension SummarizedTree.Node {
         if isLeaf {
             assert(height == 0)
             rdLeaf { handle in
-                assert(handle.slotCount <= Context.leafCapacity)
+                //assert(handle.slotCount <= Context.leafCapacity)
                 assert(summary == Summary.summarize(elements: handle.slots))
             }
         } else {

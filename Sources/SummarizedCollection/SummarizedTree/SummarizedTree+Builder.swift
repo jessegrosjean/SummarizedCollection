@@ -6,10 +6,10 @@ extension SummarizedTree {
         var root: SummarizedTree
 
         @usableFromInline
-        var leafSize = Int(Context.leafCapacity)
+        var leafCapacity = Int(Context.leafCapacity)
 
         @usableFromInline
-        var innerSize = Int(Context.innerCapacity)
+        var innerCapacity = Int(Context.innerCapacity)
 
         @inlinable
         public init() {
@@ -23,7 +23,11 @@ extension SummarizedTree {
         
         @inlinable
         public mutating func concat<C>(elements: C) where C: RandomAccessCollection, C.Element == Element {
-            concat(elements: ContiguousArray(elements[...]))
+            if elements.count <= leafCapacity {
+                root.append(contentsOf: elements)
+            } else {
+                concat(elements: ContiguousArray(elements[...]))
+            }
         }
         
         @inlinable
@@ -33,17 +37,17 @@ extension SummarizedTree {
             var i = 0
 
             while i < count {
-                let j = Swift.min(i + leafSize, count)
+                let j = Swift.min(i + leafCapacity, count)
                 
                 var node: Node = .init(leaf: .init(elements[i..<j]))
                 while true {
                     if stack.last?.last?.height != node.height {
                         stack.append([])
-                        stack[stack.count - 1].reserveCapacity(innerSize)
+                        stack[stack.count - 1].reserveCapacity(innerCapacity)
                     }
                     
                     stack[stack.count - 1].append(node)
-                    if stack.last!.count < innerSize {
+                    if stack.last!.count < innerCapacity {
                         break
                     }
                     

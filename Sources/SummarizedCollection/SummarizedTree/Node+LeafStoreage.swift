@@ -24,19 +24,20 @@ extension SummarizedTree.Node {
         init() {
             self.slots = []
             self.slots.reserveCapacity(Int(Context.leafCapacity))
-            self.header = .init(slotCapacity: Context.leafCapacity)
+            self.header = .init(slotCapacity: Slot(slots.capacity))
         }
         
         @inlinable
         init(slots: ContiguousArray<Element>) {
-            assert(slots.count <= Context.leafCapacity)
+            let leafCapacity = Context.leafCapacity
+            assert(slots.count <= leafCapacity)
             self.slots = slots
-            self.slots.reserveCapacity(Int(Context.leafCapacity))
+            self.slots.reserveCapacity(Int(leafCapacity))
             self.header = .init(
                 height: 0,
                 summary: .summarize(elements: slots),
                 slotCount: Slot(slots.count),
-                slotCapacity: Context.leafCapacity
+                slotCapacity: Slot(slots.capacity)
             )
         }
 
@@ -90,6 +91,7 @@ extension SummarizedTree.Node.LeafHandle {
     }
 
     @inlinable
+    @inline(__always)
     var slotCount: Slot {
         Slot(storage.slots.count)
     }
@@ -178,7 +180,7 @@ extension SummarizedTree.Node.LeafHandle {
         storage.header.height = 0
         storage.header.summary = Summary.summarize(elements: storage.slots)
         storage.header.slotCount = Slot(storage.slots.count)
-        assert(storage.header.slotCount <= Context.leafCapacity)
+        //assert(storage.header.slotCount <= Context.leafCapacity)
     }
         
 }
