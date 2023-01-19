@@ -4,7 +4,25 @@ import XCTest
 import _CollectionsTestSupport
 
 final class SummarizedTreeTests: CollectionTestCase {
+
+    /*func testAppend() {
+        let a = [1, 2, 3]
         
+        let a1 = a[a.startIndex]
+        //let a2 = a[a.endIndex]
+
+        var l = List<Int>([1, 2, 3])
+        let l1 = l[l.startIndex]
+        let l2 = l[l.endIndex]
+
+        var list = List<Int>()
+        for i in 0..<1024 {
+            list.append(i)
+        }
+        print(list)
+
+    }*/
+
     func testInit() {
         withEvery("size", in: 0..<100) { size in
             let list = List(0..<size)
@@ -93,12 +111,9 @@ final class SummarizedTreeTests: CollectionTestCase {
                 withEvery("end", in: start..<size) { end in
                     withEvery("insert", in: [0, 1, 2, 3, 5, 9]) { insert in
                         var list = template
-                        let removed = list.replace(start..<end, with: 0..<insert)
-                        let removedCount = removed.count
-                        XCTAssertEqual(removedCount, end - start)
-                        XCTAssertEqual(list.count, (template.count - removedCount) + insert)
+                        list.replace(start..<end, with: 0..<insert)
+                        XCTAssertEqual(list.count, (template.count - (start..<end).count) + insert)
                         list.ensureValid()
-                        removed.ensureValid()
                     }
                 }
             }

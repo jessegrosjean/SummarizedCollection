@@ -109,10 +109,13 @@ extension SummarizedTree.Node.InnerHandle {
 
     @inlinable
     func findChild(containing index: Int) -> Child {
+        let slotCount = slotCount
         var startIndex = 0
+        var eachCount = 0
+        
         for i in 0..<slotCount {
-            let child = self[i]
-            let endIndex = startIndex + child.count
+            eachCount = self[i].count
+            let endIndex = startIndex + eachCount
             if index < endIndex {
                 return .init(
                     index: i,
@@ -123,7 +126,16 @@ extension SummarizedTree.Node.InnerHandle {
                 startIndex = endIndex
             }
         }
-        fatalError()
+        
+        assert(index == header.summary.count)
+        
+        startIndex -= eachCount
+        
+        return .init(
+            index: Slot(slots.count - 1),
+            start: startIndex,
+            end: startIndex + eachCount
+        )
     }
 
     @inlinable

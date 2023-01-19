@@ -51,7 +51,6 @@ extension Benchmark {
                 blackHole(list)
             }
         }
-        */
         
         add(
             title: "List<Int> prepend",
@@ -70,6 +69,44 @@ extension Benchmark {
                 blackHole(list)
             }
         }
+         */
+
+        add(
+            title: "List<Int> append",
+            input: [Int].self
+        ) { input in
+            { timer in
+                var list = List<Int>()
+                timer.measure {
+                    OSLog.pointsOfInterest.begin(name: "List<Int> append")
+                    for i in input {
+                        list.append(i)
+                    }
+                    OSLog.pointsOfInterest.end(name: "List<Int> append")
+                }
+                assert(list.count == input.count)
+                blackHole(list)
+            }
+        }
+
+        /*
+        add(
+            title: "List<Int> endIndex",
+            input: Int.self
+        ) { size in
+            { timer in
+                let list = List<Int>(0..<size)
+                timer.measure {
+                    OSLog.pointsOfInterest.begin(name: "List<Int> endIndex")
+                    for _ in 0..<10000 {
+                        _ = list.endIndex
+                    }
+                    OSLog.pointsOfInterest.end(name: "List<Int> endIndex")
+                }
+                blackHole(list)
+            }
+        }*/
+
         
         /*
         add(

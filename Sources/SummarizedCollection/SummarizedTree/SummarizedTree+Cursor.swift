@@ -20,18 +20,22 @@ extension SummarizedTree {
             @usableFromInline
             var offset: Int
             
+            @inlinable
+            @inline(__always)
             init() {
                 self.nodeStart = .zero
                 self.offset = .zero
             }
             
             @inlinable
+            @inline(__always)
             mutating func moveFoward(nodeSummary: Summary) {
                 nodeStart += nodeSummary
                 offset = 0
             }
             
             @inlinable
+            @inline(__always)
             mutating func moveBackward(nodeSummary: Summary) {
                 nodeStart -= nodeSummary
                 offset = 0
@@ -499,10 +503,10 @@ extension SummarizedTree.Cursor {
         if isBeforeStart {
             return nil
         } else if isAtStart {
-            reset()
+            resetToBeforeStart()
             return nil
         } else if isAfterEnd {
-            reset()
+            resetToBeforeStart()
             descendToLastLeaf(root)
             atEnd = root.count == 0
             return leaf()
@@ -791,23 +795,34 @@ extension SummarizedTree.Cursor {
         !isSeeking && index == root.count && atEnd
     }
     
-    public mutating func reset() {
+    @inlinable
+    public mutating func resetToBeforeStart() {
         stack.removeAll()
         position = .init()
         atEnd = false
     }
 
+    @inlinable
+    public mutating func resetToStart() {
+        resetToBeforeStart()
+        descendToFirstLeaf(root)
+        atEnd = root.count == 0
+    }
+
+    @inlinable
     public mutating func resetToEnd() {
-        reset()
+        resetToBeforeStart()
         descendToLastLeaf(root)
         position.offset = leafSummary().count
         atEnd = true
     }
 
-    public mutating func resetToStart() {
-        reset()
-        descendToFirstLeaf(root)
-        atEnd = root.count == 0
+    @inlinable
+    public mutating func resetToAfterEnd() {
+        stack.removeAll()
+        position = .init()
+        position.nodeStart = root.summary
+        atEnd = true
     }
 
     @inlinable

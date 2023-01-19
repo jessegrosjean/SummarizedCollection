@@ -6,6 +6,9 @@ public protocol SummarizedTreeContext {
     typealias Element = Summary.Element
     typealias TreeNode = SummarizedTree<Self>.Node
 
+    static var innerCapacity: Slot { get }
+    static var leafCapacity: Slot { get }
+
     init(root: TreeNode?, maintainBackpointersIfAble: Bool)
 
     // TreeNodes are shared and immutable. If we want backpointers
@@ -26,29 +29,46 @@ public protocol IdentifiedSummarizedTreeContext: SummarizedTreeContext where Ele
 
 }
 
+@usableFromInline
+var innerCapacityCache: [ObjectIdentifier: Any] = [:]
+
+@usableFromInline
+var leafCapacityCache: [ObjectIdentifier: Any] = [:]
+
 extension SummarizedTreeContext {
 
     @inlinable
-    static var innerCapacity: Slot {
+    public static var innerCapacity: Slot {
         #if DEBUG
             return 3
         #else
+            if let capacity = innerCapacityCache[ObjectIdentifier(Self.self)] as? Slot {
+                return capacity
+            }
+            
             let capacityInBytes = 1023 //16384
-            return Slot(Swift.max(16, capacityInBytes / MemoryLayout<TreeNode>.stride))
+            let capacity =  Slot(Swift.max(16, capacityInBytes / MemoryLayout<TreeNode>.stride))
+            innerCapacityCache[ObjectIdentifier(Self.self)] = capacity
+            return capacity
         #endif
     }
     
     @inlinable
-    static var leafCapacity: Slot {
+    public static var leafCapacity: Slot {
         #if DEBUG
             return 3
         #else
+            if let capacity = leafCapacityCache[ObjectIdentifier(Self.self)] as? Slot {
+                return capacity
+            }
+
             let capacityInBytes = 1023
-            return Slot(Swift.max(16, capacityInBytes / MemoryLayout<Element>.stride))
+            let capacity = Slot(Swift.max(16, capacityInBytes / MemoryLayout<Element>.stride))
+            leafCapacityCache[ObjectIdentifier(Self.self)] = capacity
+            return capacity
         #endif
     }
 
-    
     public subscript(parentOf identifier: ObjectIdentifier) -> TreeNode.InnerStorage? { get { nil } set {} }
     public subscript(leafOf element: Element) -> TreeNode.LeafStorage? { nil }
     public mutating func addElements<C: Collection>(_ elements: C, to leaf: TreeNode.LeafStorage) where C.Element == Element {}
