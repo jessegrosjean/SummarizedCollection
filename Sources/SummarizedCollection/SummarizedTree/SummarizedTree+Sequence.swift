@@ -35,7 +35,7 @@ extension SummarizedTree: Sequence {
         var endIndex: Int
 
         @usableFromInline
-        var leafIterator: IndexingIterator<ManagedBuffer<SummarizedTree<Context>.Node.Header, Context.Summary.Element>.Slice>?
+        var leafIterator: IndexingIterator<SummarizedTree<Context>.Node.LeafStorage.SubSequence>?
         
         @inlinable
         init(tree: SummarizedTree, startIndex: Index? = nil, endIndex: Index? = nil) {

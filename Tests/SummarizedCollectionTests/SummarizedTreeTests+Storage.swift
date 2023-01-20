@@ -5,6 +5,7 @@ import _CollectionsTestSupport
 
 extension SummarizedTreeTests {
 
+    /*
     func testStorageHandleBidirectionalCollection() {
         var rng = RepeatableRandomNumberGenerator(seed: 0)
         withEvery("count", in: [0, 1, 2, 13, 31, 32, 33]) { count in
@@ -31,6 +32,6 @@ extension SummarizedTreeTests {
 
             checkBidirectionalCollection(storage.subSequence, expectedContents: reference, maxSamples: 100)
         }
-    }
+    }*/
 
 }

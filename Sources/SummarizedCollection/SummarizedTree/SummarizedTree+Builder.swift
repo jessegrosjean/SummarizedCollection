@@ -2,6 +2,9 @@ extension SummarizedTree {
 
     public struct Builder {
         
+        public typealias Slot = Context.Slot
+        public typealias LeafStorage = SummarizedTree.Node.LeafStorage
+
         @usableFromInline
         var root: SummarizedTree
 
@@ -37,9 +40,9 @@ extension SummarizedTree {
                 let startIndex = elements.index(elements.startIndex, offsetBy: i)
                 let endIndex = elements.index(startIndex, offsetBy: j - i)
 
-                var node: Node = .init(leaf: .create(update: { handle in
-                    handle.slotsAppend(elements[startIndex..<endIndex])
-                }))
+                var node: Node = .init(leaf: LeafStorage.create(with: Slot(leafCapacity)) { handle in
+                    handle.append(contentsOf: elements[startIndex..<endIndex])
+                })
                 
                 while true {
                     if stack.last?.last?.height != node.height {

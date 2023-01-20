@@ -23,12 +23,12 @@ extension SummarizedTree: IdentifiedCollection where Element: Identifiable, Cont
             return nil
         }
         
-        var offset = leaf.elements.firstIndex { $0.id == id }!
+        var offset = Int(leaf.subSequence.firstIndex { $0.id == id }!)
         var parent = context[parentOf: ObjectIdentifier(leaf)]
         var child = ObjectIdentifier(leaf)
 
         while let p = parent {
-            for each in p.elements {
+            for each in p.subSequence {
                 if each.objectIdentifier == child {
                     break
                 } else {

@@ -11,7 +11,7 @@ extension SummarizedTree.Node: CustomDebugStringConvertible {
             }
         } else {
             result.append("<Leaf count: \(node.summary.count)>\n")
-            result.append("\(String(repeating: "  ", count: indent + 1))\(node.leaf.elements)\n")
+            result.append("\(String(repeating: "  ", count: indent + 1))\(node.leaf.subSequence)\n")
         }
     }
     
@@ -28,7 +28,7 @@ extension SummarizedTree.Node {
     
     func ensureValid(parent: Node?, ctx: Context) {
         if let contextParent = ctx[parentOf: self.objectIdentifier] {
-            assert(contextParent.elements.contains(self))
+            assert(contextParent.subSequence.contains(self))
             if ctx.maintainsBackpointers {
                 assert(parent?.inner === contextParent)
             }
@@ -39,7 +39,7 @@ extension SummarizedTree.Node {
         if isLeaf {
             assert(height == 0)
             //assert(handle.slotCount <= Context.leafCapacity)
-            assert(summary == Summary.summarize(elements: leaf.elements))
+            assert(summary == Summary.summarize(elements: leaf.subSequence))
         } else {
             assert(height > 0)
             
@@ -49,7 +49,7 @@ extension SummarizedTree.Node {
             
             assert(inner.header.slotCount <= Context.innerCapacity)
             var childrenSummary: Summary = .zero
-            for each in inner.elements {
+            for each in inner.subSequence {
                 each.ensureValid(parent: self, ctx: ctx)
                 childrenSummary += each.summary
             }

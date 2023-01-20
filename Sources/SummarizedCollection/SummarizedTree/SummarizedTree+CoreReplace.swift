@@ -9,8 +9,7 @@ extension SummarizedTree {
         
         let overflow = root.replace(
             subrange,
-            with: newElements,
-            ctx: &context
+            with: newElements
         )
         
         if let overflow {
@@ -27,8 +26,7 @@ extension SummarizedTree.Node {
     @inlinable
     mutating func replace<C>(
         _ subrange: Range<Int>,
-        with newElements: C,
-        ctx: inout Context
+        with newElements: C
     ) -> Node?
         where
             C: RandomAccessCollection, C.Element == Element
@@ -44,11 +42,10 @@ extension SummarizedTree.Node {
                 let localStart = subrange.lowerBound - startChild.start
                 let localEnd = subrange.upperBound - endChild.start
                 let overflow = mutInner {
-                    $0.replace(
-                        slot: startChild.index,
+                    $0.replaceWithOverflow(
+                        at: startChild.index,
                         subrange: localStart..<localEnd,
-                        with: newElements,
-                        ctx: &ctx
+                        with: newElements
                     )
                 }
                 
@@ -58,7 +55,7 @@ extension SummarizedTree.Node {
                     
                     if splitIndex < count {
                         var overflowTree = SummarizedTree(root: overflow)
-                        let split = split(splitIndex, ctx: &ctx)
+                        let split = split(splitIndex)
                         overflowTree.concat(split)
                         return overflowTree.root
                     } else {
@@ -68,14 +65,14 @@ extension SummarizedTree.Node {
                     return nil
                 }
             } else {
-                let trailing = split(subrange.upperBound, ctx: &ctx)
-                _ = split(subrange.lowerBound, ctx: &ctx)
+                let trailing = split(subrange.upperBound)
+                _ = split(subrange.lowerBound)
                 var insert = SummarizedTree(newElements)
                 
                 insert.concat(trailing)
 
                 if insert.height <= height {
-                    if let overflow = concat(insert.root, ctx: &ctx) {
+                    if let overflow = concat(insert.root) {
                         return overflow
                     } else {
                         return nil
@@ -86,36 +83,30 @@ extension SummarizedTree.Node {
             }
         } else {
             let subrange = Slot(subrange.lowerBound)..<Slot(subrange.upperBound)
-            let overflow = mutLeaf { $0.slotsReplaceSubrange(subrange, with: newElements, ctx: &ctx) }
+            let overflow = mutLeaf { $0.replaceWithOverflow(in: subrange, with: newElements) }
             return overflow
         }
     }
     
 }
 
-extension SummarizedTree.Node.InnerHandle {
+extension SummarizedTree.Node.Storage.Handle where StoredElement == SummarizedTree.Node {
 
-    public typealias Element = SummarizedTree.Element
+    public typealias Node = SummarizedTree.Node
 
     @inlinable
-    func replace<C>(
-        slot: Slot,
+    func replaceWithOverflow<C>(
+        at slot: Slot,
         subrange: Range<Int>,
-        with newElements: C,
-        ctx: inout Context
+        with newElements: C
     ) -> Node?
         where
-            C: RandomAccessCollection, C.Element == Element
+            C: RandomAccessCollection, C.Element == SummarizedTree.Element
     {
         assertMutable()
-        
-        let before = slotsPointer(at: slot).pointee.summary
-        let overflow = slotsPointer(at: slot).pointee.replace(
-            subrange,
-            with: newElements,
-            ctx: &ctx
-        )
-        let after = slotsPointer(at: slot).pointee.summary
+        let before = storedElementPointer(at: slot).pointee.summary
+        let overflow = storedElementPointer(at: slot).pointee.replace(subrange, with: newElements)
+        let after = storedElementPointer(at: slot).pointee.summary
         headerPtr.pointee.summary -= before
         headerPtr.pointee.summary += after
         return overflow
@@ -123,14 +114,13 @@ extension SummarizedTree.Node.InnerHandle {
 
 }
 
-extension SummarizedTree.Node.LeafHandle {
+extension SummarizedTree.Node.Storage.Handle where StoredElement == SummarizedTree.Element {
     
     @inlinable
-    func slotsReplaceSubrange<C>(
-        _ subrange: Range<Slot>,
-        with newElements: C,
-        ctx: inout Context
-    ) -> Node?
+    func replaceWithOverflow<C>(
+        in subrange: Range<Slot>,
+        with newElements: C
+    ) -> SummarizedTree.Node?
         where
             C: RandomAccessCollection, C.Element == Element
     {
@@ -142,20 +132,17 @@ extension SummarizedTree.Node.LeafHandle {
         let endLength = Int(slotCount) + changeInLength
         
         if endLength <= slotCapacity {
-            slotsReplaceSubrange(start..<end, with: newElements)
+            replaceSubrange(start..<end, with: newElements)
             return nil
         } else {
-            defer { didChangeSlots() }
-
-            let trailing = slotsSplit(at: end, ctx: &ctx)
-            slotsReplaceSubrange(start..<slotCount, with: [])
-            let take = min(Int(slotCapacity - start), newElements.count)
-            slotsAppend(newElements.prefix(take))
+            let trailing = split(at: end)
+            removeSubrange(start..<slotCount)
+            let take = Swift.min(Int(slotCapacity - start), newElements.count)
+            append(contentsOf: newElements.prefix(take))
 
             var builder = SummarizedTree.Builder()
             builder.concat(elements: newElements.suffix(newElements.count - take))
-            builder.concat(elements: trailing.elements)
-            //fatalError()
+            builder.concat(elements: trailing.subSequence)
             return builder.build().root
         }
     }

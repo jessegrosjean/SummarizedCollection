@@ -61,9 +61,9 @@ extension SummarizedTree.Node {
         }
 
         @inlinable
-        var children: InnerStorage.Slice {
+        var children: InnerStorage.SubSequence {
             if case .inner(let inner) = self {
-                return inner._withUnsafeGuaranteedRef { $0.elements }
+                return inner._withUnsafeGuaranteedRef { $0.subSequence }
             }
             fatalError()
         }
@@ -79,9 +79,9 @@ extension SummarizedTree.Node {
 
         @inlinable
         @inline(__always)
-        var elements: LeafStorage.Slice {
+        var elements: LeafStorage.SubSequence {
             if case .leaf(let leaf) = self {
-                return leaf._withUnsafeGuaranteedRef { $0.elements }
+                return leaf._withUnsafeGuaranteedRef { $0.subSequence }
             }
             fatalError()
         }

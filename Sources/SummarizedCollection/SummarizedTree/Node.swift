@@ -41,9 +41,6 @@ extension SummarizedTree {
         var _inner: InnerStorage?
 
         @usableFromInline
-        var _inner2: InnerStorage2?
-
-        @usableFromInline
         var _leaf: LeafStorage?
     }
     
@@ -54,10 +51,6 @@ extension SummarizedTree.Node {
     @inlinable
     @inline(__always)
     public var inner: InnerStorage { _inner.unsafelyUnwrapped }
-
-    @inlinable
-    @inline(__always)
-    public var inner2: InnerStorage2 { _inner2.unsafelyUnwrapped }
 
     @inlinable
     @inline(__always)
@@ -90,8 +83,8 @@ extension SummarizedTree.Node {
     var isInner: Bool { _inner != nil }
     
     @inlinable
-    var children: InnerStorage.Slice {
-        inner.elements
+    var children: InnerStorage.SubSequence {
+        inner.subSequence
     }
 
     @inlinable
@@ -99,8 +92,8 @@ extension SummarizedTree.Node {
     var isLeaf: Bool { _leaf != nil }
 
     @inlinable
-    var elements: LeafStorage.Slice {
-        leaf.elements
+    var elements: LeafStorage.SubSequence {
+        leaf.subSequence
     }
 
     @inlinable
@@ -108,14 +101,14 @@ extension SummarizedTree.Node {
 
     @inlinable
     init() {
-        _leaf = .create()
+        _leaf = .create(with: Context.leafCapacity)
         _header = _leaf.unsafelyUnwrapped.header
     }
 
     @inlinable
     init<C>(inner: C) where C: Collection, C.Element == Node {
-        self.init(inner: InnerStorage.create { handle in
-            handle.slotsAppend(inner)
+        self.init(inner: InnerStorage.create(with: Context.innerCapacity) { handle in
+            handle.append(contentsOf: inner)
         })
     }
 
@@ -127,9 +120,9 @@ extension SummarizedTree.Node {
 
     @inlinable
     init<C>(leaf: C) where C: Collection, C.Element == Element {
-        self.init(leaf: .create(update: { handle in
-            handle.slotsAppend(leaf)
-        }))
+        self.init(leaf: .create(with: Context.leafCapacity) { handle in
+            handle.append(contentsOf: leaf)
+        })
     }
 
     @inlinable
@@ -139,13 +132,11 @@ extension SummarizedTree.Node {
     }
 
     @inlinable
-    init(combining child1: Self, and child2: Self, ctx: inout Context) {
+    init(combining child1: Self, and child2: Self) {
         assert(child1.height == child2.height)
-        let height = child1.height
-        self.init(inner: InnerStorage.create { handle in
-            handle.slotsAppend(child1, ctx: &ctx)
-            handle.slotsAppend(child2, ctx: &ctx)
-            handle.headerPtr.pointee.height = height + 1
+        self.init(inner: InnerStorage.create(with: Context.innerCapacity) { handle in
+            handle.append(child1)
+            handle.append(child2)
         })
     }
 
