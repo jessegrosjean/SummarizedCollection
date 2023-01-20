@@ -20,7 +20,7 @@ public struct ListSummary<Element>: CollectionSummary {
     public static func summarize<C>(elements: C) -> Self where C : BidirectionalCollection, C.Element == Element {
         .init(count: elements.count)
     }
-    
+
     public static func + (lhs: Self, rhs: Self) -> Self {
         .init(count: lhs.count + rhs.count)
     }

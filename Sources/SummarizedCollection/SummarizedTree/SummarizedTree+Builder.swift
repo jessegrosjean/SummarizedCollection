@@ -20,26 +20,27 @@ extension SummarizedTree {
         public mutating func concat(node: Node) {
             root.concat(node)
         }
-        
+                
         @inlinable
-        public mutating func concat<C>(elements: C) where C: RandomAccessCollection, C.Element == Element {
+        public mutating func concat<C>(elements: C) where C: Collection, C.Element == Element {
             if elements.count <= leafCapacity {
                 root.append(contentsOf: elements)
-            } else {
-                concat(elements: ContiguousArray(elements[...]))
+                return
             }
-        }
-        
-        @inlinable
-        public mutating func concat(elements: ContiguousArray<Element>) {
+
             var stack: [ContiguousArray<Node>] = []
             let count = elements.count
             var i = 0
 
             while i < count {
                 let j = Swift.min(i + leafCapacity, count)
+                let startIndex = elements.index(elements.startIndex, offsetBy: i)
+                let endIndex = elements.index(startIndex, offsetBy: j - i)
+
+                var node: Node = .init(leaf: .create(update: { handle in
+                    handle.slotsAppend(elements[startIndex..<endIndex])
+                }))
                 
-                var node: Node = .init(leaf: .init(elements[i..<j]))
                 while true {
                     if stack.last?.last?.height != node.height {
                         stack.append([])

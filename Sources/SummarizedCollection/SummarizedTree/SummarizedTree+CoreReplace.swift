@@ -23,10 +23,7 @@ extension SummarizedTree {
 }
 
 extension SummarizedTree.Node {
-    
-    @usableFromInline
-    typealias SubSequence = SummarizedTree.SubSequence
-    
+        
     @inlinable
     mutating func replace<C>(
         _ subrange: Range<Int>,
@@ -99,10 +96,9 @@ extension SummarizedTree.Node {
 extension SummarizedTree.Node.InnerHandle {
 
     public typealias Element = SummarizedTree.Element
-    public typealias SubSequence = SummarizedTree.SubSequence
 
     @inlinable
-    mutating func replace<C>(
+    func replace<C>(
         slot: Slot,
         subrange: Range<Int>,
         with newElements: C,
@@ -111,16 +107,17 @@ extension SummarizedTree.Node.InnerHandle {
         where
             C: RandomAccessCollection, C.Element == Element
     {
-        let slot = Int(slot)
-        let before = storage.slots[slot].summary
-        let overflow = storage.slots[slot].replace(
+        assertMutable()
+        
+        let before = slotsPointer(at: slot).pointee.summary
+        let overflow = slotsPointer(at: slot).pointee.replace(
             subrange,
             with: newElements,
             ctx: &ctx
         )
-        let after = storage.slots[slot].summary
-        header.summary -= before
-        header.summary += after
+        let after = slotsPointer(at: slot).pointee.summary
+        headerPtr.pointee.summary -= before
+        headerPtr.pointee.summary += after
         return overflow
     }
 
@@ -129,7 +126,7 @@ extension SummarizedTree.Node.InnerHandle {
 extension SummarizedTree.Node.LeafHandle {
     
     @inlinable
-    mutating func slotsReplaceSubrange<C>(
+    func slotsReplaceSubrange<C>(
         _ subrange: Range<Slot>,
         with newElements: C,
         ctx: inout Context
@@ -137,24 +134,28 @@ extension SummarizedTree.Node.LeafHandle {
         where
             C: RandomAccessCollection, C.Element == Element
     {
-        let start = Int(subrange.lowerBound)
-        let end = Int(subrange.upperBound)
+        assertMutable()
+        
+        let start = subrange.lowerBound
+        let end = subrange.upperBound
         let changeInLength = newElements.count - subrange.count
         let endLength = Int(slotCount) + changeInLength
-
-        defer { didChangeSlots() }
         
-        if endLength <= header.slotCapacity {
-            storage.slots.replaceSubrange(start..<end, with: newElements)
+        if endLength <= slotCapacity {
+            slotsReplaceSubrange(start..<end, with: newElements)
             return nil
         } else {
-            let trailing = storage.slots.split(index: end)
-            storage.slots.removeSubrange(start...)
-            let take = min((Int(storage.header.slotCapacity) - start), newElements.count)
-            storage.slots.append(contentsOf: newElements.prefix(take))
+            defer { didChangeSlots() }
+
+            let trailing = slotsSplit(at: end, ctx: &ctx)
+            slotsReplaceSubrange(start..<slotCount, with: [])
+            let take = min(Int(slotCapacity - start), newElements.count)
+            slotsAppend(newElements.prefix(take))
+
             var builder = SummarizedTree.Builder()
             builder.concat(elements: newElements.suffix(newElements.count - take))
-            builder.concat(elements: trailing)
+            builder.concat(elements: trailing.elements)
+            //fatalError()
             return builder.build().root
         }
     }

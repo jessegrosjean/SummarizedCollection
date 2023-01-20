@@ -47,13 +47,13 @@ extension SummarizedTree.Node {
             let concatChildren = InnerStorage.create()
             
             if heightDelta == 0 {
-                concatChildren.append(node.inner, ctx: &ctx)
+                concatChildren.mut { $0.slotsAppend(node.inner, ctx: &ctx) }
             } else if heightDelta == 1 && !node.slotsUnderflowing {
-                concatChildren.append(node, ctx: &ctx)
+                concatChildren.mut { $0.slotsAppend(node, ctx: &ctx) }
             } else {
                 mutInner { handle in
                     if let overflow = handle[handle.slotCount - 1].concat(node, ctx: &ctx) {
-                        concatChildren.append(overflow, ctx: &ctx)
+                        concatChildren.mut { $0.slotsAppend(overflow, ctx: &ctx) }
                     }
                 }
             }
@@ -62,7 +62,7 @@ extension SummarizedTree.Node {
                 mutInner { $0.slotsAppend(concatChildren, ctx: &ctx) }
             } else {
                 var overflow: Node = .init(inner: concatChildren)
-                mutInner(with: &overflow) { $0.slotsDistribute(with: &$1, distribute: .even, ctx: &ctx) }
+                mutInner(with: &overflow) { $0.slotsDistribute(with: $1, distribute: .even, ctx: &ctx) }
                 return overflow
             }
         } else {
@@ -70,7 +70,7 @@ extension SummarizedTree.Node {
                 mutLeaf { $0.slotsAppend(node.leaf, ctx: &ctx) }
             } else if slotsUnderflowing {
                 var node = node
-                mutLeaf(with: &node) { $0.slotsDistribute(with: &$1, distribute: .even, ctx: &ctx) }
+                mutLeaf(with: &node) { $0.slotsDistribute(with: $1, distribute: .even, ctx: &ctx) }
                 return node
             } else {
                 return node

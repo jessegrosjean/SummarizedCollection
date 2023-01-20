@@ -6,6 +6,7 @@ extension SummarizedTree {
         public typealias Element = Context.Element
         public typealias Summary = Context.Summary
         public typealias Node = SummarizedTree.Node
+        public typealias LeafStorage = Node.LeafStorage
         public typealias IndexDimension = CollectionIndexDimension<Summary>
 
         @usableFromInline
@@ -276,11 +277,11 @@ extension SummarizedTree.Cursor {
         }
     }
     
-    func sliceToPrevBoundary<B>(_ type: B.Type) -> ArraySlice<Element>? where B: CollectionBoundary, B.Element == Element {
+    func sliceToPrevBoundary<B>(_ type: B.Type) -> LeafStorage.Slice? where B: CollectionBoundary, B.Element == Element {
         fatalError()
     }
 
-    func sliceToNextBoundary<B>(_ type: B.Type) -> ArraySlice<Element>? where B: CollectionBoundary, B.Element == Element {
+    func sliceToNextBoundary<B>(_ type: B.Type) -> LeafStorage.Slice? where B: CollectionBoundary, B.Element == Element {
         fatalError()
     }
 
@@ -432,7 +433,7 @@ extension SummarizedTree.Cursor {
 
     @inlinable
     @inline(__always)
-    public mutating func leaf() -> ArraySlice<Element> {
+    public mutating func leaf() -> LeafStorage.Slice {
         if isBeforeStart {
             resetToStart()
         } else if isAfterEnd {
@@ -443,7 +444,7 @@ extension SummarizedTree.Cursor {
     
     @inlinable
     @inline(__always)
-    public func uncheckedLeaf() -> ArraySlice<Element> {
+    public func uncheckedLeaf() -> LeafStorage.Slice {
         assert(!isBeforeStart)
         assert(!isAfterEnd)
         return stack.last.storage.elements
@@ -483,14 +484,14 @@ extension SummarizedTree.Cursor {
     }
     
     @inlinable
-    public func peekPrevLeaf() -> ArraySlice<Element>? {
+    public func peekPrevLeaf() -> LeafStorage.Slice? {
         if stack.depth <= 1 {
             var copy = Cursor(self)
             return copy.prevLeaf()
         } else {
             let parent = stack[stack.depth - 2]
             if parent.childIndex > 0 {
-                return parent.storage.child(at: parent.childIndex - 1).rdLeaf { $0.slots[...] }
+                return parent.storage.child(at: parent.childIndex - 1).leaf.elements
             } else {
                 var copy = Cursor(self)
                 return copy.prevLeaf()
@@ -499,7 +500,7 @@ extension SummarizedTree.Cursor {
     }
         
     @inlinable
-    public mutating func prevLeaf() -> ArraySlice<Element>? {
+    public mutating func prevLeaf() -> LeafStorage.Slice? {
         if isBeforeStart {
             return nil
         } else if isAtStart {
@@ -541,14 +542,14 @@ extension SummarizedTree.Cursor {
     }
     
     @inlinable
-    public func peakNextLeaf() -> ArraySlice<Element>? {
+    public func peakNextLeaf() -> LeafStorage.Slice? {
         if stack.depth <= 1 {
             var copy = Cursor(self)
             return copy.nextLeaf()
         } else {
             let parent = stack[stack.depth - 2]
             if parent.childIndex < parent.storage.children.count + 1 {
-                return parent.storage.child(at: parent.childIndex + 1).elements
+                return parent.storage.child(at: parent.childIndex + 1).leaf.elements
             } else {
                 var copy = Cursor(self)
                 return copy.nextLeaf()
@@ -557,12 +558,12 @@ extension SummarizedTree.Cursor {
     }
 
     @inlinable
-    public mutating func nextLeaf() -> ArraySlice<Element>? {
+    public mutating func nextLeaf() -> LeafStorage.Slice? {
         nextLeafInternal()
     }
 
     @inlinable
-    mutating func nextLeafInternal() -> ArraySlice<Element>? {
+    mutating func nextLeafInternal() -> LeafStorage.Slice? {
         if isBeforeStart {
             resetToStart()
             return leaf()
@@ -629,7 +630,7 @@ extension SummarizedTree.Cursor {
     // MARK: Seeking Internal
 
     public typealias ContainsClosure = (_ start: Summary, _ node: Summary) -> Bool
-    public typealias SeekClosure = (_ start: Summary, _ node: Summary, Int, ArraySlice<Element>) -> Int?
+    public typealias SeekClosure = (_ start: Summary, _ node: Summary, Int, LeafStorage.Slice) -> Int?
 
     @inlinable
     public mutating func seek(contains: ContainsClosure, seek: SeekClosure) -> Int? {
@@ -686,7 +687,7 @@ extension SummarizedTree.Cursor {
                         start: position.nodeStart,
                         summary: leafSummary,
                         index: position.offset,
-                        leaf: stackItem.storage.elements[...]
+                        leaf: stackItem.storage.elements
                     ) {
                         return .found
                     }
@@ -729,7 +730,7 @@ extension SummarizedTree.Cursor {
                         start: position.nodeStart,
                         summary: leafSummary,
                         index: 0,
-                        leaf: storage.elements[...]
+                        leaf: storage.elements
                     ))
                     return
                 } else {
@@ -751,7 +752,7 @@ extension SummarizedTree.Cursor {
         start: Summary,
         summary: Summary,
         index: Int,
-        leaf: ArraySlice<Element>
+        leaf: LeafStorage.Slice
     ) -> Bool {
         if let found = seek(start, summary, index, leaf) {
             position.offset = found

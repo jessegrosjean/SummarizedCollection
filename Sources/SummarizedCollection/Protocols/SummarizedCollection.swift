@@ -22,7 +22,7 @@ public protocol SummarizedCollection: BidirectionalCollection {
     where
         B.Summary == Summary,
         D.Summary == Summary
- 
+
 }
 
 extension SummarizedCollection {

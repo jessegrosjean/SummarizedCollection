@@ -6,16 +6,12 @@ extension SummarizedTree.Node: CustomDebugStringConvertible {
         
         if node.isInner {
             result.append("<Inner height: \(node.height) count: \(node.summary.count)>\n")
-            node.rdInner { handle in
-                for each in handle.slots {
-                    debugNode(node: each, indent: indent + 1, result: &result)
-                }
+            for each in node.children {
+                debugNode(node: each, indent: indent + 1, result: &result)
             }
         } else {
             result.append("<Leaf count: \(node.summary.count)>\n")
-            node.rdLeaf { handle in
-                result.append("\(String(repeating: "  ", count: indent + 1))\(handle.slots)\n")
-            }
+            result.append("\(String(repeating: "  ", count: indent + 1))\(node.leaf.elements)\n")
         }
     }
     
@@ -32,7 +28,7 @@ extension SummarizedTree.Node {
     
     func ensureValid(parent: Node?, ctx: Context) {
         if let contextParent = ctx[parentOf: self.objectIdentifier] {
-            assert(contextParent.slots.contains(self))
+            assert(contextParent.elements.contains(self))
             if ctx.maintainsBackpointers {
                 assert(parent?.inner === contextParent)
             }
@@ -42,10 +38,8 @@ extension SummarizedTree.Node {
         
         if isLeaf {
             assert(height == 0)
-            rdLeaf { handle in
-                //assert(handle.slotCount <= Context.leafCapacity)
-                assert(summary == Summary.summarize(elements: handle.slots))
-            }
+            //assert(handle.slotCount <= Context.leafCapacity)
+            assert(summary == Summary.summarize(elements: leaf.elements))
         } else {
             assert(height > 0)
             
@@ -53,15 +47,13 @@ extension SummarizedTree.Node {
                 assert(height == parent.height - 1)
             }
             
-            rdInner { handle in
-                assert(handle.slotCount <= Context.innerCapacity)
-                var childrenSummary: Summary = .zero
-                for each in handle.slots {
-                    each.ensureValid(parent: self, ctx: ctx)
-                    childrenSummary += each.summary
-                }
-                assert(summary == childrenSummary)
+            assert(inner.header.slotCount <= Context.innerCapacity)
+            var childrenSummary: Summary = .zero
+            for each in inner.elements {
+                each.ensureValid(parent: self, ctx: ctx)
+                childrenSummary += each.summary
             }
+            assert(inner.header.summary == childrenSummary)
         }
     }
     

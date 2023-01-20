@@ -6,8 +6,7 @@ extension SummarizedTree {
         public typealias Summary = Context.Summary
         public typealias Slot = Context.Slot
         
-        @usableFromInline
-        struct Header {
+        public struct Header {
             @usableFromInline
             var height: UInt8
             
@@ -84,17 +83,17 @@ extension SummarizedTree.Node {
     var isInner: Bool { _inner != nil }
     
     @inlinable
-    var children: ArraySlice<Node> {
-        rdInner { $0.slots }[...]
+    var children: InnerStorage.Slice {
+        inner.elements
     }
-    
+
     @inlinable
     @inline(__always)
     var isLeaf: Bool { _leaf != nil }
 
     @inlinable
-    var elements: ArraySlice<Element> {
-        rdLeaf { $0.slots }[...]
+    var elements: LeafStorage.Slice {
+        leaf.elements
     }
 
     @inlinable
@@ -107,8 +106,10 @@ extension SummarizedTree.Node {
     }
 
     @inlinable
-    init(inner: ContiguousArray<Node>) {
-        self.init(inner: .init(slots: inner))
+    init<C>(inner: C) where C: Collection, C.Element == Node {
+        self.init(inner: InnerStorage.create { handle in
+            handle.slotsAppend(inner)
+        })
     }
 
     @inlinable
@@ -118,8 +119,10 @@ extension SummarizedTree.Node {
     }
 
     @inlinable
-    init(leaf: ContiguousArray<Element>) {
-        self.init(leaf: .init(slots: leaf))
+    init<C>(leaf: C) where C: Collection, C.Element == Element {
+        self.init(leaf: .create(update: { handle in
+            handle.slotsAppend(leaf)
+        }))
     }
 
     @inlinable
@@ -132,10 +135,10 @@ extension SummarizedTree.Node {
     init(combining child1: Self, and child2: Self, ctx: inout Context) {
         assert(child1.height == child2.height)
         let height = child1.height
-        self.init(inner: .create() { handle in
-            handle.slotAppend(child1, ctx: &ctx)
-            handle.slotAppend(child2, ctx: &ctx)
-            handle.header.height = height + 1
+        self.init(inner: InnerStorage.create { handle in
+            handle.slotsAppend(child1, ctx: &ctx)
+            handle.slotsAppend(child2, ctx: &ctx)
+            handle.headerPtr.pointee.height = height + 1
         })
     }
 
@@ -143,7 +146,7 @@ extension SummarizedTree.Node {
     init(copying node: Self) {
         if node.isInner {
             _inner = node.inner.copy()
-            _header = node.inner.header //.init(inner: node.inner.header, slotCount: node.slotCount)
+            _header = node.inner.header
         } else {
             _leaf = node.leaf.copy()
             _header = node.leaf.header

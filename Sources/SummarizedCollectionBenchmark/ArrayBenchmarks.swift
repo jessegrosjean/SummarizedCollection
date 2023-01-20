@@ -3,6 +3,7 @@ import CollectionsBenchmark
 extension Benchmark {
     
     public mutating func addArrayBenchmarks() {
+        /*
         addSimple(
             title: "Array<Int> init from range",
             input: Int.self
@@ -181,7 +182,7 @@ extension Benchmark {
         ) { input in
             blackHole(input.kalimbaOrdered3())
         }
-        
+        */
         add(
             title: "Array<Int> random insertions",
             input: Insertions.self
@@ -197,7 +198,7 @@ extension Benchmark {
                 blackHole(array)
             }
         }
-        
+        /*
         add(
             title: "Array<Int> random insertions, reserving capacity",
             input: Insertions.self
@@ -262,6 +263,7 @@ extension Benchmark {
                 blackHole(array)
             }
         }
+         */
     }
     
 }

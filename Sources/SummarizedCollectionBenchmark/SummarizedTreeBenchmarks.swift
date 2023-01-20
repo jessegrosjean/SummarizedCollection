@@ -14,8 +14,9 @@ extension Benchmark {
             let list = List(0 ..< size)
             OSLog.pointsOfInterest.end(name: "List<Int> init from range")
             blackHole(list)
-        }
+        }*/
         
+        /*
         add(
             title: "List<Int> sequential iteration",
             input: [Int].self
@@ -71,6 +72,7 @@ extension Benchmark {
         }
          */
 
+    /*
         add(
             title: "List<Int> append",
             input: [Int].self
@@ -88,7 +90,27 @@ extension Benchmark {
                 blackHole(list)
             }
         }
+     */
+        
+        add(
+            title: "List<Int> random insertions",
+            input: Insertions.self
+        ) { insertions in
+            return { timer in
+                let insertions = insertions.values
+                var list = List<Int>()
+                timer.measure {
+                    OSLog.pointsOfInterest.begin(name: "List<Int> random insertions")
+                    for i in insertions.indices {
+                        list.replace(i..<i, with: CollectionOfOne(i))
+                    }
+                    OSLog.pointsOfInterest.end(name: "List<Int> random insertions")
+                }
+                blackHole(list)
+            }
+        }
 
+         
         /*
         add(
             title: "List<Int> endIndex",

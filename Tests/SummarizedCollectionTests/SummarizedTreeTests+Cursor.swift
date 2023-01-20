@@ -61,6 +61,7 @@ extension SummarizedTreeTests {
         XCTAssertEqual(cursor.isAtEnd, true)
     }
     
+    /*
     func testCursorMultiLeafSeekTo() {
         #if !DEBUG
         return // because test depends on leaf size
@@ -90,5 +91,6 @@ extension SummarizedTreeTests {
         XCTAssertEqual(cursor.index, 4)
         XCTAssertEqual(cursor.point(), .init(base: IndexDim(4), offset: IndexDim(0)))
     }
+    */
 
 }

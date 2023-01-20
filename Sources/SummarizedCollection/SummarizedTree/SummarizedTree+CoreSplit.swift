@@ -26,7 +26,7 @@ extension SummarizedTree {
     @inlinable
     mutating func pullUpSingularNodes() {
         while !root.isLeaf && root.slotCount == 1 {
-            root = root.rdInner { $0.slots[0] }
+            root = root.rdInner { $0[0] }
         }
     }
 
@@ -41,25 +41,25 @@ extension SummarizedTree.Node {
                 let child = handle.findChild(containing: index)
                 
                 if index == child.start {
-                    return .init(inner: handle.slotSplit(at: child.index, ctx: &ctx))
+                    return .init(inner: handle.slotsSplit(at: child.index, ctx: &ctx))
                 } else if index == child.end {
-                    return .init(inner: handle.slotSplit(at: child.index + 1, ctx: &ctx))
+                    return .init(inner: handle.slotsSplit(at: child.index + 1, ctx: &ctx))
                 } else {
-                    let splitChildren = handle.slotSplit(at: child.index + 1, ctx: &ctx)
-                    let splitNode = handle.storage.slots[Int(child.index)].split(index - child.start, ctx: &ctx)
+                    let splitChildren = handle.slotsSplit(at: child.index + 1, ctx: &ctx)
+                    let splitNode = handle[child.index].split(index - child.start, ctx: &ctx)
                     
                     handle.didChangeSlots()
                     
                     splitChildren.mut { handle in
-                        handle.header.height = splitNode.height + 1
-                        handle.slotInsert(splitNode, at: 0, ctx: &ctx)
+                        handle.headerPtr.pointee.height = splitNode.height + 1
+                        handle.slotsInsert(splitNode, at: 0, ctx: &ctx)
                     }
                     
                     return .init(inner: splitChildren)
                 }
             }
         } else {
-            return mutLeaf { .init(leaf: $0.slotSplit(at: Slot(index), ctx: &ctx)) }
+            return mutLeaf { .init(leaf: $0.slotsSplit(at: Slot(index), ctx: &ctx)) }
         }
     }
     
@@ -127,27 +127,29 @@ extension SummarizedTree.Node.InnerHandle {
             }
         }
         
-        assert(index == header.summary.count)
+        assert(index == headerPtr.pointee.summary.count)
         
         startIndex -= eachCount
         
         return .init(
-            index: Slot(slots.count - 1),
+            index: slotCount - 1,
             start: startIndex,
             end: startIndex + eachCount
         )
     }
 
     @inlinable
-    mutating func zipFixLeft(ctx: inout Context) -> Bool {
+    func zipFixLeft(ctx: inout Context) -> Bool {
+        assertMutable()
+
         var didStuff = false
         
         while true {
-            if slotCount > 1 && storage.slots[0].slotsUnderflowing {
+            if slotCount > 1 && self[0].slotsUnderflowing {
                 didStuff = slotsMergeOrDistribute(slot1: 0, slot2: 1, ctx: &ctx) || didStuff
             }
             
-            if !storage.slots[0].zipFixLeft(ctx: &ctx) {
+            if !self[0].zipFixLeft(ctx: &ctx) {
                 break
             }
         }
@@ -156,16 +158,18 @@ extension SummarizedTree.Node.InnerHandle {
     }
 
     @inlinable
-    mutating func zipFixRight(ctx: inout Context) -> Bool {
+    func zipFixRight(ctx: inout Context) -> Bool {
+        assertMutable()
+        
         var didStuff = false
         
         while true {
             let last = slotCount - 1
-            if slotCount > 1 && storage.slots[Int(last)].slotsUnderflowing {
+            if slotCount > 1 && self[last].slotsUnderflowing {
                 didStuff = slotsMergeOrDistribute(slot1: last - 1, slot2: last, ctx: &ctx) || didStuff
             }
             
-            if !storage.slots[storage.slots.count - 1].zipFixRight(ctx: &ctx) {
+            if !self[slotCount - 1].zipFixRight(ctx: &ctx) {
                 break
             }
         }
@@ -174,27 +178,28 @@ extension SummarizedTree.Node.InnerHandle {
     }
     
     @inlinable
-    mutating func slotsMergeOrDistribute(slot1: Slot, slot2: Slot, ctx: inout Context) -> Bool {
+    func slotsMergeOrDistribute(slot1: Slot, slot2: Slot, ctx: inout Context) -> Bool {
         assert(slot1 == slot2 - 1)
         assert(slot2 < slotCount)
+        assertMutable()
 
-        let removeSlot2 = storage.slots.withUnsafeMutableBufferPointer { buffer in
-            let s1 = Int(slot1)
-            let s2 = Int(slot2)
+        let removeSlot2 = {
+            let s1 = slot1
+            let s2 = slot2
 
-            if header.height > 1 {
-                return buffer[s1].mutInner(with: &buffer[s2]) { h1, h2 in
-                    h1.slotsMergeOrDistribute(with: &h2, distribute: .even, ctx: &ctx)
+            if headerPtr.pointee.height > 1 {
+                return self[s1].mutInner(with: &self[s2]) { h1, h2 in
+                    h1.slotsMergeOrDistribute(with: h2, distribute: .even, ctx: &ctx)
                 }
             } else {
-                return buffer[s1].mutLeaf(with: &buffer[s2]) { h1, h2 in
-                    h1.slotsMergeOrDistribute(with: &h2, distribute: .even, ctx: &ctx)
+                return self[s1].mutLeaf(with: &self[s2]) { h1, h2 in
+                    h1.slotsMergeOrDistribute(with: h2, distribute: .even, ctx: &ctx)
                 }
             }
-        }
+        }()
         
         if removeSlot2 {
-            slotRemove(at: slot2, ctx: &ctx)
+            _ = slotsRemove(at: slot2, ctx: &ctx)
             return true
         } else {
             return false

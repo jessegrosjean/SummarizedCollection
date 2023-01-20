@@ -86,7 +86,8 @@ extension SummarizedTreeContext {
                 addNode(each)
             }
         } else {
-            addElements(node.elements, to: node.leaf)
+            //fatalError()
+            //addElements(node.elements, to: node.leaf)
         }
     }
 
@@ -103,7 +104,8 @@ extension SummarizedTreeContext {
                 removeNode(each)
             }
         } else {
-            removeElements(node.elements, from: node.leaf)
+            //fatalError()
+            //removeElements(node.elements, from: node.leaf)
         }
     }
 

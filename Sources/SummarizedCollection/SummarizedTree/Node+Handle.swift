@@ -34,19 +34,19 @@ extension SummarizedTree.Node {
     @inline(__always)
     mutating func mutInner<R>(
         isUnique: Bool? = nil,
-        body: (inout InnerHandle) throws -> R
+        body: (InnerHandle) throws -> R
     ) rethrows -> R {
         ensureUnique(isUnique)
         defer { updateFromStorage() }
-        return try inner.mut { try body(&$0) }
+        return try inner.mut { try body($0) }
     }
 
     @inlinable
     @inline(__always)
-    mutating func mutInner<R>(with node: inout Self, body: (inout InnerHandle, inout InnerHandle) throws -> R) rethrows -> R {
+    mutating func mutInner<R>(with node: inout Self, body: (InnerHandle, InnerHandle) throws -> R) rethrows -> R {
         try mutInner { handle in
             try node.mutInner { nodeHandle in
-                return try body(&handle, &nodeHandle)
+                return try body(handle, nodeHandle)
             }
         }
     }
@@ -55,19 +55,19 @@ extension SummarizedTree.Node {
     @inline(__always)
     mutating func mutLeaf<R>(
         isUnique: Bool? = nil,
-        body: (inout LeafHandle) throws -> R
+        body: (LeafHandle) throws -> R
     ) rethrows -> R {
         ensureUnique(isUnique)
         defer { updateFromStorage() }
-        return try leaf.mut { try body(&$0) }
+        return try leaf.mut { try body($0) }
     }
 
     @inlinable
     @inline(__always)
-    mutating func mutLeaf<R>(with node: inout Self, body: (inout LeafHandle, inout LeafHandle) throws -> R) rethrows -> R {
+    mutating func mutLeaf<R>(with node: inout Self, body: (LeafHandle, LeafHandle) throws -> R) rethrows -> R {
         try mutLeaf { handle in
             try node.mutLeaf { nodeHandle in
-                return try body(&handle, &nodeHandle)
+                return try body(handle, nodeHandle)
             }
         }
     }

@@ -1,16 +1,16 @@
 extension SummarizedTree.Node {
     
-    public final class InnerStorage: ManagedBuffer<Header, Node> {
-
+    public final class LeafStorage: ManagedBuffer<Header, Element> {
+        
         @inlinable
         static func create() -> Self {
-            unsafeDowncast(InnerStorage.create(minimumCapacity: Int(Context.innerCapacity)) { storage in
+            unsafeDowncast(LeafStorage.create(minimumCapacity: Int(Context.leafCapacity)) { storage in
                 .init(slotCapacity: Slot(storage.capacity))
             }, to: Self.self)
         }
         
         @inlinable
-        static func create(update: (InnerHandle)->()) -> Self {
+        static func create(update: (LeafHandle)->()) -> Self {
             let newStorage = Self.create()
             newStorage.mut { handle in
                 update(handle)
@@ -23,7 +23,7 @@ extension SummarizedTree.Node {
             withUnsafeMutablePointers { header, elements in
                 Self.create { copyHandle in
                     copyHandle.headerPtr.pointee = header.pointee
-                    copyHandle.nodesPtr.initialize(from: elements, count: Int(header.pointee.slotCount))
+                    copyHandle.elementsPtr.initialize(from: elements, count: Int(header.pointee.slotCount))
                 }
             }
         }
@@ -41,68 +41,68 @@ extension SummarizedTree.Node {
 
         @inlinable
         @inline(__always)
-        func rd<R>(_ body: (InnerHandle) throws -> R) rethrows -> R {
+        func rd<R>(_ body: (LeafHandle) throws -> R) rethrows -> R {
             try withUnsafeMutablePointers { header, elements in
-                try body(.init(header: header, nodes: elements))
+                try body(.init(header: header, elements: elements))
             }
         }
      
         @inlinable
         @inline(__always)
-        func mut<R>(_ body: (InnerHandle) throws -> R) rethrows -> R {
+        func mut<R>(_ body: (LeafHandle) throws -> R) rethrows -> R {
             try self.rd {
-                try body(InnerHandle(mutating: $0))
+                try body(LeafHandle(mutating: $0))
             }
         }
         
     }
-    
+
     @usableFromInline
-    struct InnerHandle {
+    struct LeafHandle {
         
         @usableFromInline
         typealias HeaderPointer = UnsafeMutablePointer<Header>
 
         @usableFromInline
-        typealias NodePointer = UnsafeMutablePointer<Node>
+        typealias ElementPointer = UnsafeMutablePointer<Element>
 
         @usableFromInline
         var headerPtr: HeaderPointer
         
         @usableFromInline
-        var nodesPtr: NodePointer
+        var elementsPtr: ElementPointer
         
         @usableFromInline
         let isMutable: Bool
 
         @inlinable
-        init(header: HeaderPointer, nodes: NodePointer) {
-            self.init(header: header, nodes: nodes, isMutable: false)
+        init(header: HeaderPointer, elements: ElementPointer) {
+            self.init(header: header, elements: elements, isMutable: false)
         }
 
         @inlinable
         init(mutating: Self) {
-            self.init(header: mutating.headerPtr, nodes: mutating.nodesPtr, isMutable: true)
+            self.init(header: mutating.headerPtr, elements: mutating.elementsPtr, isMutable: true)
         }
         
         @inlinable
-        init(header: HeaderPointer, nodes: NodePointer, isMutable: Bool) {
+        init(header: HeaderPointer, elements: ElementPointer, isMutable: Bool) {
             self.headerPtr = header
-            self.nodesPtr = nodes
+            self.elementsPtr = elements
             self.isMutable = isMutable
         }
-        
+
     }
 
 }
 
-extension SummarizedTree.Node.InnerHandle {
-        
-    public typealias Node = SummarizedTree.Node
-
-    @usableFromInline
-    typealias Slot = Context.Slot
+extension SummarizedTree.Node.LeafHandle {
     
+    public typealias Slot = Context.Slot
+    public typealias Node = SummarizedTree.Node
+    public typealias Element = Node.Element
+    public typealias Summary = Node.Summary
+
     @inlinable
     var slotCount: Slot {
         get { headerPtr.pointee.slotCount }
@@ -128,17 +128,17 @@ extension SummarizedTree.Node.InnerHandle {
     }
 
     @inlinable
-    var firstSlotNode: Node? {
+    var firstSlotElement: Element? {
         slotCount > 0 ? self[0] : nil
     }
 
     @inlinable
-    var lastSlotNode: Node? {
+    var lastSlotElement: Element? {
         slotCount > 0 ? self[slotCount - 1] : nil
     }
     
     @inlinable
-    subscript(_ slot: Slot) -> Node {
+    subscript(_ slot: Slot) -> Element {
         get {
             assert(0 <= slot && slot < slotCount)
             return slotsPointer(at: slot).pointee
@@ -152,20 +152,20 @@ extension SummarizedTree.Node.InnerHandle {
             slotsPointer(at: slot).initialize(to: value)
         }
     }
-    
+
     @inlinable
-    subscript(_ range: Range<Slot>) -> UnsafeBufferPointer<Node> {
+    subscript(_ range: Range<Slot>) -> UnsafeBufferPointer<Element> {
         get {
             assert(0 <= range.lowerBound && range.upperBound <= slotCount)
-            return .init(start: nodesPtr.advanced(by: Int(range.lowerBound)), count: range.count)
+            return .init(start: elementsPtr.advanced(by: Int(range.lowerBound)), count: range.count)
         }
     }
 
     @inlinable
-    func slotsSplit(at slot: Slot, ctx: inout Context) -> Node.InnerStorage {
+    func slotsSplit(at slot: Slot, ctx: inout Context) -> Node.LeafStorage {
         assert(slot <= slotCount)
 
-        return Node.InnerStorage.create() { handle in
+        return Node.LeafStorage.create() { handle in
             if slot != slotCount {
                 slotsMoveInitialized(
                     range: slot..<slotCount,
@@ -182,55 +182,7 @@ extension SummarizedTree.Node.InnerHandle {
     }
     
     @inlinable
-    func slotsInsert(_ node: Node, at slot: Slot, ctx: inout Context) {
-        assertMutable()
-        
-        assert(0 <= slot && slot <= slotCount, "Attempt to remove out-of-bounds element.")
-        assert(slotCount < slotCapacity, "Cannot insert into full node")
-      
-        slotsMoveInitialized(
-            range: slot..<slotCount,
-            to: slot + 1,
-            of: self
-        )
-
-        nodesPtr.advanced(by: Int(slot)).initialize(to: node)
-        slotCount += 1
-        didChangeSlots()
-    }
-    
-    @inlinable
-    func slotsRemove(at slot: Slot, ctx: inout Context) -> Node {
-        assertMutable()
-        
-        assert(0 <= slot && slot < slotCount, "Attempt to remove out-of-bounds element.")
-      
-        let node = slotsMove(at: slot)
-      
-        slotsMoveInitialized(
-            range: slot + 1..<slotCount,
-            to: slot,
-            of: self
-        )
-              
-        slotCount -= 1
-        didChangeSlots()
-
-        return node
-    }
-
-    @inlinable
-    func slotsAppend(_ node: Node, ctx: inout Context) {
-        assertMutable()
-        assert(slotCount < slotCapacity, "Cannot insert into full node")
-
-        nodesPtr.advanced(by: Int(slotCount)).initialize(to: node)
-        slotCount += 1
-        didChangeSlots()
-    }
-
-    @inlinable
-    func slotsAppend(_ storage: Node.InnerStorage, ctx: inout Context) {
+    func slotsAppend(_ storage: Node.LeafStorage, ctx: inout Context) {
         storage.rd { handle in
             slotsAppend(handle, ctx: &ctx)
         }
@@ -250,14 +202,14 @@ extension SummarizedTree.Node.InnerHandle {
 
     @inlinable
     func slotsAppend<C>(_ elements: C)
-        where C: Collection, Node == C.Element
+        where C: Collection, Element == C.Element
     {
         slotsReplaceSubrange(slotCount..<slotCount, with: elements)
     }
 
     @inlinable
     func slotsReplaceSubrange<C>(_ subrange: Range<Slot>, with newElements: C)
-        where C: Collection, Node == C.Element
+        where C: Collection, Element == C.Element
     {
         let changeInLength = newElements.count - subrange.count
         
@@ -272,9 +224,9 @@ extension SummarizedTree.Node.InnerHandle {
 
         // Move tail
         let tailCount = Int(slotCount - subrange.upperBound)
-        if tailCount > 0 {
+        if tailCount > 0, !subrange.isEmpty {
             let newTailStart = Int(subrange.upperBound) + changeInLength
-            let newTailStartPtr = nodesPtr.advanced(by: newTailStart)
+            let newTailStartPtr = elementsPtr.advanced(by: newTailStart)
             newTailStartPtr.moveInitialize(
                 from: slotsPointer(at: subrange.upperBound),
                 count: tailCount
@@ -283,7 +235,7 @@ extension SummarizedTree.Node.InnerHandle {
         
         // Insert new
         if !newElements.isEmpty {
-            var ptr = nodesPtr.advanced(by: Int(subrange.lowerBound))
+            var ptr = elementsPtr.advanced(by: Int(subrange.lowerBound))
             for each in newElements {
                 ptr.initialize(to: each)
                 ptr = ptr.advanced(by: 1)
@@ -295,7 +247,7 @@ extension SummarizedTree.Node.InnerHandle {
         
         didChangeSlots()
     }
-    
+        
     @inlinable
     func slotsDistribute(with handle: Self, distribute: Distribute, ctx: inout Context) {
         let total = slotCount + handle.slotCount
@@ -334,25 +286,14 @@ extension SummarizedTree.Node.InnerHandle {
 
     @inlinable
     func didChangeSlots() {
-        headerPtr.pointee.height = slotCount == 0 ? 1 : self[0].height + 1
-        headerPtr.pointee.summary = .zero
-        
-        for i in 0..<slotCount {
-            headerPtr.pointee.summary += self[i].summary
-        }
+        headerPtr.pointee.height = 0
+        headerPtr.pointee.summary = Summary.summarize(elements: UnsafeBufferPointer(start: elementsPtr, count: Int(slotCount)))
     }
 
     @inlinable
-    func slotsPointer(at slot: Slot) -> UnsafeMutablePointer<Node> {
+    func slotsPointer(at slot: Slot) -> UnsafeMutablePointer<Element> {
         assert(0 <= slot && slot < slotCount)
-        return nodesPtr.advanced(by: Int(slot))
-    }
-
-    @inlinable
-    func slotsMove(at slot: Slot) -> Node {
-        assertMutable()
-        assert(0 <= slot && slot < slotCount, "Attempted to move out-of-bounds element.")
-        return nodesPtr.advanced(by: Int(slot)).move()
+        return elementsPtr.advanced(by: Int(slot))
     }
 
     @inlinable
@@ -363,10 +304,10 @@ extension SummarizedTree.Node.InnerHandle {
         assertMutable()
         target.assertMutable()
       
-        target.nodesPtr
+        target.elementsPtr
             .advanced(by: Int(slot))
             .moveInitialize(
-                from: nodesPtr.advanced(by: Int(range.startIndex)),
+                from: elementsPtr.advanced(by: Int(range.startIndex)),
                 count: Int(range.count)
             )
     }
@@ -378,10 +319,10 @@ extension SummarizedTree.Node.InnerHandle {
       
         target.assertMutable()
       
-        target.nodesPtr
+        target.elementsPtr
             .advanced(by: Int(slot))
             .initialize(
-                from: nodesPtr.advanced(by: Int(range.startIndex)),
+                from: elementsPtr.advanced(by: Int(range.startIndex)),
                 count: Int(range.count)
             )
     }
@@ -389,10 +330,10 @@ extension SummarizedTree.Node.InnerHandle {
 }
 
 //#if DEBUG
-extension SummarizedTree.Node.InnerHandle: CustomDebugStringConvertible {
+extension SummarizedTree.Node.LeafHandle: CustomDebugStringConvertible {
 
     public var debugDescription: String {
-        var result = "<InnerHandle>["
+        var result = "<LeafHandle>["
         for s in 0..<slotCount {
             if s != 0 {
                 result.append(", ")

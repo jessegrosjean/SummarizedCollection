@@ -4,7 +4,7 @@ public protocol CollectionSummary: AdditiveArithmetic {
     static func summarize<C: BidirectionalCollection>(
         elements: C
     ) -> Self where C.Element == Element
-    
+        
     var count: Int { get }
 }
 

@@ -52,6 +52,7 @@ public struct IdentifiedListContext<Element: Identifiable>: IdentifiedSummarized
 }
 
 public struct IdentifiedListSummary<Element: Identifiable>: CollectionSummary {
+    
     public var count: Int
     
     @inlinable
@@ -68,7 +69,7 @@ public struct IdentifiedListSummary<Element: Identifiable>: CollectionSummary {
     public static func summarize<C>(elements: C) -> Self where C : BidirectionalCollection, C.Element == Element {
         .init(count: elements.count)
     }
-    
+
     @inlinable
     public static func + (lhs: Self, rhs: Self) -> Self {
         .init(count: lhs.count + rhs.count)

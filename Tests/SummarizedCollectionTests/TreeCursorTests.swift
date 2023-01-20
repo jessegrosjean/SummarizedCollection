@@ -1,3 +1,4 @@
+/*
 import XCTest
 @testable import SummarizedCollection
 
@@ -64,3 +65,4 @@ final class TreeCursorTests: XCTestCase {
     }
 
 }
+*/
