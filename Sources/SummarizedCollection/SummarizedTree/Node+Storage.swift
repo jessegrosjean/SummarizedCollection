@@ -1,6 +1,8 @@
 extension SummarizedTree.Node {
     
-    public final class Storage<Element>: ManagedBuffer<Header, Element> {
+    public final class Storage<StoredElement>: ManagedBuffer<Header, StoredElement> {
+        
+        public typealias StoredElement = StoredElement
         
         public struct Handle {
             
@@ -8,31 +10,31 @@ extension SummarizedTree.Node {
             typealias HeaderPointer = UnsafeMutablePointer<Header>
 
             @usableFromInline
-            typealias ElementPointer = UnsafeMutablePointer<Element>
+            typealias StoredElementPointer = UnsafeMutablePointer<StoredElement>
 
             @usableFromInline
             var headerPtr: HeaderPointer
             
             @usableFromInline
-            var elementsPtr: ElementPointer
+            var storedElementsPtr: StoredElementPointer
             
             @usableFromInline
             let isMutable: Bool
             
             @inlinable
-            init(header: HeaderPointer, elements: ElementPointer) {
-                self.init(header: header, elements: elements, isMutable: false)
+            init(header: HeaderPointer, storedElements: StoredElementPointer) {
+                self.init(header: header, storedElements: storedElements, isMutable: false)
             }
 
             @inlinable
             init(mutating: Self) {
-                self.init(header: mutating.headerPtr, elements: mutating.elementsPtr, isMutable: true)
+                self.init(header: mutating.headerPtr, storedElements: mutating.storedElementsPtr, isMutable: true)
             }
             
             @inlinable
-            init(header: HeaderPointer, elements: ElementPointer, isMutable: Bool) {
+            init(header: HeaderPointer, storedElements: StoredElementPointer, isMutable: Bool) {
                 self.headerPtr = header
-                self.elementsPtr = elements
+                self.storedElementsPtr = storedElements
                 self.isMutable = isMutable
             }
 
@@ -59,7 +61,7 @@ extension SummarizedTree.Node {
             withUnsafeMutablePointers { header, elements in
                 Self.create(with: header.pointee.slotCapacity) { copyHandle in
                     copyHandle.headerPtr.pointee = header.pointee
-                    copyHandle.elementsPtr.initialize(from: elements, count: Int(header.pointee.slotCount))
+                    copyHandle.storedElementsPtr.initialize(from: elements, count: Int(header.pointee.slotCount))
                 }
             }
         }
@@ -74,8 +76,8 @@ extension SummarizedTree.Node {
         @inlinable
         @inline(__always)
         func rd<R>(_ body: (Handle) throws -> R) rethrows -> R {
-            try withUnsafeMutablePointers { header, elements in
-                try body(.init(header: header, elements: elements))
+            try withUnsafeMutablePointers { header, storedElements in
+                try body(.init(header: header, storedElements: storedElements))
             }
         }
      
@@ -125,26 +127,26 @@ extension SummarizedTree.Node.Storage.Handle {
     }
     
     @inlinable
-    public subscript(_ index: Slot) -> Element {
+    public subscript(_ index: Slot) -> StoredElement {
         get {
             assert(0 <= index && index < slotCount)
-            return elementPointer(at: index).pointee
+            return storedElementPointer(at: index).pointee
         }
         
         nonmutating _modify {
             assertMutable()
             assert(0 <= index && index < slotCount)
-            var value = elementPointer(at: index).move()
+            var value = storedElementPointer(at: index).move()
             yield &value
-            elementPointer(at: index).initialize(to: value)
+            storedElementPointer(at: index).initialize(to: value)
         }
     }
     
     @inlinable
-    subscript(_ range: Range<Slot>) -> UnsafeBufferPointer<Element> {
+    subscript(_ range: Range<Slot>) -> UnsafeBufferPointer<StoredElement> {
         get {
             assert(0 <= range.lowerBound && range.upperBound <= slotCount)
-            return .init(start: elementsPtr.advanced(by: Int(range.lowerBound)), count: range.count)
+            return .init(start: storedElementsPtr.advanced(by: Int(range.lowerBound)), count: range.count)
         }
     }
 
@@ -152,7 +154,7 @@ extension SummarizedTree.Node.Storage.Handle {
     subscript(_ range: Range<Slot>) -> UnsafeRawBufferPointer {
         get {
             assert(0 <= range.lowerBound && range.upperBound <= slotCount)
-            return .init(start: elementsPtr.advanced(by: Int(range.lowerBound)), count: range.count)
+            return .init(start: storedElementsPtr.advanced(by: Int(range.lowerBound)), count: range.count)
         }
     }
 
@@ -175,7 +177,7 @@ extension SummarizedTree.Node.Storage.Handle {
 
 extension SummarizedTree.Node.Storage.Handle {
     
-    public typealias Storage = SummarizedTree.Node.Storage<Element>
+    public typealias Storage = SummarizedTree.Node.Storage<StoredElement>
     
     public enum Distribute {
 
@@ -201,7 +203,7 @@ extension SummarizedTree.Node.Storage.Handle {
         return Storage.create(with: slotCapacity) { handle in
             if index != slotCount {
                 summarize(.subtract(index..<slotCount))
-                elementsMoveInitialized(
+                moveInitializeStoredElements(
                     range: index..<slotCount,
                     to: 0,
                     of: handle
@@ -215,7 +217,7 @@ extension SummarizedTree.Node.Storage.Handle {
     }
     
     @inlinable
-    func distribute(with handle: Self, distribute: Distribute) {
+    func distributeStoredElements(with handle: Self, distribute: Distribute) {
         let total = slotCount + handle.slotCount
         let partitionIndex = distribute.partitionIndex(
             total: total,
@@ -235,12 +237,12 @@ extension SummarizedTree.Node.Storage.Handle {
     }
     
     @inlinable
-    func mergeOrDistribute(with handle: Self, distribute: Distribute) -> Bool {
+    func mergeOrDistributeStoredElements(with handle: Self, distribute: Distribute) -> Bool {
         if slotsAvailible >= handle.slotCount {
             append(contentsOf: handle)
             return true
         } else {
-            self.distribute(with: handle, distribute: distribute)
+            self.distributeStoredElements(with: handle, distribute: distribute)
             return false
         }
     }
@@ -248,8 +250,6 @@ extension SummarizedTree.Node.Storage.Handle {
 }
 
 extension SummarizedTree.Node.Storage.Handle: Collection {
-
-    public typealias Index = Slot
     
     @inlinable
     public var startIndex: Slot { 0 }
@@ -258,7 +258,7 @@ extension SummarizedTree.Node.Storage.Handle: Collection {
     public var endIndex: Slot { slotCount }
 
     @inlinable
-    public var indices: Range<Index> { startIndex..<endIndex }
+    public var indices: Range<Slot> { startIndex..<endIndex }
     
     @inlinable
     public func index(after i: Slot) -> Slot { i + 1 }
@@ -293,7 +293,7 @@ extension SummarizedTree.Node.Storage.Handle: RangeReplaceableCollection {
 
     @inlinable
     public func append(contentsOf handle: Self) {
-        handle.elementsCopyInitialized(
+        handle.copyInitializeStoredElements(
             range: 0..<handle.slotCount,
             to: slotCount,
             of: self
@@ -303,13 +303,19 @@ extension SummarizedTree.Node.Storage.Handle: RangeReplaceableCollection {
     }
 
     @inlinable
-    public func append<S>(contentsOf newElements: S) where S : Sequence, S.Element == Element {
-        fatalError()
+    public func append<S>(contentsOf newElements: S) where S : Sequence, S.Element == StoredElement {
+        var ptr = storedElementsPtr.advanced(by: Int(slotCount))
+        for each in newElements {
+            assert(slotsAvailible > 0)
+            ptr.initialize(to: each)
+            ptr = ptr.advanced(by: 1)
+            slotCount += 1
+        }
     }
 
     @inlinable
     public func replaceSubrange<C>(_ subrange: Range<Slot>, with newElements: C)
-        where C : Collection, C.Element == Element
+        where C : Collection, C.Element == StoredElement
     {
         let changeInLength = newElements.count - subrange.count
         let endLength = Slot(Int(slotCount) + changeInLength)
@@ -321,23 +327,23 @@ extension SummarizedTree.Node.Storage.Handle: RangeReplaceableCollection {
         // Remove old
         if !subrange.isEmpty {
             summarize(.subtract(subrange.startIndex..<subrange.endIndex))
-            elementPointer(at: subrange.lowerBound).deinitialize(count: subrange.count)
+            storedElementPointer(at: subrange.lowerBound).deinitialize(count: subrange.count)
         }
 
         // Move tail
         let tailCount = slotCount - subrange.upperBound
         if tailCount > 0 {
             let newTailStart = Int(subrange.upperBound) + changeInLength
-            let newTailStartPtr = elementsPtr.advanced(by: newTailStart)
+            let newTailStartPtr = storedElementsPtr.advanced(by: newTailStart)
             newTailStartPtr.moveInitialize(
-                from: elementPointer(at: subrange.upperBound),
+                from: storedElementPointer(at: subrange.upperBound),
                 count: Int(tailCount)
             )
         }
         
         // Insert new
         if !newElements.isEmpty {
-            var ptr = elementsPtr.advanced(by: Int(subrange.lowerBound))
+            var ptr = storedElementsPtr.advanced(by: Int(subrange.lowerBound))
             for each in newElements {
                 ptr.initialize(to: each)
                 ptr = ptr.advanced(by: 1)
@@ -356,41 +362,41 @@ extension SummarizedTree.Node.Storage.Handle: RangeReplaceableCollection {
 extension SummarizedTree.Node.Storage.Handle {
 
     @inlinable
-    func elementPointer(at index: Slot) -> UnsafeMutablePointer<Element> {
+    func storedElementPointer(at index: Slot) -> UnsafeMutablePointer<StoredElement> {
         assert(0 <= index && index < slotCount)
-        return elementsPtr.advanced(by: Int(index))
+        return storedElementsPtr.advanced(by: Int(index))
     }
 
     @inlinable
-    func elementMove(at index: Slot) -> Element {
+    func moveStoredElement(at index: Slot) -> StoredElement {
         assertMutable()
         assert(0 <= index && index < slotCount)
-        return elementsPtr.advanced(by: Int(index)).move()
+        return storedElementsPtr.advanced(by: Int(index)).move()
     }
 
     @inlinable
-    func elementsMoveInitialized(range: Range<Slot>, to index: Slot, of target: Self) {
+    func moveInitializeStoredElements(range: Range<Slot>, to index: Slot, of target: Self) {
         assert(range.upperBound <= slotCapacity)
         assert(index + Slot(range.count) <= target.slotCount)
         assertMutable()
         target.assertMutable()
-        target.elementsPtr
+        target.storedElementsPtr
             .advanced(by: Int(index))
             .moveInitialize(
-                from: elementsPtr.advanced(by: Int(range.startIndex)),
+                from: storedElementsPtr.advanced(by: Int(range.startIndex)),
                 count: range.count
             )
     }
 
     @inlinable
-    func elementsCopyInitialized(range: Range<Slot>, to index: Slot, of target: Self) {
+    func copyInitializeStoredElements(range: Range<Slot>, to index: Slot, of target: Self) {
         assert(range.upperBound <= slotCapacity)
         assert(index + Slot(range.count) <= target.slotCapacity)
         target.assertMutable()
-        target.elementsPtr
+        target.storedElementsPtr
             .advanced(by: Int(index))
             .initialize(
-                from: elementsPtr.advanced(by: Int(range.startIndex)),
+                from: storedElementsPtr.advanced(by: Int(range.startIndex)),
                 count: range.count
             )
     }

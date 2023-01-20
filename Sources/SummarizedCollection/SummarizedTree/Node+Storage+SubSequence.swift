@@ -1,11 +1,12 @@
 extension SummarizedTree.Node.Storage {
     
     public typealias Slot = SummarizedTree.Node.Slot
-    public typealias Base = SummarizedTree.Node.Storage<Element>
+    public typealias Base = SummarizedTree.Node.Storage<StoredElement>
 
     public struct SubSequence {
         
-        public var bounds: Range<Slot>
+        @usableFromInline
+        var bounds: Range<Slot>
 
         @usableFromInline
         var base: Base
@@ -32,7 +33,7 @@ extension SummarizedTree.Node.Storage {
 extension SummarizedTree.Node.Storage.SubSequence: Collection {
     
     public typealias Slot = SummarizedTree.Node.Slot
-    public typealias Element = Element
+    public typealias Element = StoredElement
 
     @inlinable
     public var startIndex: Slot {
@@ -55,7 +56,7 @@ extension SummarizedTree.Node.Storage.SubSequence: Collection {
     }
 
     @inlinable
-    public subscript(index: Slot) -> Element {
+    public subscript(index: Slot) -> StoredElement {
         get {
             base.withUnsafeMutablePointerToElements { elementsPtr in
                 elementsPtr.advanced(by: Int(index)).pointee

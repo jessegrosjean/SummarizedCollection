@@ -39,7 +39,10 @@ extension SummarizedTree {
         
         @usableFromInline
         var _inner: InnerStorage?
-        
+
+        @usableFromInline
+        var _inner2: InnerStorage2?
+
         @usableFromInline
         var _leaf: LeafStorage?
     }
@@ -51,6 +54,10 @@ extension SummarizedTree.Node {
     @inlinable
     @inline(__always)
     public var inner: InnerStorage { _inner.unsafelyUnwrapped }
+
+    @inlinable
+    @inline(__always)
+    public var inner2: InnerStorage2 { _inner2.unsafelyUnwrapped }
 
     @inlinable
     @inline(__always)
