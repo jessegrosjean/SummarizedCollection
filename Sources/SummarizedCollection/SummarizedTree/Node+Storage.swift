@@ -10,7 +10,7 @@ public protocol StorageHeaderUpdater {
     static func update(
         header: inout SummarizedTree<Context>.Node.Header,
         buffer: UnsafeBufferPointer<StorageElement>,
-        removing: Range<Slot>
+        removing: Range<Int>
     )
 
     @inlinable
@@ -18,7 +18,7 @@ public protocol StorageHeaderUpdater {
     static func update(
         header: inout SummarizedTree<Context>.Node.Header,
         buffer: UnsafeBufferPointer<StorageElement>,
-        adding: Range<Slot>
+        adding: Range<Int>
     )
     
 }
@@ -165,13 +165,23 @@ extension SummarizedTree.Node.Storage.Handle {
     }
 
     @inlinable
+    @inline(__always)
     func willRemove(_ range: Range<Slot>) {
-        HeaderUpdater.update(header: &headerPtr.pointee, buffer: buffer, removing: range)
+        HeaderUpdater.update(
+            header: &headerPtr.pointee,
+            buffer: buffer,
+            removing: Int(range.startIndex)..<Int(range.endIndex)
+        )
     }
 
     @inlinable
+    @inline(__always)
     func didAdd(_ range: Range<Slot>) {
-        HeaderUpdater.update(header: &headerPtr.pointee, buffer: buffer, adding: range)
+        HeaderUpdater.update(
+            header: &headerPtr.pointee,
+            buffer: buffer,
+            adding: Int(range.startIndex)..<Int(range.endIndex)
+        )
     }
 
     @inlinable

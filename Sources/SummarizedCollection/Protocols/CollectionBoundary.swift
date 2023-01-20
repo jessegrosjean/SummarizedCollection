@@ -28,10 +28,12 @@ public protocol CollectionBoundary {
 
 extension CollectionBoundary {
 
+    @inlinable
     public static var canFragment: Bool {
         false
     }
     
+    @inlinable
     public static func boundary<C>(
         before i: C.Index,
         elements: C
@@ -72,18 +74,21 @@ extension CollectionBoundary {
 
 extension BidirectionalCollection {
 
+    @inlinable
     public func isBoundary<B>(_ type: B.Type, at i: Index) -> Bool
         where B: CollectionBoundary, B.Element == Element
     {
         B.isBoundary(at: i, elements: self)
     }
 
+    @inlinable
     public func boundary<B>(_ type: B.Type, before i: Index) -> Index?
         where B: CollectionBoundary, B.Element == Element
     {
         B.boundary(before: i, elements: self)
     }
 
+    @inlinable
     public func boundary<B>(_ type: B.Type, after i: Index) -> Index?
         where B: CollectionBoundary, B.Element == Element
     {

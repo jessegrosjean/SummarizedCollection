@@ -14,6 +14,7 @@ public struct CollectionPoint<
 
 extension CollectionPoint: Comparable {
     
+    @inlinable
     public static func < (lhs: CollectionPoint<B, O>, rhs: CollectionPoint<B, O>) -> Bool {
         if lhs.base == rhs.base {
             return lhs.offset < rhs.offset
@@ -26,12 +27,15 @@ extension CollectionPoint: Comparable {
 public protocol CollectionDimension: CollectionBoundary, AdditiveArithmetic, Comparable {
     associatedtype Summary: CollectionSummary where Summary.Element == Element
 
+    @inlinable
     static func get(_ summary: Summary) -> Self
     
+    @inlinable
     static func measure<C>(_ elements: C) -> Self
     where
         C: BidirectionalCollection, C.Element == Element
 
+    @inlinable
     static func index<C>(
         to: Self,
         summary: Summary?,
@@ -40,6 +44,7 @@ public protocol CollectionDimension: CollectionBoundary, AdditiveArithmetic, Com
     where
         C: BidirectionalCollection, C.Element == Element
     
+    @inlinable
     static func point<O, C>(from dimension: O, summary: Summary?, elements: C) -> CollectionPoint<Self, O>
     where
         O: CollectionDimension, O.Summary == Summary,
@@ -47,27 +52,33 @@ public protocol CollectionDimension: CollectionBoundary, AdditiveArithmetic, Com
     
     var rawValue: Int { get set }
     
+    @inlinable
     init(_ rawValue: Int)
 }
 
 extension CollectionDimension {
     
+    @inlinable
     public static var zero: Self {
         .init(0)
     }
 
+    @inlinable
     public static func + (lhs: Self, rhs: Self) -> Self {
         .init(lhs.rawValue + rhs.rawValue)
     }
 
+    @inlinable
     public static func - (lhs: Self, rhs: Self) -> Self {
         .init(lhs.rawValue - rhs.rawValue)
     }
 
+    @inlinable
     public static func < (lhs: Self, rhs: Self) -> Bool {
         lhs.rawValue < rhs.rawValue
     }
 
+    @inlinable
     public static func isBoundary<C>(at i: C.Index, elements: C) -> Bool
         where
             C : BidirectionalCollection, Element == C.Element
@@ -90,6 +101,7 @@ extension CollectionDimension {
     ///
     /// Measures given items in this dimension until total is >= given target
     /// value. Returns item index of item where that threshhold is met.
+    @inlinable
     public static func index<C>(
         to: Self,
         summary: Summary?,
@@ -126,6 +138,7 @@ extension CollectionDimension {
     /// Returned value is a point containing this dimension's value (base) at
     /// the given index and an (offset) in index dimension. Offset is needed
     /// because given index might not lie on boundary of this base dimension.
+    @inlinable
     public static func point<O, C>(
         from offset: O,
         summary: Summary?,
@@ -167,6 +180,7 @@ extension CollectionDimension {
 
 extension SummarizedCollection {
     
+    @inlinable
     public func isBoundary<D>(_ type: D.Type, i: Index) -> Bool
         where D: CollectionDimension, D.Summary == Summary
     {
@@ -180,6 +194,7 @@ extension SummarizedCollection {
         return beforeD < indexD || indexD < afterD
     }
 
+    @inlinable
     public func boundary<D>(_ type: D.Type, before i: Index) -> Index?
         where D: CollectionDimension, D.Summary == Summary
     {
@@ -200,6 +215,7 @@ extension SummarizedCollection {
         return i
     }
 
+    @inlinable
     public func boundary<D>(_ type: D.Type, after i: Index) -> Index?
         where D: CollectionDimension, D.Summary == Summary
     {
@@ -220,6 +236,7 @@ extension SummarizedCollection {
         return i
     }
 
+    @inlinable
     public func index<D>(
         _ i: Self.Index,
         offsetBy distance: D
@@ -229,10 +246,12 @@ extension SummarizedCollection {
         return D.index(to: end, summary: nil, elements: self) ?? endIndex
     }
 
+    @inlinable
     public func index<D>(at distance: D) -> Index where D: CollectionDimension, D.Summary == Summary {
         index(startIndex, offsetBy: distance)
     }
 
+    @inlinable
     public func index<B, O>(
         _ i: Self.Index,
         offsetBy point: CollectionPoint<B, O>) -> Index
@@ -243,6 +262,7 @@ extension SummarizedCollection {
         return index(baseOffset, offsetBy: point.offset)
     }
 
+    @inlinable
     public func index<B, O>(
         at point: CollectionPoint<B, O>) -> Index
     where

@@ -10,6 +10,7 @@ public protocol CollectionSummary: AdditiveArithmetic {
 
 extension CollectionSummary {
 
+    @inlinable
     public static func summarize(element: Element) -> Self {
         summarize(elements: [element])
     }

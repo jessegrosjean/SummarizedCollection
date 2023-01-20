@@ -1,20 +1,20 @@
 extension SummarizedTree.Node {
 
+    @inlinable
+    var unmanaged: UnmanagedStorage {
+        if isInner {
+            return .inner(.passUnretained(inner))
+        } else {
+            return .leaf(.passUnretained(leaf))
+        }
+    }
+    
     @usableFromInline
     enum UnmanagedStorage {
         
         case inner(Unmanaged<InnerStorage>)
         case leaf(Unmanaged<LeafStorage>)
-        
-        @inlinable
-        init(_ node: Node) {
-            if node.isInner {
-                self = .inner(.passUnretained(node.inner))
-            } else {
-                self = .leaf(.passUnretained(node.leaf))
-            }
-        }
-        
+                
         @inlinable
         var isInner: Bool {
             if case .inner = self {
@@ -73,6 +73,15 @@ extension SummarizedTree.Node {
         func child(at slot: Slot) -> Node {
             if case .inner(let inner) = self {
                 return inner._withUnsafeGuaranteedRef { $0.rd { $0[slot] } }
+            }
+            fatalError()
+        }
+
+        @inlinable
+        @inline(__always)
+        func unmanagedStorage(at slot: Slot) -> UnmanagedStorage {
+            if case .inner(let inner) = self {
+                return inner._withUnsafeGuaranteedRef { $0.rd { $0[slot].unmanaged } }
             }
             fatalError()
         }

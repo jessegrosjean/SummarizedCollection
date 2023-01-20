@@ -8,6 +8,7 @@ public protocol IdentifiedCollection: Collection where Element: Identifiable {
 
 extension IdentifiedCollection {
 
+    @inlinable
     public func offset(id: ID) -> Int? {
         for (i, each) in enumerated() {
             if each.id == id {

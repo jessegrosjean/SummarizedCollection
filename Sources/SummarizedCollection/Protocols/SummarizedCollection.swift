@@ -27,10 +27,12 @@ public protocol SummarizedCollection: BidirectionalCollection {
 
 extension SummarizedCollection {
     
+    @inlinable
     public var summary: Summary {
         summary(at: endIndex)
     }
     
+    @inlinable
     public func summary(at index: Index) -> Summary {
         var summary = Summary.zero
         for i in indices {
@@ -43,6 +45,7 @@ extension SummarizedCollection {
         return summary
     }
 
+    @inlinable
     public func measure<D>(to i: Index? = nil) -> D where D: CollectionDimension, D.Summary == Summary {
         if let index = i {
             return .get(summary(at: index))
@@ -51,6 +54,7 @@ extension SummarizedCollection {
         }
     }
     
+    @inlinable
     public func pointToDimension<B, D>(
         point: CollectionPoint<B, D>
     ) -> D?
@@ -62,6 +66,7 @@ extension SummarizedCollection {
         return measure(to: baseIndex) + point.offset
     }
     
+    @inlinable
     public func dimensionToPoint<D, B>(
         _ dimension: D
     ) -> CollectionPoint<B, D>?

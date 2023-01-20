@@ -8,15 +8,15 @@ extension SummarizedTree.Node {
         public typealias StorageElement = Element
         
         @inlinable
-        public static func update(header: inout Header, buffer: UnsafeBufferPointer<StorageElement>, adding: Range<Slot>) {
+        public static func update(header: inout Header, buffer: UnsafeBufferPointer<StorageElement>, adding: Range<Int>) {
             header.height = 0
-            header.summary += Summary.summarize(elements: buffer[Int(adding.startIndex)..<Int(adding.endIndex)])
+            header.summary += Summary.summarize(elements: buffer[adding])
         }
         
         @inlinable
-        public static func update(header: inout Header, buffer: UnsafeBufferPointer<StorageElement>, removing: Range<Slot>) {
+        public static func update(header: inout Header, buffer: UnsafeBufferPointer<StorageElement>, removing: Range<Int>) {
             header.height = 0
-            header.summary -= Summary.summarize(elements: buffer[Int(removing.startIndex)..<Int(removing.endIndex)])
+            header.summary -= Summary.summarize(elements: buffer[removing])
         }
 
     }

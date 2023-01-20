@@ -112,7 +112,7 @@ extension SummarizedTree {
             root: Node,
             version: Int
         ) {
-            let root: UnmanagedStorage = .init(root)
+            let root: UnmanagedStorage = root.unmanaged
             self.root = root
             self.version = version
             self.stack = .init(repeating: .init(storage: root, childIndex: 0))
@@ -163,6 +163,7 @@ extension SummarizedTree.Cursor {
     }
 
     @inlinable
+    @inline(__always)
     public mutating func nextElement() -> Element? {
         if index == root.count {
             return nil
@@ -515,8 +516,8 @@ extension SummarizedTree.Cursor {
                     if stackItem.childIndex > 0 {
                         let newIndex = stackItem.childIndex - 1
                         push(storage: stackItem.storage, childIndex: newIndex)
-                        let child = stackItem.storage.child(at: newIndex)
-                        descendToLastLeaf(.init(child))
+                        let child = stackItem.storage.unmanagedStorage(at: newIndex)
+                        descendToLastLeaf(child)
                         position.moveBackward(nodeSummary: child.summary)
                         return leaf()
                     }
@@ -570,7 +571,7 @@ extension SummarizedTree.Cursor {
                 let i = stack.depth - 1
                 let newSubtree: UnmanagedStorage? = {
                     if stack[i].storage.isInner {
-                        return stack[i].nextChild().map { .init($0) }
+                        return stack[i].nextChild()?.unmanaged
                     } else {
                         position.moveFoward(nodeSummary: stack[i].storage.summary)
                         return nil
@@ -596,7 +597,7 @@ extension SummarizedTree.Cursor {
         while true {
             push(storage: node, childIndex: 0)
             if node.isInner {
-                node = .init(node.children.first!)
+                node = node.children.first!.unmanaged
             } else {
                 return
             }
@@ -613,7 +614,7 @@ extension SummarizedTree.Cursor {
                 position.moveFoward(nodeSummary: node.summary)
                 position.moveBackward(nodeSummary: lastChild.summary)
                 push(storage: node, childIndex: lastIndex)
-                node = .init(lastChild)
+                node = lastChild.unmanaged
             } else {
                 push(storage: node, childIndex: 0)
                 return
@@ -652,6 +653,7 @@ extension SummarizedTree.Cursor {
     }
     
     @inlinable
+    @inline(__always)
     mutating func seekInternalAscending(contains: ContainsClosure, seek: SeekClosure) -> SeekAscendingResult {
         if isBeforeStart && contains(position.nodeStart, root.summary) {
             push(storage: root, childIndex: 0)
@@ -662,6 +664,20 @@ extension SummarizedTree.Cursor {
             var stackItem = stack.pop()
             if stackItem.storage.isInner {
                 stackItem.childIndex += 1
+                let slotCount = stackItem.storage.slotCount
+                for i in stackItem.childIndex..<slotCount {
+                    let child = stackItem.storage.unmanagedStorage(at: i)
+                    if contains(position.nodeStart, child.summary) {
+                        stack.append(stackItem)
+                        push(storage: child, childIndex: 0)
+                        return .seekDescending
+                    } else {
+                        position.moveFoward(nodeSummary: child.summary)
+                        stackItem.childIndex += 1
+                    }
+                }
+
+                /*
                 for child in stackItem.storage.children[stackItem.childIndex...] {
                     if contains(position.nodeStart, child.summary) {
                         stack.append(stackItem)
@@ -671,7 +687,7 @@ extension SummarizedTree.Cursor {
                         position.moveFoward(nodeSummary: child.summary)
                         stackItem.childIndex += 1
                     }
-                }
+                }*/
             } else {
                 let leafSummary = stackItem.storage.summary
                 if contains(position.nodeStart, leafSummary) {
@@ -699,6 +715,7 @@ extension SummarizedTree.Cursor {
     }
     
     @inlinable
+    @inline(__always)
     mutating func seekInternalDescending(contains: ContainsClosure, seek: SeekClosure) {
         var storage = stack.pop().storage
         
@@ -706,6 +723,20 @@ extension SummarizedTree.Cursor {
             var nextStorage: UnmanagedStorage?
             
             if storage.isInner {
+                let slotCount = storage.slotCount
+                for i in 0..<slotCount {
+                    let child = storage.unmanagedStorage(at: i)
+                    let childSummary = child.summary
+                    if contains(position.nodeStart, childSummary) {
+                        push(storage: storage, childIndex: Slot(i))
+                        nextStorage = child
+                        break
+                    } else {
+                        position.moveFoward(nodeSummary: child.summary)
+                    }
+                }
+
+                /*
                 for (i, child) in storage.children.enumerated() {
                     let childSummary = child.summary
                     if contains(position.nodeStart, childSummary) {
@@ -715,7 +746,7 @@ extension SummarizedTree.Cursor {
                     } else {
                         position.moveFoward(nodeSummary: child.summary)
                     }
-                }
+                }*/
             } else {
                 let leafSummary = storage.summary
                 if contains(position.nodeStart, leafSummary) {
@@ -822,18 +853,13 @@ extension SummarizedTree.Cursor {
     }
 
     @inlinable
-    mutating func push(node: Node, childIndex: Slot) {
-        stack.append(.init(storage: .init(node), childIndex: childIndex))
-    }
-
-    @inlinable
     mutating func push(storage: UnmanagedStorage, childIndex: Slot) {
         stack.append(.init(storage: storage, childIndex: childIndex))
     }
 
     @inlinable
     public func ensureValid(for root: Node, version: Int) {
-        precondition(self.version == version && self.root == .init(root))
+        precondition(self.version == version && self.root == root.unmanaged)
     }
     
     @inlinable

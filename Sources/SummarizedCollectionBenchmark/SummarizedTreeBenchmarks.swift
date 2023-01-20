@@ -14,9 +14,8 @@ extension Benchmark {
             let list = List(0 ..< size)
             OSLog.pointsOfInterest.end(name: "List<Int> init from range")
             blackHole(list)
-        }*/
+        }
         
-        /*
         add(
             title: "List<Int> sequential iteration",
             input: [Int].self
@@ -35,7 +34,23 @@ extension Benchmark {
                 blackHole(list)
             }
         }
-        
+
+        add(
+            title: "List<Int> for each",
+            input: [Int].self
+        ) { input in
+            { timer in
+                let list = List(input)
+                timer.measure {
+                    OSLog.pointsOfInterest.begin(name: "List<Int> for each")
+                    for _ in list {
+                    }
+                    OSLog.pointsOfInterest.end(name: "List<Int> for each")
+                }
+                blackHole(list)
+            }
+        }
+        */
         add(
             title: "List<Int> subscript get, random offsets",
             input: ([Int], [Int]).self
@@ -52,7 +67,7 @@ extension Benchmark {
                 blackHole(list)
             }
         }
-        
+        /*
         add(
             title: "List<Int> prepend",
             input: [Int].self
@@ -70,9 +85,7 @@ extension Benchmark {
                 blackHole(list)
             }
         }
-         */
 
-    /*
         add(
             title: "List<Int> append",
             input: [Int].self
@@ -90,8 +103,7 @@ extension Benchmark {
                 blackHole(list)
             }
         }
-     */
-        
+
         add(
             title: "List<Int> random insertions",
             input: Insertions.self
@@ -110,8 +122,6 @@ extension Benchmark {
             }
         }
 
-         
-        /*
         add(
             title: "List<Int> endIndex",
             input: Int.self
@@ -127,10 +137,8 @@ extension Benchmark {
                 }
                 blackHole(list)
             }
-        }*/
+        }
 
-        
-        /*
         add(
             title: "List<Int> splits",
             input: Int.self
@@ -174,7 +182,6 @@ extension Benchmark {
             }
         }
         */
-        
     }
     
 }
