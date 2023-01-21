@@ -61,8 +61,8 @@ extension SummarizedTree.Node {
         }
     }
     
-    @discardableResult
     @inlinable
+    @discardableResult
     mutating func zipFixLeft(ctx: inout Context) -> Bool {
         if isInner && slotCount > 1 {
             return mutInner { $0.zipFixLeft(ctx: &ctx) }
@@ -71,8 +71,8 @@ extension SummarizedTree.Node {
         }
     }
 
-    @discardableResult
     @inlinable
+    @discardableResult
     mutating func zipFixRight(ctx: inout Context) -> Bool {
         if isInner && slotCount > 1 {
             return mutInner { $0.zipFixRight(ctx: &ctx) }
@@ -144,7 +144,7 @@ extension SummarizedTree.Node.Storage.Handle where StoredElement == SummarizedTr
         
         while true {
             if slotCount > 1 && self[0].slotsUnderflowing {
-                didStuff = slotsMergeOrDistribute(slot1: 0, slot2: 1) || didStuff
+                didStuff = mergeOrDistributeSiblingChildren(slot1: 0, slot2: 1) || didStuff
             }
             
             if !self[0].zipFixLeft(ctx: &ctx) {
@@ -164,7 +164,7 @@ extension SummarizedTree.Node.Storage.Handle where StoredElement == SummarizedTr
         while true {
             let last = slotCount - 1
             if slotCount > 1 && self[last].slotsUnderflowing {
-                didStuff = slotsMergeOrDistribute(slot1: last - 1, slot2: last) || didStuff
+                didStuff = mergeOrDistributeSiblingChildren(slot1: last - 1, slot2: last) || didStuff
             }
             
             if !self[slotCount - 1].zipFixRight(ctx: &ctx) {
@@ -176,21 +176,18 @@ extension SummarizedTree.Node.Storage.Handle where StoredElement == SummarizedTr
     }
     
     @inlinable
-    func slotsMergeOrDistribute(slot1: Slot, slot2: Slot) -> Bool {
+    func mergeOrDistributeSiblingChildren(slot1: Slot, slot2: Slot) -> Bool {
         assert(slot1 == slot2 - 1)
         assert(slot2 < slotCount)
         assertMutable()
 
         let removeSlot2 = {
-            let s1 = slot1
-            let s2 = slot2
-
             if headerPtr.pointee.height > 1 {
-                return self[s1].mutInner(with: &self[s2]) { h1, h2 in
+                return self[slot1].mutInner(with: &self[slot2]) { h1, h2 in
                     h1.mergeOrDistributeStoredElements(with: h2, distribute: .even)
                 }
             } else {
-                return self[s1].mutLeaf(with: &self[s2]) { h1, h2 in
+                return self[slot1].mutLeaf(with: &self[slot2]) { h1, h2 in
                     h1.mergeOrDistributeStoredElements(with: h2, distribute: .even)
                 }
             }

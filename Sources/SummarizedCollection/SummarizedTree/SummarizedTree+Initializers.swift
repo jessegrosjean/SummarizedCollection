@@ -15,7 +15,7 @@ extension SummarizedTree {
     @inlinable
     public init<S>(_ s: S) where Element == S.Element, S : RandomAccessCollection {
         var builder = Builder()
-        builder.concat(elements: s)
+        builder.append(contentsOf: s)
         self = builder.build()
         self.context.addNode(root)
     }
@@ -23,7 +23,7 @@ extension SummarizedTree {
     @inlinable
     public init<C>(_ c: C) where Element == C.Element, C : Collection {
         var builder = Builder()
-        builder.concat(elements: ContiguousArray(c))
+        builder.append(contentsOf: ContiguousArray(c))
         self = builder.build()
         self.context.addNode(root)
     }

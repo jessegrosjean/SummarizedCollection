@@ -8,8 +8,29 @@
 
 extension SummarizedTree: IdentifiedCollection where Element: Identifiable, Context: IdentifiedSummarizedTreeContext {
         
+    typealias UnmanagedNode = Node.UnmanagedNode
+    
+    /*
+    func buildIndex(node: UnmanagedNode, map: inout [Element.ID : UnmanagedNode]) {
+        if node.isInner {
+            for i in 0..<node.slotCount {
+                buildIndex(node: node.unmanagedChild(at: i), map: &map)
+            }
+        } else {
+            for e in node.elements {
+                map[e.id] = node
+            }
+        }
+    }*/
+    
     @inline(never)
     public func offset(id: Element.ID) -> Int? {
+        /*
+        var map: [Element.ID : UnmanagedNode] = [:]
+        buildIndex(node: root.unmanagedNode, map: &map)
+        return nil
+        */
+        
         guard context.maintainsBackpointers else {
             for (i, each) in enumerated() {
                 if each.id == id {

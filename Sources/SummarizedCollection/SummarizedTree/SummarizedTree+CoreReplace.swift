@@ -41,8 +41,8 @@ extension SummarizedTree.Node {
             if startChild.index == endChild.index {
                 let localStart = subrange.lowerBound - startChild.start
                 let localEnd = subrange.upperBound - endChild.start
-                let overflow = mutInner {
-                    $0.replaceWithOverflow(
+                let overflow = mutInner { handle in
+                    handle.innerReplaceWithOverflow(
                         at: startChild.index,
                         subrange: localStart..<localEnd,
                         with: newElements
@@ -83,7 +83,7 @@ extension SummarizedTree.Node {
             }
         } else {
             let subrange = Slot(subrange.lowerBound)..<Slot(subrange.upperBound)
-            let overflow = mutLeaf { $0.replaceWithOverflow(in: subrange, with: newElements) }
+            let overflow = mutLeaf { $0.leafReplaceWithOverflow(in: subrange, with: newElements) }
             return overflow
         }
     }
@@ -92,10 +92,11 @@ extension SummarizedTree.Node {
 
 extension SummarizedTree.Node.Storage.Handle where StoredElement == SummarizedTree.Node {
 
-    public typealias Node = SummarizedTree.Node
+    @usableFromInline
+    typealias Node = SummarizedTree.Node
 
     @inlinable
-    func replaceWithOverflow<C>(
+    func innerReplaceWithOverflow<C>(
         at slot: Slot,
         subrange: Range<Int>,
         with newElements: C
@@ -117,7 +118,7 @@ extension SummarizedTree.Node.Storage.Handle where StoredElement == SummarizedTr
 extension SummarizedTree.Node.Storage.Handle where StoredElement == SummarizedTree.Element {
     
     @inlinable
-    func replaceWithOverflow<C>(
+    func leafReplaceWithOverflow<C>(
         in subrange: Range<Slot>,
         with newElements: C
     ) -> SummarizedTree.Node?
@@ -141,8 +142,8 @@ extension SummarizedTree.Node.Storage.Handle where StoredElement == SummarizedTr
             append(contentsOf: newElements.prefix(take))
 
             var builder = SummarizedTree.Builder()
-            builder.concat(elements: newElements.suffix(newElements.count - take))
-            builder.concat(elements: trailing.subSequence)
+            builder.append(contentsOf: newElements.suffix(newElements.count - take))
+            builder.append(contentsOf: trailing.subSequence)
             return builder.build().root
         }
     }

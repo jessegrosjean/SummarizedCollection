@@ -20,12 +20,12 @@ extension SummarizedTree {
         }
         
         @inlinable
-        public mutating func concat(node: Node) {
+        public mutating func append(_ node: Node) {
             root.concat(node)
         }
                 
         @inlinable
-        public mutating func concat<C>(elements: C) where C: Collection, C.Element == Element {
+        public mutating func append<C>(contentsOf elements: C) where C: Collection, C.Element == Element {
             if elements.count <= leafCapacity {
                 root.append(contentsOf: elements)
                 return
@@ -63,7 +63,7 @@ extension SummarizedTree {
             
             for siblings in stack {
                 for node in siblings {
-                    concat(node: node)
+                    append(node)
                 }
             }
         }

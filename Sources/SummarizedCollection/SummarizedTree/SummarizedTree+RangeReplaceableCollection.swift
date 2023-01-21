@@ -2,7 +2,7 @@ extension SummarizedTree: RangeReplaceableCollection {
     
     @inlinable
     public mutating func append(_ newElement: Context.Element) {
-        replace(summary.count..<summary.count, with: [newElement])
+        replace(summary.count..<summary.count, with: CollectionOfOne(newElement))
     }
     
     @inlinable
@@ -17,7 +17,9 @@ extension SummarizedTree: RangeReplaceableCollection {
     }
 
     @inlinable
-    public mutating func replaceSubrange<C>(_ subrange: Range<Index>, with newElements: C) where C: Collection, C.Element == Element {
+    public mutating func replaceSubrange<C>(_ subrange: Range<Index>, with newElements: C)
+        where C: Collection, C.Element == Element
+    {
         replace(subrange.lowerBound.offset..<subrange.upperBound.offset, with: ContiguousArray(newElements))
     }
     
