@@ -5,7 +5,6 @@ extension Benchmark {
     
     public mutating func addSummarizedTreeBenchmarks() {
         
-        /*
         addSimple(
             title: "List<Int> init from range",
             input: Int.self
@@ -16,6 +15,7 @@ extension Benchmark {
             blackHole(list)
         }
         
+        /*
         add(
             title: "List<Int> sequential iteration",
             input: [Int].self
@@ -34,7 +34,7 @@ extension Benchmark {
                 blackHole(list)
             }
         }
-
+         */
         add(
             title: "List<Int> for each",
             input: [Int].self
@@ -50,7 +50,7 @@ extension Benchmark {
                 blackHole(list)
             }
         }
-        */
+        /*
         add(
             title: "List<Int> subscript get, random offsets",
             input: ([Int], [Int]).self
@@ -67,7 +67,7 @@ extension Benchmark {
                 blackHole(list)
             }
         }
-        /*
+        
         add(
             title: "List<Int> prepend",
             input: [Int].self
@@ -103,6 +103,7 @@ extension Benchmark {
                 blackHole(list)
             }
         }
+        */
 
         add(
             title: "List<Int> random insertions",
@@ -122,6 +123,7 @@ extension Benchmark {
             }
         }
 
+        /*
         add(
             title: "List<Int> endIndex",
             input: Int.self
@@ -181,7 +183,7 @@ extension Benchmark {
                 blackHole(tree)
             }
         }
-        */
+         */
     }
     
 }

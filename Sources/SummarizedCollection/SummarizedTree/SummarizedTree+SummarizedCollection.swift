@@ -54,14 +54,14 @@ extension SummarizedTree: SummarizedCollection {
             return endIndex
         }
         
-        var cursor = Cursor(root: root, version: version)
+        var cursor = Cursor(root: root.unmanagedNode, version: version)
         cursor.resetToStart()
         return .init(cursor: cursor)
     }
     
     @inlinable
     public var endIndex: Index {
-        var cursor = Cursor(root: root, version: version)
+        var cursor = Cursor(root: root.unmanagedNode, version: version)
         cursor.resetToEnd()
         return .init(cursor: cursor)
     }

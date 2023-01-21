@@ -1,19 +1,19 @@
 extension SummarizedTree.Node {
 
     @inlinable
-    var unmanaged: UnmanagedStorage {
+    var unmanagedNode: UnmanagedNode {
         if isInner {
-            return .inner(.passUnretained(inner))
+            return .inner(_header, .passUnretained(inner))
         } else {
-            return .leaf(.passUnretained(leaf))
+            return .leaf(_header, .passUnretained(leaf))
         }
     }
     
     @usableFromInline
-    enum UnmanagedStorage {
+    enum UnmanagedNode {
         
-        case inner(Unmanaged<InnerStorage>)
-        case leaf(Unmanaged<LeafStorage>)
+        case inner(Header, Unmanaged<InnerStorage>)
+        case leaf(Header, Unmanaged<LeafStorage>)
                 
         @inlinable
         var isInner: Bool {
@@ -34,14 +34,10 @@ extension SummarizedTree.Node {
         @inlinable
         var header: Header {
             switch self {
-            case .inner(let inner):
-                return inner._withUnsafeGuaranteedRef { inner in
-                    return inner.header
-                }
-            case .leaf(let leaf):
-                return leaf._withUnsafeGuaranteedRef { leaf in
-                    return leaf.header
-                }
+            case .inner(let header, _):
+                return header
+            case .leaf(let header, _):
+                return header
             }
         }
 
@@ -62,7 +58,7 @@ extension SummarizedTree.Node {
 
         @inlinable
         var children: InnerStorage.SubSequence {
-            if case .inner(let inner) = self {
+            if case .inner(_, let inner) = self {
                 return inner._withUnsafeGuaranteedRef { $0.subSequence }
             }
             fatalError()
@@ -71,7 +67,7 @@ extension SummarizedTree.Node {
         @inlinable
         @inline(__always)
         func child(at slot: Slot) -> Node {
-            if case .inner(let inner) = self {
+            if case .inner(_, let inner) = self {
                 return inner._withUnsafeGuaranteedRef { $0.rd { $0[slot] } }
             }
             fatalError()
@@ -79,9 +75,9 @@ extension SummarizedTree.Node {
 
         @inlinable
         @inline(__always)
-        func unmanagedStorage(at slot: Slot) -> UnmanagedStorage {
-            if case .inner(let inner) = self {
-                return inner._withUnsafeGuaranteedRef { $0.rd { $0[slot].unmanaged } }
+        func unmanagedChild(at slot: Slot) -> UnmanagedNode {
+            if case .inner(_, let inner) = self {
+                return inner._withUnsafeGuaranteedRef { $0.rd { $0[slot].unmanagedNode } }
             }
             fatalError()
         }
@@ -89,7 +85,7 @@ extension SummarizedTree.Node {
         @inlinable
         @inline(__always)
         var elements: LeafStorage.SubSequence {
-            if case .leaf(let leaf) = self {
+            if case .leaf(_, let leaf) = self {
                 return leaf._withUnsafeGuaranteedRef { $0.subSequence }
             }
             fatalError()
@@ -98,7 +94,7 @@ extension SummarizedTree.Node {
         @inlinable
         @inline(__always)
         func element(at slot: Slot) -> Element {
-            if case .leaf(let leaf) = self {
+            if case .leaf(_, let leaf) = self {
                 return leaf._withUnsafeGuaranteedRef { $0.rd { $0[slot] } }
             }
             fatalError()
@@ -106,16 +102,16 @@ extension SummarizedTree.Node {
     }
 }
 
-extension SummarizedTree.Node.UnmanagedStorage: Equatable {
+extension SummarizedTree.Node.UnmanagedNode: Equatable {
     
-    public typealias UnmanagedStorage = SummarizedTree.Node.UnmanagedStorage
+    public typealias UnmanagedNode = SummarizedTree.Node.UnmanagedNode
 
     @inlinable
-    public static func ==(lhs: UnmanagedStorage, rhs: UnmanagedStorage) -> Bool {
+    public static func ==(lhs: UnmanagedNode, rhs: UnmanagedNode) -> Bool {
         switch (lhs, rhs) {
-        case (.inner(let lstore), .inner(let rstore)):
+        case (.inner(_, let lstore), .inner(_, let rstore)):
             return lstore.toOpaque() == rstore.toOpaque()
-        case (.leaf(let lstore), .leaf(let rstore)):
+        case (.leaf(_, let lstore), .leaf(_, let rstore)):
             return lstore.toOpaque() == rstore.toOpaque()
         default:
             return false

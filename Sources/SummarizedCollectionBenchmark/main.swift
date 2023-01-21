@@ -7,7 +7,7 @@ struct IdentifiedItem: Identifiable {
     let id: Int
 }
 
-//benchmark.addArrayBenchmarks()
+benchmark.addArrayBenchmarks()
 benchmark.addSummarizedTreeBenchmarks()
 
 /*

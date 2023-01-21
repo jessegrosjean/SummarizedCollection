@@ -1,8 +1,5 @@
 extension SummarizedTree: Sequence {
-    
-    @usableFromInline
-    typealias UnmanagedStorage = SummarizedTree.Node.UnmanagedStorage
-    
+        
     @inlinable
     @inline(__always)
     public func forEach(_ body: (Element) throws -> Void) rethrows {

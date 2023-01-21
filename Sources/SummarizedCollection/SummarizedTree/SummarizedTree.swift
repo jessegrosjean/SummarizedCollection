@@ -50,19 +50,19 @@ public struct SummarizedTree<Context: SummarizedTreeContext> {
 
     @inlinable
     public func cursor() -> Cursor {
-        Cursor(root: root, version: version)
+        Cursor(root: root.unmanagedNode, version: version)
     }
 
     @inlinable
     public func cursor<D>(at dimension: D) -> Cursor where D: CollectionDimension, D.Summary == Summary {
-        var cursor = Cursor(root: root, version: version)
+        var cursor = Cursor(root: root.unmanagedNode, version: version)
         _ = cursor.seek(to: .init(base: dimension, offset: IndexDimension(0)))
         return cursor
     }
 
     @inlinable
     public func cursor<B, O>(at point: CollectionPoint<B, O>) -> Cursor where B.Summary == Summary {
-        var cursor = Cursor(root: root, version: version)
+        var cursor = Cursor(root: root.unmanagedNode, version: version)
         _ = cursor.seek(to: point)
         return cursor
     }

@@ -3,7 +3,7 @@ import CollectionsBenchmark
 extension Benchmark {
     
     public mutating func addArrayBenchmarks() {
-        /*
+
         addSimple(
             title: "Array<Int> init from range",
             input: Int.self
@@ -11,6 +11,7 @@ extension Benchmark {
             blackHole(Array(0 ..< size))
         }
         
+        /*
         addSimple(
             title: "Array<Int> init from unsafe buffer",
             input: [Int].self
@@ -19,6 +20,7 @@ extension Benchmark {
                 blackHole(Array(buffer))
             }
         }
+        */
         
         addSimple(
             title: "Array<Int> sequential iteration",
@@ -29,6 +31,7 @@ extension Benchmark {
             }
         }
         
+        /*
         addSimple(
             title: "Array<Int> subscript get, random offsets",
             input: ([Int], [Int]).self
@@ -198,6 +201,7 @@ extension Benchmark {
                 blackHole(array)
             }
         }
+        
         /*
         add(
             title: "Array<Int> random insertions, reserving capacity",

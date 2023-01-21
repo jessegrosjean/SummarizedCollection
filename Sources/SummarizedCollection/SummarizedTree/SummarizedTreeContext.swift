@@ -46,7 +46,7 @@ extension SummarizedTreeContext {
                 return capacity
             }
             
-            let capacityInBytes = 1023 //16384
+            let capacityInBytes = 1024
             let capacity =  Slot(Swift.max(16, capacityInBytes / MemoryLayout<TreeNode>.stride))
             innerCapacityCache[ObjectIdentifier(Self.self)] = capacity
             return capacity
@@ -62,7 +62,7 @@ extension SummarizedTreeContext {
                 return capacity
             }
 
-            let capacityInBytes = 1023
+            let capacityInBytes = 1024
             let capacity = Slot(Swift.max(16, capacityInBytes / MemoryLayout<Element>.stride))
             leafCapacityCache[ObjectIdentifier(Self.self)] = capacity
             return capacity
