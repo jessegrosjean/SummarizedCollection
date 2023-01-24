@@ -83,3 +83,9 @@ extension LifetimeTracked: Encodable where Payload: Encodable {
     try payload.encode(to: encoder)
   }
 }
+
+extension LifetimeTracked: Identifiable where Payload: Identifiable {
+    public var id: Payload.ID {
+        payload.id
+    }
+}

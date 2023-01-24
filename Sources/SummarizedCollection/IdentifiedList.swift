@@ -38,7 +38,7 @@ public struct IdentifiedListContext<Element: Identifiable>: IdentifiedSummarized
     }
     
     @inlinable
-    public mutating func changed(rootIdentifier: ObjectIdentifier) {
+    public mutating func setRoot(_ rootIdentifier: ObjectIdentifier) {
         self.rootIdentifier = rootIdentifier
     }
 
@@ -109,6 +109,29 @@ public struct IdentifiedListContext<Element: Identifiable>: IdentifiedSummarized
     @inlinable
     func isTrackedInContext(objectIdentifier: ObjectIdentifier) -> Bool {
         return objectIdentifier == rootIdentifier || parents.keys.contains(objectIdentifier)
+    }
+    
+    @inlinable
+    public func validateInsert<C>(_ elements: C, in tree: SummarizedTree<Self>) where C : Collection, C.Element == Element {
+        for each in elements {
+            assert(!elementsLookup.keys.contains(each.id))
+        }
+    }
+    
+    @inlinable
+    public func validateReplace<C>(
+        subrange: Range<Int>,
+        with newElements: C,
+        in tree: SummarizedTree<Self>
+    ) where C : Collection, C.Element == Element {
+        var replacing = Set(tree[subrange].map { $0.id })
+        for each in newElements {
+            if replacing.contains(each.id) {
+                replacing.remove(each.id)
+            } else {
+                assert(!elementsLookup.keys.contains(each.id))
+            }
+        }
     }
     
 }

@@ -5,6 +5,8 @@ extension SummarizedTree {
         where
             C: RandomAccessCollection, C.Element == Element
     {
+        context.validateReplace(subrange: subrange, with: newElements, in: self)
+        
         invalidateIndices()
         
         let overflow = root.replace(

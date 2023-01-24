@@ -13,11 +13,15 @@ public protocol SummarizedTreeContext {
     init()
     init(tracking: Node)
 
-    mutating func changed(rootIdentifier: ObjectIdentifier)
+    mutating func setRoot(_ rootIdentifier: ObjectIdentifier)
     mutating func addChildren<C>(_ children: C, to inner: Unmanaged<Node.InnerStorage>) where C: Collection, C.Element == Node
     mutating func removeChildren<C>(_ children: C, from inner: Unmanaged<Node.InnerStorage>) where C: Collection, C.Element == Node
     mutating func addElements<C>(_ elements: C, to leaf: Unmanaged<Node.LeafStorage>) where C: Collection, C.Element == Element
     mutating func removeElements<C>(_ elements: C, from leaf: Unmanaged<Node.LeafStorage>) where C: Collection, C.Element == Element
+    
+    func validateInsert<C>(_ elements: C, in tree: SummarizedTree<Self>) where C: Collection, C.Element == Element
+    func validateReplace<C>(subrange: Range<Int>, with newElements: C, in tree: SummarizedTree<Self>) where C: Collection, C.Element == Element
+
 }
 
 public protocol IdentifiedSummarizedTreeContext: SummarizedTreeContext where Element: Identifiable {
@@ -83,14 +87,30 @@ extension SummarizedTreeContext {
         set {}
     }
     
+    @inlinable
     public init(tracking: Node) {
         self.init()
     }
     
-    public func changed(rootIdentifier: ObjectIdentifier) {}
+    @inlinable
+    public func setRoot(_ rootIdentifier: ObjectIdentifier) {}
+
+    @inlinable
     public func addChildren<C>(_ children: C, to inner: Unmanaged<Node.InnerStorage>) where C: Collection, C.Element == Node {}
+
+    @inlinable
     public func removeChildren<C>(_ children: C, from inner: Unmanaged<Node.InnerStorage>) where C: Collection, C.Element == Node {}
+
+    @inlinable
     public func addElements<C>(_ elements: C, to leaf: Unmanaged<Node.LeafStorage>) where C: Collection, C.Element == Element {}
+
+    @inlinable
     public func removeElements<C>(_ elements: C, from leaf: Unmanaged<Node.LeafStorage>) where C: Collection, C.Element == Element {}
     
+    @inlinable
+    public func validateInsert<C>(_ elements: C, in tree: SummarizedTree<Self>) where C: Collection, C.Element == Element {}
+    
+    @inlinable
+    public func validateReplace<C>(subrange: Range<Int>, with newElements: C, in tree: SummarizedTree<Self>) where C: Collection, C.Element == Element {}
+
 }

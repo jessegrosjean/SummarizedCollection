@@ -26,6 +26,7 @@ extension SummarizedTree.Node {
             for each in buffer[removing] {
                 header.summary -= each.summary
             }
+            ctx.removeChildren(buffer[removing], from: storage)
         }
         
         @inlinable
@@ -41,6 +42,7 @@ extension SummarizedTree.Node {
             for each in buffer[adding] {
                 header.summary += each.summary
             }
+            ctx.addChildren(buffer[adding], to: storage)
         }
     }    
     

@@ -10,6 +10,11 @@ extension SummarizedTree: IdentifiedCollection where Element: Identifiable, Cont
         
     typealias UnmanagedNode = Node.UnmanagedNode
     
+    @inlinable
+    public func contains(id: Element.ID) -> Bool {
+        context[parentOf: id] != nil
+    }
+    
     /*
     func buildIndex(node: UnmanagedNode, map: inout [Element.ID : UnmanagedNode]) {
         if node.isInner {

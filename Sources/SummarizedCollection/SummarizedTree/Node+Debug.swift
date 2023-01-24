@@ -26,6 +26,7 @@ extension SummarizedTree.Node: CustomDebugStringConvertible {
 
 extension SummarizedTree.Node {
     
+    @inlinable
     func ensureValid(parent: Node?, ctx: Context) {
         if isLeaf {
             assert(height == 0)

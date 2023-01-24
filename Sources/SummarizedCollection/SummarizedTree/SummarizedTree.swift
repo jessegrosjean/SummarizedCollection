@@ -24,6 +24,7 @@ public struct SummarizedTree<Context: SummarizedTreeContext> {
         version &+= 1
     }
     
+    @inlinable
     public func ensureValid() {
         root.ensureValid(parent: nil, ctx: context)
     }
@@ -33,11 +34,35 @@ public struct SummarizedTree<Context: SummarizedTreeContext> {
     public func index(at offset: Int) -> Index {
         index(startIndex, offsetBy: offset)
     }
-    
+
+    @inlinable
+    @inline(__always)
+    public func indexRange(from offsetRange: Range<Int>) -> Range<Index> {
+        let startIndex = index(at: offsetRange.startIndex)
+        if offsetRange.isEmpty {
+            return startIndex..<startIndex
+        } else {
+            let endIndex = index(startIndex, offsetBy: offsetRange.count)
+            return startIndex..<endIndex
+        }
+    }
+
     @inlinable
     @inline(__always)
     public func offset(of index: Index) -> Int {
         distance(from: startIndex, to: index)
+    }
+
+    @inlinable
+    @inline(__always)
+    public func offsetRange(from indexRange: Range<Index>) -> Range<Int> {
+        let startIndex = offset(of: indexRange.lowerBound)
+        if indexRange.isEmpty {
+            return startIndex..<startIndex
+        } else {
+            let endIndex = offset(of: indexRange.upperBound)
+            return startIndex..<endIndex
+        }
     }
 
     @inlinable
@@ -75,7 +100,7 @@ public struct SummarizedTree<Context: SummarizedTreeContext> {
             root = root.rdInner { handle in
                 let child = handle[0]
                 context.removeChildren([child], from: .passUnretained(root.inner))
-                context.changed(rootIdentifier: child.objectIdentifier)
+                context.setRoot(child.objectIdentifier)
                 return child
             }
         }
@@ -84,11 +109,13 @@ public struct SummarizedTree<Context: SummarizedTreeContext> {
     @inlinable
     mutating func pushDownOverflowingRoot(overflow: Node) {
         assert(root.height == overflow.height)
-        root = .init(inner: Node.InnerStorage.create(with: Context.innerCapacity) { handle in
-            handle.append(root, ctx: &context)
+        let pushed = root
+        root = .init(inner: .create(with: Context.innerCapacity))
+        context.setRoot(root.objectIdentifier)
+        root.mutInner(isUnique: true) { handle in
+            handle.append(pushed, ctx: &context)
             handle.append(overflow, ctx: &context)
-        })
-        context.changed(rootIdentifier: root.objectIdentifier)
+        }
     }
         
 }

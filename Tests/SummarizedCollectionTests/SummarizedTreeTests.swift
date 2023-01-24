@@ -5,51 +5,39 @@ import _CollectionsTestSupport
 
 final class SummarizedTreeTests: CollectionTestCase {
 
-    /*func testAppend() {
-        let a = [1, 2, 3]
-        
-        let a1 = a[a.startIndex]
-        //let a2 = a[a.endIndex]
-
-        var l = List<Int>([1, 2, 3])
-        let l1 = l[l.startIndex]
-        let l2 = l[l.endIndex]
-
-        var list = List<Int>()
-        for i in 0..<1024 {
-            list.append(i)
-        }
-        print(list)
-
-    }*/
-
     func testInit() {
         withEvery("size", in: 0..<100) { size in
-            let list = List(0..<size)
-            list.ensureValid()
-            XCTAssertEqual(list.count, size)
+            withLifetimeTracking { tracker in
+                let list = List(tracker.instances(for: 0..<size))
+                list.ensureValid()
+                XCTAssertEqual(list.count, size)
+            }
         }
     }
 
     func testIndexAtOffset() {
         withEvery("count", in: [1, 2, 4, 8, 16, 32, 64]) { count in
-            let list = List<Int>(0..<count)
-            for i in 0..<count {
-                let index = list.index(at: i)
-                expectEqual(list[index], i)
+            withLifetimeTracking { tracker in
+                let list = List(tracker.instances(for: 0..<count))
+                for i in 0..<count {
+                    let index = list.index(at: i)
+                    expectEqual(list[index].payload, i)
+                }
             }
         }
     }
     
     func testIndexOffsetByForward() {
         withEvery("count", in: [1, 2, 4, 8, 16, 32, 64]) { count in
-            let list = List<Int>(0..<count)
-            withEvery("baseIndex", in: 0...count) { baseIndex in
-                withEvery("distance", in: 0...(count - baseIndex)) { distance in
-                    var index = list.index(at: baseIndex)
-                    list.formIndex(&index, offsetBy: distance)
-                    let expectedIndex = list.index(at: baseIndex + distance)
-                    expectEqual(index, expectedIndex)
+            withLifetimeTracking { tracker in
+                let list = List(tracker.instances(for: 0..<count))
+                withEvery("baseIndex", in: 0...count) { baseIndex in
+                    withEvery("distance", in: 0...(count - baseIndex)) { distance in
+                        var index = list.index(at: baseIndex)
+                        list.formIndex(&index, offsetBy: distance)
+                        let expectedIndex = list.index(at: baseIndex + distance)
+                        expectEqual(index, expectedIndex)
+                    }
                 }
             }
         }
@@ -57,13 +45,15 @@ final class SummarizedTreeTests: CollectionTestCase {
     
     func testIndexOffsetByBackward() {
         withEvery("count", in: [1, 2, 4, 8, 16, 32, 64]) { count in
-            let list = List<Int>(0..<count)
-            withEvery("baseIndex", in: 0...count) { baseIndex in
-                withEvery("distance", in: 0...baseIndex) { distance in
-                    var index = list.index(at: baseIndex)
-                    list.formIndex(&index, offsetBy: -distance)
-                    let expectedIndex = list.index(at: baseIndex - distance)
-                    expectEqual(index, expectedIndex)
+            withLifetimeTracking { tracker in
+                let list = List(tracker.instances(for: 0..<count))
+                withEvery("baseIndex", in: 0...count) { baseIndex in
+                    withEvery("distance", in: 0...baseIndex) { distance in
+                        var index = list.index(at: baseIndex)
+                        list.formIndex(&index, offsetBy: -distance)
+                        let expectedIndex = list.index(at: baseIndex - distance)
+                        expectEqual(index, expectedIndex)
+                    }
                 }
             }
         }
@@ -71,9 +61,11 @@ final class SummarizedTreeTests: CollectionTestCase {
 
     func testIterator() {
         withEvery("size", in: [1, 2, 4, 8, 16, 32, 64, 127, 128, 129]) { size in
-            let list = List<Int>(0..<size)
-            for (each, i) in list.enumerated() {
-                XCTAssertEqual(each, list[list.index(at: i)])
+            withLifetimeTracking { tracker in
+                let list = List(tracker.instances(for: 0..<size))
+                for (i, each) in list.enumerated() {
+                    XCTAssertEqual(each, list[list.index(at: i)])
+                }
             }
         }
     }
@@ -81,11 +73,13 @@ final class SummarizedTreeTests: CollectionTestCase {
     func testSplit() {
         withEvery("size", in: [1, 2, 4, 8, 16, 32, 64, 127, 128, 129]) { size in
             withEvery("index", in: 0..<size) { index in
-                var list = List<Int>(0..<size)
-                let split = list.split(index)
-                list.ensureValid()
-                split.ensureValid()
-                expectEqual(list.count + split.count, size)
+                withLifetimeTracking { tracker in
+                    var list = List(tracker.instances(for: 0..<size))
+                    let split = list.split(index)
+                    list.ensureValid()
+                    split.ensureValid()
+                    expectEqual(list.count + split.count, size)
+                }
             }
         }
     }
@@ -93,27 +87,31 @@ final class SummarizedTreeTests: CollectionTestCase {
     func testConcat() {
         withEvery("size", in: [1, 2, 4, 8, 16, 32, 64, 127, 128, 129]) { size in
             withEvery("index", in: 0..<size) { index in
-                var list = List<Int>(0..<size)
-                let split = list.split(index)
-                var new = List<Int>()
-                new.concat(list)
-                new.concat(split)
-                new.ensureValid()
-                expectEqual(new.count, size)
+                withLifetimeTracking { tracker in
+                    var list = List(tracker.instances(for: 0..<size))
+                    let split = list.split(index)
+                    var new = List<LifetimeTracked<Int>>()
+                    new.concat(list)
+                    new.concat(split)
+                    new.ensureValid()
+                    expectEqual(new.count, size)
+                }
             }
         }
     }
 
     func testReplace() {
         withEvery("size", in: [1, 2, 4, 8, 16]) { size in
-            let template = List<Int>(0..<size)
-            withEvery("start", in: 0..<size) { start in
-                withEvery("end", in: start..<size) { end in
-                    withEvery("insert", in: [0, 1, 2, 3, 5, 9]) { insert in
-                        var list = template
-                        list.replace(start..<end, with: 0..<insert)
-                        XCTAssertEqual(list.count, (template.count - (start..<end).count) + insert)
-                        list.ensureValid()
+            withLifetimeTracking { tracker in
+                let template = List(tracker.instances(for: 0..<size))
+                withEvery("start", in: 0..<size) { start in
+                    withEvery("end", in: start..<size) { end in
+                        withEvery("insert", in: [0, 1, 2, 3, 5, 9]) { insert in
+                            var list = template
+                            list.replace(start..<end, with: tracker.instances(for: 0..<insert))
+                            XCTAssertEqual(list.count, (template.count - (start..<end).count) + insert)
+                            list.ensureValid()
+                        }
                     }
                 }
             }
@@ -123,10 +121,12 @@ final class SummarizedTreeTests: CollectionTestCase {
     func testSingleDeletion() {
         withEvery("size", in: [1, 2, 4, 8, 16, 32, 64, 128]) { size in
             withEvery("index", in: 0..<size) { index in
-                var list = List<Int>(0..<size)
-                list.remove(at: list.index(at: index))
-                list.ensureValid()
-                expectEqual(list.count, size - 1)
+                withLifetimeTracking { tracker in
+                    var list = List(tracker.instances(for: 0..<size))
+                    list.remove(at: list.index(at: index))
+                    list.ensureValid()
+                    expectEqual(list.count, size - 1)
+                }
             }
         }
     }
@@ -134,9 +134,12 @@ final class SummarizedTreeTests: CollectionTestCase {
     func testBidirectionalCollection() {
         var rng = RepeatableRandomNumberGenerator(seed: 0)
         withEvery("count", in: [0, 1, 2, 13, 31, 32, 33]) { count in
-            let reference = randomBoolArray(count: count, using: &rng)
-            let value = List(reference)
-            checkBidirectionalCollection(value, expectedContents: reference, maxSamples: 100)
+            withLifetimeTracking { tracker in
+                let reference = randomBoolArray(count: count, using: &rng)
+                let trackedBools = tracker.instances(for: reference)
+                let list = List(trackedBools)
+                checkBidirectionalCollection(list, expectedContents: trackedBools, maxSamples: 100)
+            }
         }
     }
 

@@ -1,6 +1,7 @@
 extension SummarizedTree {
         
     public mutating func concat(_ tree: SummarizedTree) {
+        context.validateInsert(tree, in: self)
         invalidateIndices()
         concat(tree.root)
     }

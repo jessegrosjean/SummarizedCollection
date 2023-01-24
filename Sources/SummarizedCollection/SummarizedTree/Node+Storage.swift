@@ -62,26 +62,6 @@ extension SummarizedTree.Node {
             let isMutable: Bool
             
             @inlinable
-            init(storage: Unmanaged<Storage>, header: HeaderPointer, storedElements: StoredElementPointer) {
-                self.init(
-                    storage: storage,
-                    header: header,
-                    storedElements: storedElements,
-                    isMutable: false
-                )
-            }
-
-            @inlinable
-            init(mutating: Self) {
-                self.init(
-                    storage: mutating.storage,
-                    header: mutating.headerPtr,
-                    storedElements: mutating.storedElementsPtr,
-                    isMutable: true
-                )
-            }
-            
-            @inlinable
             init(storage: Unmanaged<Storage>, header: HeaderPointer, storedElements: StoredElementPointer, isMutable: Bool) {
                 self.storage = storage
                 self.headerPtr = header
@@ -128,15 +108,15 @@ extension SummarizedTree.Node {
         @inline(__always)
         func rd<R>(_ body: (Handle) throws -> R) rethrows -> R {
             try withUnsafeMutablePointers { header, storedElements in
-                try body(.init(storage: .passUnretained(self), header: header, storedElements: storedElements))
+                try body(.init(storage: .passUnretained(self), header: header, storedElements: storedElements, isMutable: false))
             }
         }
      
         @inlinable
         @inline(__always)
         func mut<R>(_ body: (Handle) throws -> R) rethrows -> R {
-            try self.rd {
-                try body(Handle(mutating: $0))
+            try withUnsafeMutablePointers { header, storedElements in
+                try body(.init(storage: .passUnretained(self), header: header, storedElements: storedElements, isMutable: true))
             }
         }
 

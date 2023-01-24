@@ -41,7 +41,12 @@ extension SummarizedTree {
         }
         
     }
-    
+
+    @inlinable
+    public subscript(bounds: Range<Int>) -> SubSequence {
+        self[indexRange(from: bounds)]
+    }
+
     @inlinable
     public subscript(bounds: Range<Self.Index>) -> SubSequence {
         return .init(base: self, bounds: bounds)
