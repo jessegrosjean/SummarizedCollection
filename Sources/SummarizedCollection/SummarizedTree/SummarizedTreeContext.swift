@@ -2,31 +2,29 @@ public protocol SummarizedTreeContext {
     
     associatedtype Slot: FixedWidthInteger & UnsignedInteger
     associatedtype Summary: CollectionSummary
-
+    
     typealias Element = Summary.Element
     typealias TreeNode = SummarizedTree<Self>.Node
-
+    typealias Node = SummarizedTree<Self>.Node
+    
     static var innerCapacity: Slot { get }
     static var leafCapacity: Slot { get }
-
-    init(root: TreeNode?, maintainBackpointersIfAble: Bool)
-
-    // TreeNodes are shared and immutable. If we want backpointers
-    // to quickly find summarized values for a given Element.ID then
-    // need to maintain backpointers in Tree.Context
     
-    var maintainsBackpointers: Bool { get }
+    init()
+    init(tracking: Node)
 
-    subscript(parentOf nodeIdentifier: ObjectIdentifier) -> TreeNode.InnerStorage? { get set }
-    mutating func addElements<C: Collection>(_ elements: C, to leaf: TreeNode.LeafStorage) where C.Element == Element
-    mutating func removeElements<C: Collection>(_ elements: C, from leaf: TreeNode.LeafStorage) where C.Element == Element
-
+    mutating func changed(rootIdentifier: ObjectIdentifier)
+    mutating func addChildren<C>(_ children: C, to inner: Unmanaged<Node.InnerStorage>) where C: Collection, C.Element == Node
+    mutating func removeChildren<C>(_ children: C, from inner: Unmanaged<Node.InnerStorage>) where C: Collection, C.Element == Node
+    mutating func addElements<C>(_ elements: C, to leaf: Unmanaged<Node.LeafStorage>) where C: Collection, C.Element == Element
+    mutating func removeElements<C>(_ elements: C, from leaf: Unmanaged<Node.LeafStorage>) where C: Collection, C.Element == Element
 }
 
 public protocol IdentifiedSummarizedTreeContext: SummarizedTreeContext where Element: Identifiable {
 
-    subscript(leafOf id: Element.ID) -> TreeNode.LeafStorage? { get }
-
+    subscript(parentOf nodeIdentifier: ObjectIdentifier) -> Unmanaged<Node.InnerStorage>? { get }
+    subscript(parentOf id: Element.ID) -> Unmanaged<Node.LeafStorage>? { get }
+    
 }
 
 @usableFromInline
@@ -34,6 +32,9 @@ var innerCapacityCache: [ObjectIdentifier: Any] = [:]
 
 @usableFromInline
 var leafCapacityCache: [ObjectIdentifier: Any] = [:]
+
+@usableFromInline
+var nonTrackingContextCache: [ObjectIdentifier: Any] = [:]
 
 extension SummarizedTreeContext {
 
@@ -69,44 +70,27 @@ extension SummarizedTreeContext {
         #endif
     }
 
-    public subscript(parentOf identifier: ObjectIdentifier) -> TreeNode.InnerStorage? { get { nil } set {} }
-    public subscript(leafOf element: Element) -> TreeNode.LeafStorage? { nil }
-    public mutating func addElements<C: Collection>(_ elements: C, to leaf: TreeNode.LeafStorage) where C.Element == Element {}
-    public mutating func removeElements<C: Collection>(_ elements: C, from leaf: TreeNode.LeafStorage) where C.Element == Element {}
-
     @inlinable
-    public mutating func addNode(_ node: TreeNode) {
-        guard maintainsBackpointers else {
-            return
-        }
-        
-        if node.isInner {
-            for each in node.children {
-                self[parentOf: each.objectIdentifier] = node.inner
-                addNode(each)
+    public static var nonTracking: Self {
+        get {
+            if let nonTracking = nonTrackingContextCache[ObjectIdentifier(Self.self)] as? Self {
+                return nonTracking
             }
-        } else {
-            //fatalError()
-            //addElements(node.elements, to: node.leaf)
+            let nonTracking = Self.init()
+            nonTrackingContextCache[ObjectIdentifier(Self.self)] = nonTracking
+            return nonTracking
         }
+        set {}
     }
-
-    @inlinable
-    public mutating func removeNode(_ node: TreeNode) {
-        guard maintainsBackpointers else {
-            return
-        }
-
-        self[parentOf: node.objectIdentifier] = nil
-
-        if node.isInner {
-            for each in node.children {
-                removeNode(each)
-            }
-        } else {
-            //fatalError()
-            //removeElements(node.elements, from: node.leaf)
-        }
+    
+    public init(tracking: Node) {
+        self.init()
     }
-
+    
+    public func changed(rootIdentifier: ObjectIdentifier) {}
+    public func addChildren<C>(_ children: C, to inner: Unmanaged<Node.InnerStorage>) where C: Collection, C.Element == Node {}
+    public func removeChildren<C>(_ children: C, from inner: Unmanaged<Node.InnerStorage>) where C: Collection, C.Element == Node {}
+    public func addElements<C>(_ elements: C, to leaf: Unmanaged<Node.LeafStorage>) where C: Collection, C.Element == Element {}
+    public func removeElements<C>(_ elements: C, from leaf: Unmanaged<Node.LeafStorage>) where C: Collection, C.Element == Element {}
+    
 }

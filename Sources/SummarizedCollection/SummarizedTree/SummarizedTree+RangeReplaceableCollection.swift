@@ -9,6 +9,7 @@ extension SummarizedTree: RangeReplaceableCollection {
     public mutating func removeAll(keepingCapacity keepCapacity: Bool) {
         invalidateIndices()
         root = .init()
+        context = .init(tracking: root)
     }
     
     @inlinable

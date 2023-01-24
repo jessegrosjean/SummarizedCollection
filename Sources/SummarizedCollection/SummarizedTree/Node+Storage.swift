@@ -1,41 +1,56 @@
-public protocol StorageHeaderUpdater {
+public protocol StorageDelegate {
     
     associatedtype Context: SummarizedTreeContext
     associatedtype StorageElement
 
     typealias Slot = Context.Slot
+    typealias Header = Context.Node.Header
+    typealias Summary = Context.Summary
+    typealias Storage = SummarizedTree<Context>.Node.Storage<StorageElement, Self>
+
+    @inlinable
+    @inline(__always)
+    static func summarize(_ element: StorageElement) -> Summary
 
     @inlinable
     @inline(__always)
     static func update(
-        header: inout SummarizedTree<Context>.Node.Header,
+        header: inout Header,
+        removing: Range<Int>,
+        from storage: Unmanaged<Storage>,
         buffer: UnsafeBufferPointer<StorageElement>,
-        removing: Range<Int>
-    )
-
-    @inlinable
-    @inline(__always)
-    static func update(
-        header: inout SummarizedTree<Context>.Node.Header,
-        buffer: UnsafeBufferPointer<StorageElement>,
-        adding: Range<Int>
+        ctx: inout Context
     )
     
+    @inlinable
+    @inline(__always)
+    static func update(
+        header: inout Header,
+        adding: Range<Int>,
+        from storage: Unmanaged<Storage>,
+        buffer: UnsafeBufferPointer<StorageElement>,
+        ctx: inout Context
+    )
+
 }
 
 extension SummarizedTree.Node {
     
-    public final class Storage<StoredElement, HeaderUpdater: StorageHeaderUpdater>: ManagedBuffer<Header, StoredElement>
-        where HeaderUpdater.Context == Context, HeaderUpdater.StorageElement == StoredElement
+    public final class Storage<StoredElement, Delegate: StorageDelegate>: ManagedBuffer<Header, StoredElement>
+        where Delegate.Context == Context, Delegate.StorageElement == StoredElement
     {
         
-        public struct Handle {
-            
+        @usableFromInline
+        struct Handle {
+
             @usableFromInline
             typealias HeaderPointer = UnsafeMutablePointer<Header>
 
             @usableFromInline
             typealias StoredElementPointer = UnsafeMutablePointer<StoredElement>
+
+            @usableFromInline
+            var storage: Unmanaged<Storage>
 
             @usableFromInline
             var headerPtr: HeaderPointer
@@ -47,17 +62,28 @@ extension SummarizedTree.Node {
             let isMutable: Bool
             
             @inlinable
-            init(header: HeaderPointer, storedElements: StoredElementPointer) {
-                self.init(header: header, storedElements: storedElements, isMutable: false)
+            init(storage: Unmanaged<Storage>, header: HeaderPointer, storedElements: StoredElementPointer) {
+                self.init(
+                    storage: storage,
+                    header: header,
+                    storedElements: storedElements,
+                    isMutable: false
+                )
             }
 
             @inlinable
             init(mutating: Self) {
-                self.init(header: mutating.headerPtr, storedElements: mutating.storedElementsPtr, isMutable: true)
+                self.init(
+                    storage: mutating.storage,
+                    header: mutating.headerPtr,
+                    storedElements: mutating.storedElementsPtr,
+                    isMutable: true
+                )
             }
             
             @inlinable
-            init(header: HeaderPointer, storedElements: StoredElementPointer, isMutable: Bool) {
+            init(storage: Unmanaged<Storage>, header: HeaderPointer, storedElements: StoredElementPointer, isMutable: Bool) {
+                self.storage = storage
                 self.headerPtr = header
                 self.storedElementsPtr = storedElements
                 self.isMutable = isMutable
@@ -102,7 +128,7 @@ extension SummarizedTree.Node {
         @inline(__always)
         func rd<R>(_ body: (Handle) throws -> R) rethrows -> R {
             try withUnsafeMutablePointers { header, storedElements in
-                try body(.init(header: header, storedElements: storedElements))
+                try body(.init(storage: .passUnretained(self), header: header, storedElements: storedElements))
             }
         }
      
@@ -120,8 +146,11 @@ extension SummarizedTree.Node {
 
 extension SummarizedTree.Node.Storage.Handle {
         
-    public typealias Slot = SummarizedTree.Node.Slot
-    public typealias Summary = SummarizedTree.Summary
+    @usableFromInline
+    typealias Slot = SummarizedTree.Node.Slot
+    
+    @usableFromInline
+    typealias Summary = SummarizedTree.Summary
 
     @inlinable
     var slotCount: Slot {
@@ -164,38 +193,15 @@ extension SummarizedTree.Node.Storage.Handle {
         return .init(start: storedElementsPtr.advanced(by: Int(range.lowerBound)), count: range.count)
     }
 
-    @inlinable
-    @inline(__always)
-    func willRemove(_ range: Range<Slot>) {
-        HeaderUpdater.update(
-            header: &headerPtr.pointee,
-            buffer: buffer,
-            removing: Int(range.startIndex)..<Int(range.endIndex)
-        )
-    }
-
-    @inlinable
-    @inline(__always)
-    func didAdd(_ range: Range<Slot>) {
-        HeaderUpdater.update(
-            header: &headerPtr.pointee,
-            buffer: buffer,
-            adding: Int(range.startIndex)..<Int(range.endIndex)
-        )
-    }
-
-    @inlinable
-    func assertMutable() {
-        assert(isMutable)
-    }
-
 }
 
 extension SummarizedTree.Node.Storage.Handle {
     
-    public typealias Storage = SummarizedTree.Node.Storage<StoredElement, HeaderUpdater>
+    @usableFromInline
+    typealias Storage = SummarizedTree.Node.Storage<StoredElement, Delegate>
     
-    public enum Distribute {
+    @usableFromInline
+    enum Distribute {
 
         case even
         case compact
@@ -211,78 +217,6 @@ extension SummarizedTree.Node.Storage.Handle {
         }
 
     }
-    
-    @inlinable
-    func split(at index: Slot) -> Storage {
-        assert(index <= slotCount)
-
-        return Storage.create(with: slotCapacity) { handle in
-            if index != slotCount {
-                willRemove(index..<slotCount)
-                
-                moveInitializeStoredElements(
-                    range: index..<slotCount,
-                    to: 0,
-                    of: handle
-                )
-
-                handle.slotCount = slotCount - index
-                handle.didAdd(0..<Slot(handle.count))
-
-                slotCount = index
-            }
-        }
-    }
-    
-    @inlinable
-    func distributeStoredElements(with handle: Self, distribute: Distribute) {
-        let total = slotCount + handle.slotCount
-        let partitionIndex = distribute.partitionIndex(
-            total: total,
-            capacity: slotCapacity
-        )
-        
-        if partitionIndex < slotCount {
-            // self to other
-            handle.replaceSubrange(0..<0, with: self[partitionIndex..<slotCount])
-            removeSubrange(partitionIndex..<slotCount)
-        } else if partitionIndex > slotCount {
-            // other to self
-            let otherEnd = partitionIndex - slotCount
-            replaceSubrange(slotCount..<slotCount, with: handle[0..<otherEnd])
-            handle.removeSubrange(0..<otherEnd)
-        }
-    }
-    
-    @inlinable
-    func mergeOrDistributeStoredElements(with handle: Self, distribute: Distribute) -> Bool {
-        if slotsAvailible >= handle.slotCount {
-            append(contentsOf: handle)
-            return true
-        } else {
-            distributeStoredElements(with: handle, distribute: distribute)
-            return false
-        }
-    }
-    
-}
-
-extension SummarizedTree.Node.Storage.Handle: Collection {
-
-    @inlinable
-    public var count: Int { Int(slotCount) }
-
-    @inlinable
-    public var startIndex: Slot { 0 }
-    
-    @inlinable
-    public var endIndex: Slot { slotCount }
-
-    @inlinable
-    public var indices: Range<Slot> { startIndex..<endIndex }
-    
-    @inlinable
-    public func index(after i: Slot) -> Slot { i + 1 }
 
     @inlinable
     public subscript(_ index: Slot) -> StoredElement {
@@ -294,75 +228,109 @@ extension SummarizedTree.Node.Storage.Handle: Collection {
         nonmutating _modify {
             assertMutable()
             assert(0 <= index && index < slotCount)
-            willRemove(index..<index + 1)
             var value = storedElementPointer(at: index).move()
+            headerPtr.pointee.summary -= Delegate.summarize(value)
             yield &value
+            headerPtr.pointee.summary += Delegate.summarize(value)
             storedElementPointer(at: index).initialize(to: value)
-            didAdd(index..<index + 1)
         }
     }
 
-}
-
-extension SummarizedTree.Node.Storage.Handle: BidirectionalCollection {
-
     @inlinable
-    public func index(before i: Slot) -> Slot { i - 1 }
+    func split(at index: Slot, ctx: inout Context) -> Storage {
+        assert(index <= slotCount)
+
+        return Storage.create(with: slotCapacity) { handle in
+            if index != slotCount {
+                willRemove(index..<slotCount, ctx: &ctx)
+                
+                moveInitializeStoredElements(
+                    range: index..<slotCount,
+                    to: 0,
+                    of: handle
+                )
+
+                handle.slotCount = slotCount - index
+                handle.didAdd(0..<handle.slotCount, ctx: &ctx)
+
+                slotCount = index
+            }
+        }
+    }
     
     @inlinable
-    public func index(_ i: Slot, offsetBy distance: Int) -> Slot { Slot(Int(i) + distance) }
-}
-
-extension SummarizedTree.Node.Storage.Handle: RandomAccessCollection {}
-
-extension SummarizedTree.Node.Storage.Handle: RangeReplaceableCollection {
-
-    public init() {
-        fatalError()
+    func distributeStoredElements(with handle: Self, distribute: Distribute, ctx: inout Context) {
+        let total = slotCount + handle.slotCount
+        let partitionIndex = distribute.partitionIndex(
+            total: total,
+            capacity: slotCapacity
+        )
+        
+        if partitionIndex < slotCount {
+            // self to other
+            handle.replaceSubrange(0..<0, with: self[partitionIndex..<slotCount], ctx: &ctx)
+            removeSubrange(partitionIndex..<slotCount, ctx: &ctx)
+        } else if partitionIndex > slotCount {
+            // other to self
+            let otherEnd = partitionIndex - slotCount
+            replaceSubrange(slotCount..<slotCount, with: handle[0..<otherEnd], ctx: &ctx)
+            handle.removeSubrange(0..<otherEnd, ctx: &ctx)
+        }
     }
-
+    
     @inlinable
-    public func remove(at i: Slot) -> StoredElement {
+    func mergeOrDistributeStoredElements(with handle: Self, distribute: Distribute, ctx: inout Context) -> Bool {
+        if slotsAvailible >= handle.slotCount {
+            append(contentsOf: handle, ctx: &ctx)
+            return true
+        } else {
+            distributeStoredElements(with: handle, distribute: distribute, ctx: &ctx)
+            return false
+        }
+    }
+    
+    @inlinable
+    func remove(at i: Slot, ctx: inout Context) -> StoredElement {
         let result = storedElementPointer(at: i).pointee
-        replaceSubrange(i..<i + 1, with: EmptyCollection())
+        replaceSubrange(i..<i + 1, with: EmptyCollection(), ctx: &ctx)
         return result
     }
     
     @inlinable
-    public func removeSubrange(_ subrange: Range<Slot>) {
-        replaceSubrange(subrange, with: EmptyCollection())
+    func removeSubrange(_ subrange: Range<Slot>, ctx: inout Context) {
+        replaceSubrange(subrange, with: EmptyCollection(), ctx: &ctx)
     }
 
     @inlinable
-    public func insert(_ newElement: StoredElement, at i: SummarizedTree<Context>.Node.Slot) {
-        replaceSubrange(0..<0, with: CollectionOfOne(newElement))
+    func insert(_ newElement: StoredElement, at i: Slot, ctx: inout Context) {
+        replaceSubrange(0..<0, with: CollectionOfOne(newElement), ctx: &ctx)
     }
     
     @inlinable
-    public func append(_ newElement: StoredElement) {
+    func append(_ newElement: StoredElement, ctx: inout Context) {
         storedElementsPtr.advanced(by: Int(slotCount)).initialize(to: newElement)
         slotCount += 1
-        didAdd(slotCount - 1..<slotCount)
+        didAdd(slotCount - 1..<slotCount, ctx: &ctx)
     }
 
     @inlinable
-    public func append(contentsOf storage: Storage) {
-        storage.rd { append(contentsOf: $0) }
+    func append(contentsOf storage: Storage, ctx: inout Context) {
+        storage.rd { append(contentsOf: $0, ctx: &ctx) }
     }
 
     @inlinable
-    public func append(contentsOf handle: Self) {
+    func append(contentsOf handle: Self, ctx: inout Context) {
         handle.copyInitializeStoredElements(
             range: 0..<handle.slotCount,
             to: slotCount,
             of: self
         )
         slotCount += handle.slotCount
-        didAdd(slotCount - handle.slotCount..<slotCount)
+        didAdd(slotCount - handle.slotCount..<slotCount, ctx: &ctx)
     }
 
     @inlinable
-    public func append<S>(contentsOf newElements: S) where S : Sequence, S.Element == StoredElement {
+    func append<S>(contentsOf newElements: S, ctx: inout Context) where S : Sequence, S.Element == StoredElement {
         let start = slotCount
         var ptr = storedElementsPtr.advanced(by: Int(slotCount))
         for each in newElements {
@@ -371,11 +339,11 @@ extension SummarizedTree.Node.Storage.Handle: RangeReplaceableCollection {
             ptr = ptr.advanced(by: 1)
             slotCount += 1
         }
-        didAdd(start..<slotCount)
+        didAdd(start..<slotCount, ctx: &ctx)
     }
 
     @inlinable
-    public func replaceSubrange<C>(_ subrange: Range<Slot>, with newElements: C)
+    func replaceSubrange<C>(_ subrange: Range<Slot>, with newElements: C, ctx: inout Context)
         where C : Collection, C.Element == StoredElement
     {
         let changeInLength = newElements.count - subrange.count
@@ -387,7 +355,7 @@ extension SummarizedTree.Node.Storage.Handle: RangeReplaceableCollection {
 
         // Remove old
         if !subrange.isEmpty {
-            willRemove(subrange.startIndex..<subrange.endIndex)
+            willRemove(subrange.startIndex..<subrange.endIndex, ctx: &ctx)
             storedElementPointer(at: subrange.lowerBound).deinitialize(count: subrange.count)
         }
 
@@ -414,9 +382,38 @@ extension SummarizedTree.Node.Storage.Handle: RangeReplaceableCollection {
         slotCount -= Slot(subrange.count)
         slotCount += Slot(newElements.count)
         
-        didAdd(subrange.lowerBound..<subrange.lowerBound + Slot(newElements.count))
+        didAdd(subrange.lowerBound..<subrange.lowerBound + Slot(newElements.count), ctx: &ctx)
     }
     
+    @inlinable
+    @inline(__always)
+    func willRemove(_ range: Range<Slot>, ctx: inout Context) {
+        Delegate.update(
+            header: &headerPtr.pointee,
+            removing: Int(range.startIndex)..<Int(range.endIndex),
+            from: storage,
+            buffer: buffer,
+            ctx: &ctx
+        )
+    }
+
+    @inlinable
+    @inline(__always)
+    func didAdd(_ range: Range<Slot>, ctx: inout Context) {
+        Delegate.update(
+            header: &headerPtr.pointee,
+            adding: Int(range.startIndex)..<Int(range.endIndex),
+            from: storage,
+            buffer: buffer,
+            ctx: &ctx
+        )
+    }
+
+    @inlinable
+    func assertMutable() {
+        assert(isMutable)
+    }
+
 }
 
 extension SummarizedTree.Node.Storage.Handle {

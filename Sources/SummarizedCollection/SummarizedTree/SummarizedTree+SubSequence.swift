@@ -13,7 +13,7 @@ extension SummarizedTree {
         @inlinable
         @inline(__always)
         init(base: Node, bounds: Range<Int>? = nil) {
-            self.base = .init(root: base, maintainBackpointersIfAble: false)
+            self.base = .init(root: base)
             if let bounds {
                 self.startIndex = self.base.index(at: bounds.lowerBound)
                 self.endIndex = self.base.index(at: bounds.upperBound)

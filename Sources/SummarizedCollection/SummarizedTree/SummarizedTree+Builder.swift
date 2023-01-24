@@ -16,7 +16,8 @@ extension SummarizedTree {
 
         @inlinable
         public init() {
-            root = .init(root: .init(), maintainBackpointersIfAble: false)
+            root = .init(root: .init())
+            root.context = .nonTracking
         }
         
         @inlinable
@@ -31,6 +32,7 @@ extension SummarizedTree {
                 return
             }
 
+            var null = Context.nonTracking
             var stack: [ContiguousArray<Node>] = []
             let count = elements.count
             var i = 0
@@ -41,7 +43,7 @@ extension SummarizedTree {
                 let endIndex = elements.index(startIndex, offsetBy: j - i)
 
                 var node: Node = .init(leaf: LeafStorage.create(with: Slot(leafCapacity)) { handle in
-                    handle.append(contentsOf: elements[startIndex..<endIndex])
+                    handle.append(contentsOf: elements[startIndex..<endIndex], ctx: &null)
                 })
                 
                 while true {
@@ -70,7 +72,8 @@ extension SummarizedTree {
         
         public mutating func build() -> SummarizedTree<Context> {
             let result = root
-            root = .init(root: .init(), maintainBackpointersIfAble: false)
+            root = .init(root: .init())
+            root.context = .nonTracking
             return result
         }
 

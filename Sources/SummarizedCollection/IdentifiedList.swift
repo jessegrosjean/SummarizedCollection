@@ -1,54 +1,116 @@
 public struct IdentifiedListContext<Element: Identifiable>: IdentifiedSummarizedTreeContext {
-
+    
     public typealias Slot = UInt16
     public typealias Summary = IdentifiedListSummary<Element>
 
-    public var maintainsBackpointers: Bool
-
     @usableFromInline
-    var parents: [ObjectIdentifier : Unmanaged<TreeNode.InnerStorage>] = [:]
+    var rootIdentifier: ObjectIdentifier?
     
     @usableFromInline
-    var elementsLookup: [Element.ID : Unmanaged<TreeNode.LeafStorage>] = [:]
+    var parents: [ObjectIdentifier : Unmanaged<Node.InnerStorage>] = [:]
+    
+    @usableFromInline
+    var elementsLookup: [Element.ID : Unmanaged<Node.LeafStorage>] = [:]
 
     @inlinable
-    public init(root: TreeNode?, maintainBackpointersIfAble: Bool) {
-        self.maintainsBackpointers = maintainBackpointersIfAble
-        if let root, maintainBackpointersIfAble {
-            addNode(root)
+    public init() {
+        rootIdentifier = nil
+    }
+
+    @inlinable
+    public init(tracking root: Node) {
+        self.rootIdentifier = root.objectIdentifier
+        if root.isInner {
+            addChildren(root.children, to: .passUnretained(root.inner))
+        } else {
+            addElements(root.elements, to: .passUnretained(root.leaf))
         }
     }
 
     @inlinable
-    public subscript(parentOf nodeIdentifier: ObjectIdentifier) -> TreeNode.InnerStorage? {
-        get { parents[nodeIdentifier]?.takeUnretainedValue() }
-        set {
-            guard maintainsBackpointers else { return }
-            parents[nodeIdentifier] = newValue.map { .passUnretained($0) }
-        }
+    public subscript(parentOf nodeIdentifier: ObjectIdentifier) -> Unmanaged<Node.InnerStorage>? {
+        parents[nodeIdentifier]
     }
     
     @inlinable
-    public subscript(leafOf id: Element.ID) -> TreeNode.LeafStorage? {
-        elementsLookup[id]?.takeUnretainedValue()
+    public subscript(parentOf id: Element.ID) -> Unmanaged<Node.LeafStorage>? {
+        elementsLookup[id]
     }
+    
+    @inlinable
+    public mutating func changed(rootIdentifier: ObjectIdentifier) {
+        self.rootIdentifier = rootIdentifier
+    }
+
+    @inlinable
+    public mutating func addChildren<C>(_ children: C, to inner: Unmanaged<Node.InnerStorage>) where C: Collection, C.Element == Node {
+        let parentIdentifier = ObjectIdentifier(inner.takeUnretainedValue())
+        
+        guard isTrackedInContext(objectIdentifier: parentIdentifier) else {
+            return
+        }
+
+        for each in children {
+            parents[each.objectIdentifier] = inner
             
-    @inlinable
-    public mutating func addElements<C>(_ elements: C, to leaf: TreeNode.LeafStorage) where C : Collection, C.Element == Element {
-        guard maintainsBackpointers else { return }
-        for each in elements {
-            elementsLookup[each.id] = .passUnretained(leaf)
+            if each.isInner {
+                addChildren(each.children, to: .passUnretained(each.inner))
+            } else {
+                addElements(each.elements, to: .passUnretained(each.leaf))
+            }
         }
     }
     
     @inlinable
-    public mutating func removeElements<C>(_ elements: C, from leaf: TreeNode.LeafStorage) where C : Collection, C.Element == Element {
-        guard maintainsBackpointers else { return }
+    public mutating func removeChildren<C>(_ children: C, from inner: Unmanaged<Node.InnerStorage>) where C: Collection, C.Element == Node {
+        let parentIdentifier = ObjectIdentifier(inner.takeUnretainedValue())
+        
+        guard isTrackedInContext(objectIdentifier: parentIdentifier) else {
+            return
+        }
+
+        for each in children {
+            parents[each.objectIdentifier] = nil
+            
+            if each.isInner {
+                removeChildren(each.children, from: .passUnretained(each.inner))
+            } else {
+                removeElements(each.elements, from: .passUnretained(each.leaf))
+            }
+        }
+    }
+    
+    @inlinable
+    public mutating func addElements<C>(_ elements: C, to leaf: Unmanaged<Node.LeafStorage>) where C: Collection, C.Element == Element {
+        let leafIdentifier = ObjectIdentifier(leaf.takeUnretainedValue())
+        
+        guard isTrackedInContext(objectIdentifier: leafIdentifier) else {
+            return
+        }
+
+        for each in elements {
+            elementsLookup[each.id] = leaf
+        }
+    }
+    
+    @inlinable
+    public mutating func removeElements<C>(_ elements: C, from leaf: Unmanaged<Node.LeafStorage>) where C: Collection, C.Element == Element {
+        let leafIdentifier = ObjectIdentifier(leaf.takeUnretainedValue())
+        
+        guard isTrackedInContext(objectIdentifier: leafIdentifier) else {
+            return
+        }
+        
         for each in elements {
             elementsLookup[each.id] = nil
         }
     }
 
+    @inlinable
+    func isTrackedInContext(objectIdentifier: ObjectIdentifier) -> Bool {
+        return objectIdentifier == rootIdentifier || parents.keys.contains(objectIdentifier)
+    }
+    
 }
 
 public struct IdentifiedListSummary<Element: Identifiable>: CollectionSummary {

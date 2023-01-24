@@ -108,7 +108,7 @@ extension SummarizedTree.Node {
     @inlinable
     init<C>(inner: C) where C: Collection, C.Element == Node {
         self.init(inner: InnerStorage.create(with: Context.innerCapacity) { handle in
-            handle.append(contentsOf: inner)
+            handle.append(contentsOf: inner, ctx: &Context.nonTracking)
         })
     }
 
@@ -121,7 +121,7 @@ extension SummarizedTree.Node {
     @inlinable
     init<C>(leaf: C) where C: Collection, C.Element == Element {
         self.init(leaf: .create(with: Context.leafCapacity) { handle in
-            handle.append(contentsOf: leaf)
+            handle.append(contentsOf: leaf, ctx: &Context.nonTracking)
         })
     }
 
@@ -129,15 +129,6 @@ extension SummarizedTree.Node {
     init(leaf: LeafStorage) {
         _leaf = leaf
         _header = leaf.header
-    }
-
-    @inlinable
-    init(combining child1: Self, and child2: Self) {
-        assert(child1.height == child2.height)
-        self.init(inner: InnerStorage.create(with: Context.innerCapacity) { handle in
-            handle.append(child1)
-            handle.append(child2)
-        })
     }
 
     @inlinable

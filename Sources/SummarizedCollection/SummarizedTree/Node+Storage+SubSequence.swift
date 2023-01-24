@@ -1,7 +1,7 @@
 extension SummarizedTree.Node.Storage {
     
     public typealias Slot = SummarizedTree.Node.Slot
-    public typealias Base = SummarizedTree.Node.Storage<StoredElement, HeaderUpdater>
+    public typealias Base = SummarizedTree.Node.Storage<StoredElement, Delegate>
 
     public struct SubSequence {
         

@@ -1,13 +1,10 @@
 public struct ListContext<Element>: SummarizedTreeContext {
-    
+
     public typealias Slot = UInt16
     public typealias Summary = ListSummary<Element>
-
-    public var maintainsBackpointers: Bool { false }
-
+    
     @inlinable
-    public init(root: TreeNode?, maintainBackpointersIfAble: Bool) {
-    }
+    public init() {}
 
 }
 

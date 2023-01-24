@@ -31,16 +31,16 @@ extension SummarizedTree: IdentifiedCollection where Element: Identifiable, Cont
         return nil
         */
         
-        guard context.maintainsBackpointers else {
+        /*guard context.maintainsBackpointers else {
             for (i, each) in enumerated() {
                 if each.id == id {
                     return i
                 }
             }
             return nil
-        }
+        }*/
         
-        guard let leaf = context[leafOf: id] else {
+        guard let leaf = context[parentOf: id]?.takeUnretainedValue() else {
             return nil
         }
         
@@ -48,7 +48,7 @@ extension SummarizedTree: IdentifiedCollection where Element: Identifiable, Cont
         var parent = context[parentOf: ObjectIdentifier(leaf)]
         var child = ObjectIdentifier(leaf)
 
-        while let p = parent {
+        while let p = parent?.takeUnretainedValue() {
             for each in p.subSequence {
                 if each.objectIdentifier == child {
                     break

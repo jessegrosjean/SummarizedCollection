@@ -27,18 +27,8 @@ extension SummarizedTree.Node: CustomDebugStringConvertible {
 extension SummarizedTree.Node {
     
     func ensureValid(parent: Node?, ctx: Context) {
-        if let contextParent = ctx[parentOf: self.objectIdentifier] {
-            assert(contextParent.subSequence.contains(self))
-            if ctx.maintainsBackpointers {
-                assert(parent?.inner === contextParent)
-            }
-        } else if ctx.maintainsBackpointers {
-            assert(parent == nil)
-        }
-        
         if isLeaf {
             assert(height == 0)
-            //assert(handle.slotCount <= Context.leafCapacity)
             assert(summary == Summary.summarize(elements: leaf.subSequence))
         } else {
             assert(height > 0)

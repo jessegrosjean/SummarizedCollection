@@ -2,13 +2,13 @@ extension SummarizedTree {
     
     @inlinable
     public init() {
-        self.init(root: .init(), maintainBackpointersIfAble: true)
+        self.init(root: .init())
     }
 
     @inlinable
-    init(root: Node, maintainBackpointersIfAble: Bool = false) {
+    init(root: Node) {
         self.root = root
-        self.context = .init(root: root, maintainBackpointersIfAble: maintainBackpointersIfAble)
+        self.context = .init(tracking: root)
         self.version = root.objectIdentifier.hashValue
     }
 
@@ -17,7 +17,7 @@ extension SummarizedTree {
         var builder = Builder()
         builder.append(contentsOf: s)
         self = builder.build()
-        self.context.addNode(root)
+        context = .init(tracking: root)
     }
 
     @inlinable
@@ -25,7 +25,7 @@ extension SummarizedTree {
         var builder = Builder()
         builder.append(contentsOf: ContiguousArray(c))
         self = builder.build()
-        self.context.addNode(root)
+        context = .init(tracking: root)
     }
 
 }

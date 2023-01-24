@@ -1,8 +1,10 @@
 extension SummarizedTree.Node {
 
+    
     @inlinable
     var unmanagedNode: UnmanagedNode {
         if isInner {
+            
             return .inner(_header, .passUnretained(inner))
         } else {
             return .leaf(_header, .passUnretained(leaf))

@@ -67,4 +67,28 @@ public struct SummarizedTree<Context: SummarizedTreeContext> {
         return cursor
     }
     
+    // MARK: Balancing Root
+
+    @inlinable
+    mutating func pullUpUnderflowingRoot() {
+        while !root.isLeaf && root.slotCount == 1 {
+            root = root.rdInner { handle in
+                let child = handle[0]
+                context.removeChildren([child], from: .passUnretained(root.inner))
+                context.changed(rootIdentifier: child.objectIdentifier)
+                return child
+            }
+        }
+    }
+
+    @inlinable
+    mutating func pushDownOverflowingRoot(overflow: Node) {
+        assert(root.height == overflow.height)
+        root = .init(inner: Node.InnerStorage.create(with: Context.innerCapacity) { handle in
+            handle.append(root, ctx: &context)
+            handle.append(overflow, ctx: &context)
+        })
+        context.changed(rootIdentifier: root.objectIdentifier)
+    }
+        
 }

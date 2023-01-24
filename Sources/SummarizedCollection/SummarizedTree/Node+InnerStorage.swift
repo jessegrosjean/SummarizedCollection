@@ -1,28 +1,47 @@
 extension SummarizedTree.Node {
     
-    public typealias InnerStorage = Storage<Self, InnerHeaderUpdater>
+    public typealias InnerStorage = Storage<Self, InnerStorageDelegate>
     
-    public struct InnerHeaderUpdater: StorageHeaderUpdater {
-
+    public struct InnerStorageDelegate: StorageDelegate {
+        
         public typealias Context = SummarizedTree.Context
         public typealias StorageElement = Node
+
+        @inlinable
+        @inline(__always)
+        public static func summarize(_ element: SummarizedTree<Context>.Node.Node) -> Summary {
+            element.summary
+        }
+
+        @inlinable
+        @inline(__always)
+        public static func update(
+            header: inout Header,
+            removing: Range<Int>,
+            from storage: Unmanaged<InnerStorage>,
+            buffer: UnsafeBufferPointer<StorageElement>,
+            ctx: inout Context
+        ) {
+            header.height = buffer.count - removing.count == 0 ? 1 : buffer[0].height + 1
+            for each in buffer[removing] {
+                header.summary -= each.summary
+            }
+        }
         
         @inlinable
-        public static func update(header: inout Header, buffer: UnsafeBufferPointer<StorageElement>, adding: Range<Int>) {
+        @inline(__always)
+        public static func update(
+            header: inout Header,
+            adding: Range<Int>,
+            from storage: Unmanaged<InnerStorage>,
+            buffer: UnsafeBufferPointer<StorageElement>,
+            ctx: inout Context
+        ) {
             header.height = buffer.isEmpty ? 1 : buffer[0].height + 1
             for each in buffer[adding] {
                 header.summary += each.summary
             }
         }
-        
-        @inlinable
-        public static func update(header: inout Header, buffer: UnsafeBufferPointer<StorageElement>, removing: Range<Int>) {
-            header.height = buffer.count == removing.count ? 1 : buffer[0].height + 1
-            for each in buffer[removing] {
-                header.summary -= each.summary
-            }
-        }
-            
     }    
     
 }
