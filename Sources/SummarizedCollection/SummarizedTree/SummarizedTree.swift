@@ -99,8 +99,13 @@ public struct SummarizedTree<Context: SummarizedTreeContext> {
         while !root.isLeaf && root.slotCount == 1 {
             root = root.rdInner { handle in
                 let child = handle[0]
-                context.removeChildren([child], from: .passUnretained(root.inner))
-                context.setRoot(child.objectIdentifier)
+                
+                if context.isTracking {
+                    let childId = child.objectIdentifier
+                    context[trackedParentOf: childId] = nil
+                    context.rootIdentifier = child.objectIdentifier
+                }
+
                 return child
             }
         }
@@ -110,12 +115,30 @@ public struct SummarizedTree<Context: SummarizedTreeContext> {
     mutating func pushDownOverflowingRoot(overflow: Node) {
         assert(root.height == overflow.height)
         let pushed = root
+        
         root = .init(inner: .create(with: Context.innerCapacity))
-        context.setRoot(root.objectIdentifier)
-        root.mutInner(isUnique: true) { handle in
-            handle.append(pushed, ctx: &context)
-            handle.append(overflow, ctx: &context)
+        
+        if context.isTracking {
+            context.rootIdentifier = root.objectIdentifier
+        }
+        
+        root.mutInner(isUnique: true, ctx: &context) { handle, ctx in
+            handle.append(pushed, ctx: &ctx)
+            handle.append(overflow, ctx: &ctx)
         }
     }
         
 }
+
+//#if DEBUG
+extension SummarizedTree: CustomDebugStringConvertible {
+    
+    public var debugDescription: String {
+        var result = ""
+        result.append(root.debugDescription)
+        result.append("\(context)")
+        return result
+    }
+
+}
+//#endif

@@ -1,10 +1,11 @@
+import Foundation
+
 public struct IdentifiedListContext<Element: Identifiable>: IdentifiedSummarizedTreeContext {
     
     public typealias Slot = UInt16
     public typealias Summary = IdentifiedListSummary<Element>
 
-    @usableFromInline
-    var rootIdentifier: ObjectIdentifier?
+    public var rootIdentifier: ObjectIdentifier?
     
     @usableFromInline
     var parents: [ObjectIdentifier : Unmanaged<Node.InnerStorage>] = [:]
@@ -20,95 +21,74 @@ public struct IdentifiedListContext<Element: Identifiable>: IdentifiedSummarized
     @inlinable
     public init(tracking root: Node) {
         self.rootIdentifier = root.objectIdentifier
+        self.reserveCapacity(root.count)
         if root.isInner {
-            addChildren(root.children, to: .passUnretained(root.inner))
+            SummarizedTree<Self>.Node.InnerStorageDelegate.addChildren(root.children, to: .passUnretained(root.inner), ctx: &self)
         } else {
-            addElements(root.elements, to: .passUnretained(root.leaf))
-        }
-    }
-
-    @inlinable
-    public subscript(parentOf nodeIdentifier: ObjectIdentifier) -> Unmanaged<Node.InnerStorage>? {
-        parents[nodeIdentifier]
-    }
-    
-    @inlinable
-    public subscript(parentOf id: Element.ID) -> Unmanaged<Node.LeafStorage>? {
-        elementsLookup[id]
-    }
-    
-    @inlinable
-    public mutating func setRoot(_ rootIdentifier: ObjectIdentifier) {
-        self.rootIdentifier = rootIdentifier
-    }
-
-    @inlinable
-    public mutating func addChildren<C>(_ children: C, to inner: Unmanaged<Node.InnerStorage>) where C: Collection, C.Element == Node {
-        let parentIdentifier = ObjectIdentifier(inner.takeUnretainedValue())
-        
-        guard isTrackedInContext(objectIdentifier: parentIdentifier) else {
-            return
-        }
-
-        for each in children {
-            parents[each.objectIdentifier] = inner
-            
-            if each.isInner {
-                addChildren(each.children, to: .passUnretained(each.inner))
-            } else {
-                addElements(each.elements, to: .passUnretained(each.leaf))
-            }
+            SummarizedTree<Self>.Node.LeafStorageDelegate.addElements(root.elements, to: .passUnretained(root.leaf), ctx: &self)
         }
     }
     
     @inlinable
-    public mutating func removeChildren<C>(_ children: C, from inner: Unmanaged<Node.InnerStorage>) where C: Collection, C.Element == Node {
-        let parentIdentifier = ObjectIdentifier(inner.takeUnretainedValue())
-        
-        guard isTrackedInContext(objectIdentifier: parentIdentifier) else {
-            return
-        }
-
-        for each in children {
-            parents[each.objectIdentifier] = nil
-            
-            if each.isInner {
-                removeChildren(each.children, from: .passUnretained(each.inner))
-            } else {
-                removeElements(each.elements, from: .passUnretained(each.leaf))
-            }
-        }
+    public func isTracking(id: ObjectIdentifier) -> Bool {
+        rootIdentifier != nil && (rootIdentifier == id || parents.keys.contains(id))
     }
-    
-    @inlinable
-    public mutating func addElements<C>(_ elements: C, to leaf: Unmanaged<Node.LeafStorage>) where C: Collection, C.Element == Element {
-        let leafIdentifier = ObjectIdentifier(leaf.takeUnretainedValue())
-        
-        guard isTrackedInContext(objectIdentifier: leafIdentifier) else {
-            return
-        }
 
-        for each in elements {
-            elementsLookup[each.id] = leaf
-        }
-    }
-    
     @inlinable
-    public mutating func removeElements<C>(_ elements: C, from leaf: Unmanaged<Node.LeafStorage>) where C: Collection, C.Element == Element {
-        let leafIdentifier = ObjectIdentifier(leaf.takeUnretainedValue())
-        
-        guard isTrackedInContext(objectIdentifier: leafIdentifier) else {
+    public func contains(id: Element.ID) -> Bool {
+        elementsLookup.keys.contains(id)
+    }
+
+    @inlinable
+    public mutating func reserveCapacity(_ n: Int) {
+        guard isTracking && elementsLookup.capacity < n else {
             return
         }
         
-        for each in elements {
-            elementsLookup[each.id] = nil
+        // This isn't right, jesse brain to small
+        
+        func logN(base: Double, value: Double) -> Double {
+            return log(value) / log(base)
+        }
+        
+        let innerCapacity = Double(Self.innerCapacity)
+        let leaves = (Double(n) / Double(Self.leafCapacity)).rounded(.awayFromZero)
+        let height = logN(base: innerCapacity, value: leaves).rounded(.down) + 1
+        let nodes = (pow(innerCapacity, height)) - 1
+        let total = Int(leaves + nodes)
+        
+        parents.reserveCapacity(total)
+        elementsLookup.reserveCapacity(n)
+    }
+
+    @inlinable
+    public subscript(trackedParentOf id: ObjectIdentifier) -> Unmanaged<Node.InnerStorage>? {
+        get {
+            parents[id]
+        }
+        set {
+            parents[id] = newValue
+        }
+    }
+    
+    @inlinable
+    public subscript(trackedParentOf element: Element) -> Unmanaged<Node.LeafStorage>? {
+        get {
+            elementsLookup[element.id]
+        }
+        set {
+            elementsLookup[element.id] = newValue
         }
     }
 
     @inlinable
-    func isTrackedInContext(objectIdentifier: ObjectIdentifier) -> Bool {
-        return objectIdentifier == rootIdentifier || parents.keys.contains(objectIdentifier)
+    public subscript(trackedParentOf id: Element.ID) -> Unmanaged<Node.LeafStorage>? {
+        get {
+            elementsLookup[id]
+        }
+        set {
+            elementsLookup[id] = newValue
+        }
     }
     
     @inlinable
@@ -124,17 +104,44 @@ public struct IdentifiedListContext<Element: Identifiable>: IdentifiedSummarized
         with newElements: C,
         in tree: SummarizedTree<Self>
     ) where C : Collection, C.Element == Element {
-        var replacing = Set(tree[subrange].map { $0.id })
+        var replacing: Set<Element.ID>?
         for each in newElements {
-            if replacing.contains(each.id) {
-                replacing.remove(each.id)
-            } else {
-                assert(!elementsLookup.keys.contains(each.id))
+            if elementsLookup.keys.contains(each.id) {
+                replacing = replacing ?? Set(tree[subrange].map { $0.id })
+                if replacing!.contains(each.id) {
+                    replacing!.remove(each.id)
+                } else {
+                    assert(false)
+                }
             }
         }
     }
     
 }
+
+//#if DEBUG
+extension IdentifiedListContext: CustomDebugStringConvertible {
+    
+    public var debugDescription: String {
+        var result = ""
+        result += "parents: {\n"
+        for each in parents.keys {
+            result += "  \(each): \(parents[each]!.toOpaque())\n"
+        }
+        result += "}\n"
+
+        result += "elements: {\n"
+        for each in elementsLookup.keys {
+            result += "  \(each): \(elementsLookup[each]!.toOpaque())\n"
+        }
+        result += "}"
+
+        return result
+    }
+
+}
+//#endif
+
 
 public struct IdentifiedListSummary<Element: Identifiable>: CollectionSummary {
     

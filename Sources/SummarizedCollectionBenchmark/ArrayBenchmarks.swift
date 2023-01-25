@@ -1,4 +1,5 @@
 import CollectionsBenchmark
+import SummarizedCollection
 
 extension Benchmark {
     
@@ -20,7 +21,6 @@ extension Benchmark {
                 blackHole(Array(buffer))
             }
         }
-        */
         
         addSimple(
             title: "Array<Int> sequential iteration",
@@ -31,7 +31,6 @@ extension Benchmark {
             }
         }
         
-        /*
         addSimple(
             title: "Array<Int> subscript get, random offsets",
             input: ([Int], [Int]).self
@@ -50,6 +49,46 @@ extension Benchmark {
             }
         }
         
+         */
+        
+        /*
+        add(
+            title: "Array<Int> successful contains",
+            input: Int.self
+        ) { count in
+            { timer in
+                let array = Array(0..<count)
+                let shuffled = (0..<count).shuffled()[0..<count / 10]
+                
+                timer.measure {
+                    OSLog.pointsOfInterest.begin(name: "Array<Int> successful contains")
+                    for i in shuffled {
+                        precondition(array.contains(i))
+                    }
+                    OSLog.pointsOfInterest.end(name: "Array<Int> successful contains")
+                }
+            }
+        }
+
+        add(
+            title: "Array<Int> successful firstIndex(where:)",
+            input: Int.self
+        ) { count in
+            { timer in
+                let array = Array(0..<count)
+                let shuffled = (0..<count).shuffled()[0..<count / 10]
+                
+                timer.measure {
+                    OSLog.pointsOfInterest.begin(name: "Array<Int> successful firstIndex(where:)")
+                    for i in shuffled {
+                        precondition(array.firstIndex { $0 == i } == i)
+                    }
+                    OSLog.pointsOfInterest.end(name: "Array<Int> successful firstIndex(where:)")
+                }
+            }
+        }*/
+        
+        /*
         addSimple(
             title: "Array<Int> unsuccessful contains",
             input: ([Int], [Int]).self
@@ -59,7 +98,7 @@ extension Benchmark {
                 precondition(!input.contains(i + c))
             }
         }
-        
+         
         add(
             title: "Array<Int> mutate through subscript",
             input: ([Int], [Int]).self
@@ -185,7 +224,7 @@ extension Benchmark {
         ) { input in
             blackHole(input.kalimbaOrdered3())
         }
-        */
+
         add(
             title: "Array<Int> random insertions",
             input: Insertions.self
@@ -202,7 +241,6 @@ extension Benchmark {
             }
         }
         
-        /*
         add(
             title: "Array<Int> random insertions, reserving capacity",
             input: Insertions.self
@@ -268,6 +306,63 @@ extension Benchmark {
             }
         }
          */
+        
+        add(
+            title: "Array<Int> splits",
+            input: Int.self
+        ) { size in
+            return { timer in
+                var array = Array(0 ..< size)
+                timer.measure {
+                    OSLog.pointsOfInterest.begin(name: "Array<Int> splits")
+                    while array.count > 1 {
+                        array = array.split(array.count / 2)
+                    }
+                    OSLog.pointsOfInterest.end(name: "Array<Int> splits")
+                }
+                precondition(array.count == 1)
+                blackHole(array)
+            }
+        }
+        
+        add(
+            title: "Array<Int> concats",
+            input: Int.self
+        ) { size in
+            return { timer in
+                var array = Array(0 ..< size)
+                
+                var splits: [Array<Int>] = []
+                while array.count > 1 {
+                    splits.append(Array(array.split(array.count / 2)))
+                }
+                
+                splits.shuffle()
+                
+                timer.measure {
+                    OSLog.pointsOfInterest.begin(name: "Array<Int> concats")
+                    for each in splits {
+                        //array.append(contentsOf: each)
+                        array.insert(contentsOf: each, at: 0)
+                    }
+                    OSLog.pointsOfInterest.end(name: "Array<Int> concats")
+                }
+                
+                precondition(array.count == size)
+                blackHole(array)
+            }
+        }
+        
+    }
+    
+}
+
+extension Array {
+    
+    mutating func split(_ index: Index) -> Self {
+        let tail = Array(self[index...])
+        self.removeSubrange(index...)
+        return tail
     }
     
 }

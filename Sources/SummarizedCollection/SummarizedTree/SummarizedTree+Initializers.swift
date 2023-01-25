@@ -13,6 +13,13 @@ extension SummarizedTree {
     }
 
     @inlinable
+    init(untracked root: Node) {
+        self.root = root
+        self.context = Context.nonTracking
+        self.version = root.objectIdentifier.hashValue
+    }
+
+    @inlinable
     public init<S>(_ s: S) where Element == S.Element, S : RandomAccessCollection {
         var builder = Builder()
         builder.append(contentsOf: s)

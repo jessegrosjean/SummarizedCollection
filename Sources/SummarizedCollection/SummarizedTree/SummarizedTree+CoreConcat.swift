@@ -11,12 +11,14 @@ extension SummarizedTree {
         guard !node.isEmpty else {
             return
         }
-                
+            
         if isEmpty {
-            var copy = SummarizedTree(root: node)
+            var copy = context.isTracking ? SummarizedTree(root: node) : SummarizedTree(untracked: node)
             swap(&self, &copy)
             return
         }
+    
+        context.reserveCapacity(count + node.count)
 
         let h1 = height
         let h2 = node.height
@@ -46,32 +48,33 @@ extension SummarizedTree.Node {
 
         if isInner {
             let concatChildren = InnerStorage.create(with: Context.innerCapacity)
+            var nonTracking = Context.nonTracking
             
             if heightDelta == 0 {
-                concatChildren.mut { $0.append(contentsOf: node.inner, ctx: &ctx) }
+                concatChildren.mut { $0.append(contentsOf: node.inner, ctx: &nonTracking) }
             } else if heightDelta == 1 && !node.slotsUnderflowing {
-                concatChildren.mut { $0.append(node, ctx: &ctx) }
+                concatChildren.mut { $0.append(node, ctx: &nonTracking) }
             } else {
-                mutInner { handle in
+                mutInner(ctx: &ctx) { handle, ctx in
                     if let overflow = handle[handle.slotCount - 1].concat(node, ctx: &ctx) {
-                        concatChildren.mut { $0.append(overflow, ctx: &ctx) }
+                        concatChildren.mut { $0.append(overflow, ctx: &nonTracking) }
                     }
                 }
             }
             
             if slotsAvailible >= concatChildren.header.slotCount {
-                mutInner { $0.append(contentsOf: concatChildren, ctx: &ctx) }
+                mutInner(ctx: &ctx) { $0.append(contentsOf: concatChildren, ctx: &$1) }
             } else {
                 var overflow: Node = .init(inner: concatChildren)
-                mutInner(with: &overflow) { $0.distributeStoredElements(with: $1, distribute: .even, ctx: &ctx) }
+                mutInner(with: &overflow, ctx: &ctx) { $0.distributeStoredElements(with: $1, distribute: .even, ctx: &$2) }
                 return overflow
             }
         } else {
             if slotsAvailible >= node.slotCount {
-                mutLeaf { $0.append(contentsOf: node.leaf, ctx: &ctx) }
+                mutLeaf(ctx: &ctx) { $0.append(contentsOf: node.leaf, ctx: &$1) }
             } else if slotsUnderflowing {
                 var node = node
-                mutLeaf(with: &node) { $0.distributeStoredElements(with: $1, distribute: .even, ctx: &ctx) }
+                mutLeaf(with: &node, ctx: &ctx) { $0.distributeStoredElements(with: $1, distribute: .even, ctx: &$2) }
                 return node
             } else {
                 return node

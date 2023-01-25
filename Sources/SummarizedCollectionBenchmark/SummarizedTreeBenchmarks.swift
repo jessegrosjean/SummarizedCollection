@@ -1,5 +1,8 @@
 import SummarizedCollection
 import CollectionsBenchmark
+import OSLog
+
+import _CollectionsTestSupport
 
 extension Benchmark {
     
@@ -14,8 +17,9 @@ extension Benchmark {
             OSLog.pointsOfInterest.end(name: "List<Int> init from range")
             blackHole(list)
         }
-        
+
         /*
+        
         add(
             title: "List<Int> sequential iteration",
             input: [Int].self
@@ -34,7 +38,7 @@ extension Benchmark {
                 blackHole(list)
             }
         }
-         */
+         
         add(
             title: "List<Int> for each",
             input: [Int].self
@@ -50,7 +54,7 @@ extension Benchmark {
                 blackHole(list)
             }
         }
-        /*
+        
         add(
             title: "List<Int> subscript get, random offsets",
             input: ([Int], [Int]).self
@@ -103,7 +107,7 @@ extension Benchmark {
                 blackHole(list)
             }
         }
-        */
+         */
 
         add(
             title: "List<Int> random insertions",
@@ -122,8 +126,8 @@ extension Benchmark {
                 blackHole(list)
             }
         }
-
         /*
+        
         add(
             title: "List<Int> endIndex",
             input: Int.self
@@ -140,6 +144,7 @@ extension Benchmark {
                 blackHole(list)
             }
         }
+         */
 
         add(
             title: "List<Int> splits",
@@ -171,6 +176,8 @@ extension Benchmark {
                     splits.append(tree.split(tree.count / 2))
                 }
                 
+                splits.shuffle()
+                
                 timer.measure {
                     OSLog.pointsOfInterest.begin(name: "List<Int> concats")
                     for each in splits {
@@ -183,7 +190,7 @@ extension Benchmark {
                 blackHole(tree)
             }
         }
-         */
+        
     }
     
 }

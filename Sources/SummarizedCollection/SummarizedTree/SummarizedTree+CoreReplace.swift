@@ -6,7 +6,7 @@ extension SummarizedTree {
             C: RandomAccessCollection, C.Element == Element
     {
         context.validateReplace(subrange: subrange, with: newElements, in: self)
-        
+        context.reserveCapacity((count - subrange.count) + newElements.count)
         invalidateIndices()
         
         let overflow = root.replace(
@@ -45,7 +45,7 @@ extension SummarizedTree.Node {
             if startChild.index == endChild.index {
                 let localStart = subrange.lowerBound - startChild.start
                 let localEnd = subrange.upperBound - endChild.start
-                let overflow = mutInner { handle in
+                let overflow = mutInner(ctx: &ctx) { handle, ctx in
                     handle.innerReplaceWithOverflow(
                         at: startChild.index,
                         subrange: localStart..<localEnd,
@@ -88,7 +88,7 @@ extension SummarizedTree.Node {
             }
         } else {
             let subrange = Slot(subrange.lowerBound)..<Slot(subrange.upperBound)
-            let overflow = mutLeaf { $0.leafReplaceWithOverflow(in: subrange, with: newElements, ctx: &ctx) }
+            let overflow = mutLeaf(ctx: &ctx) { $0.leafReplaceWithOverflow(in: subrange, with: newElements, ctx: &$1) }
             return overflow
         }
     }
@@ -111,11 +111,17 @@ extension SummarizedTree.Node.Storage.Handle where StoredElement == SummarizedTr
             C: RandomAccessCollection, C.Element == SummarizedTree.Element
     {
         assertMutable()
-        let before = storedElementPointer(at: slot).pointee.summary
-        let overflow = storedElementPointer(at: slot).pointee.replace(subrange, with: newElements, ctx: &ctx)
-        let after = storedElementPointer(at: slot).pointee.summary
+        let slotPtr = storedElementPointer(at: slot)
+        let before = slotPtr.pointee.summary
+        let overflow = slotPtr.pointee.replace(subrange, with: newElements, ctx: &ctx)
+        let after = slotPtr.pointee.summary
         headerPtr.pointee.summary -= before
         headerPtr.pointee.summary += after
+        
+        if after.count == 0 {
+            _ = remove(at: slot, ctx: &ctx)
+        }
+        
         return overflow
     }
 

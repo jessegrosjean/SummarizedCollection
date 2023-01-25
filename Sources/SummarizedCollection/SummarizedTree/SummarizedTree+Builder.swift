@@ -31,6 +31,8 @@ extension SummarizedTree {
                 root.append(contentsOf: elements)
                 return
             }
+            
+            root.reserveCapacity(root.count + elements.count)
 
             var null = Context.nonTracking
             var stack: [ContiguousArray<Node>] = []

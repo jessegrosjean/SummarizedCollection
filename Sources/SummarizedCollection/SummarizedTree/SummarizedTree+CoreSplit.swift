@@ -30,7 +30,7 @@ extension SummarizedTree.Node {
     @inlinable
     mutating func split(_ index: Int, ctx: inout Context) -> Self {
         if isInner {
-            return mutInner { handle in
+            return mutInner(ctx: &ctx) { handle, ctx in
                 let child = handle.findChild(containing: index)
                 
                 if index == child.start {
@@ -50,7 +50,7 @@ extension SummarizedTree.Node {
                 }
             }
         } else {
-            return mutLeaf { .init(leaf: $0.split(at: Slot(index), ctx: &ctx)) }
+            return mutLeaf(ctx: &ctx) { .init(leaf: $0.split(at: Slot(index), ctx: &$1)) }
         }
     }
     
@@ -58,7 +58,7 @@ extension SummarizedTree.Node {
     @discardableResult
     mutating func zipFixLeft(ctx: inout Context) -> Bool {
         if isInner && slotCount > 1 {
-            return mutInner { $0.zipFixLeft(ctx: &ctx) }
+            return mutInner(ctx: &ctx) { $0.zipFixLeft(ctx: &$1) }
         } else {
             return false
         }
@@ -68,7 +68,7 @@ extension SummarizedTree.Node {
     @discardableResult
     mutating func zipFixRight(ctx: inout Context) -> Bool {
         if isInner && slotCount > 1 {
-            return mutInner { $0.zipFixRight(ctx: &ctx) }
+            return mutInner(ctx: &ctx) { $0.zipFixRight(ctx: &$1) }
         } else {
             return false
         }
@@ -176,11 +176,11 @@ extension SummarizedTree.Node.Storage.Handle where StoredElement == SummarizedTr
 
         let removeSlot2 = {
             if headerPtr.pointee.height > 1 {
-                return self[slot1].mutInner(with: &self[slot2]) { h1, h2 in
+                return self[slot1].mutInner(with: &self[slot2], ctx: &ctx) { h1, h2, ctx in
                     h1.mergeOrDistributeStoredElements(with: h2, distribute: .even, ctx: &ctx)
                 }
             } else {
-                return self[slot1].mutLeaf(with: &self[slot2]) { h1, h2 in
+                return self[slot1].mutLeaf(with: &self[slot2], ctx: &ctx) { h1, h2, ctx in
                     h1.mergeOrDistributeStoredElements(with: h2, distribute: .even, ctx: &ctx)
                 }
             }

@@ -8,7 +8,8 @@ struct IdentifiedItem: Identifiable {
 }
 
 benchmark.addArrayBenchmarks()
-benchmark.addSummarizedTreeBenchmarks()
+//benchmark.addSummarizedTreeBenchmarks()
+//benchmark.addSummarizedTreeIdentifiedListBenchmarks()
 
 /*
 benchmark.addSimple(

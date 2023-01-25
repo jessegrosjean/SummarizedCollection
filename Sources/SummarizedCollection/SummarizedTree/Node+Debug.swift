@@ -5,12 +5,12 @@ extension SummarizedTree.Node: CustomDebugStringConvertible {
         result.append(String(repeating: "  ", count: indent))
         
         if node.isInner {
-            result.append("<Inner height: \(node.height) count: \(node.summary.count)>\n")
+            result.append("<Inner: \(Unmanaged.passUnretained(node.inner).toOpaque()) height: \(node.height) count: \(node.summary.count)>\n")
             for each in node.children {
                 debugNode(node: each, indent: indent + 1, result: &result)
             }
         } else {
-            result.append("<Leaf count: \(node.summary.count)>\n")
+            result.append("<Leaf \(Unmanaged.passUnretained(node.leaf).toOpaque()) count: \(node.summary.count)>\n")
             result.append("\(String(repeating: "  ", count: indent + 1))\(node.leaf.subSequence)\n")
         }
     }
@@ -28,12 +28,26 @@ extension SummarizedTree.Node {
     
     @inlinable
     func ensureValid(parent: Node?, ctx: Context) {
+        if ctx.isTracking {
+            let trackedParent = ctx[trackedParentOf: objectIdentifier]
+            assert(trackedParent?.takeUnretainedValue() === parent?.inner)
+        }
+        
         if isLeaf {
             assert(height == 0)
+            assert(count > 0 || parent == nil)
             assert(summary == Summary.summarize(elements: leaf.subSequence))
+            
+            if ctx.isTracking {
+                for each in leaf.subSequence {
+                    let trackedParent = ctx[trackedParentOf: each]
+                    assert(trackedParent?.takeUnretainedValue() === leaf)
+                }
+            }
         } else {
             assert(height > 0)
-            
+            assert(count > 0)
+
             if let parent {
                 assert(height == parent.height - 1)
             }

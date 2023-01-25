@@ -13,11 +13,15 @@ public protocol SummarizedTreeContext {
     init()
     init(tracking: Node)
 
-    mutating func setRoot(_ rootIdentifier: ObjectIdentifier)
-    mutating func addChildren<C>(_ children: C, to inner: Unmanaged<Node.InnerStorage>) where C: Collection, C.Element == Node
-    mutating func removeChildren<C>(_ children: C, from inner: Unmanaged<Node.InnerStorage>) where C: Collection, C.Element == Node
-    mutating func addElements<C>(_ elements: C, to leaf: Unmanaged<Node.LeafStorage>) where C: Collection, C.Element == Element
-    mutating func removeElements<C>(_ elements: C, from leaf: Unmanaged<Node.LeafStorage>) where C: Collection, C.Element == Element
+    // Tracking contexts will have non-nil rootIdentifier
+    var rootIdentifier: ObjectIdentifier? { get set }
+
+    // True if the given nodeIdentifier is tracked in this context
+    func isTracking(id: ObjectIdentifier) -> Bool
+    mutating func reserveCapacity(_ n: Int)
+    
+    subscript(trackedParentOf id: ObjectIdentifier) -> Unmanaged<Node.InnerStorage>? { get set }
+    subscript(trackedParentOf element: Element) -> Unmanaged<Node.LeafStorage>? { get set }
     
     func validateInsert<C>(_ elements: C, in tree: SummarizedTree<Self>) where C: Collection, C.Element == Element
     func validateReplace<C>(subrange: Range<Int>, with newElements: C, in tree: SummarizedTree<Self>) where C: Collection, C.Element == Element
@@ -26,8 +30,8 @@ public protocol SummarizedTreeContext {
 
 public protocol IdentifiedSummarizedTreeContext: SummarizedTreeContext where Element: Identifiable {
 
-    subscript(parentOf nodeIdentifier: ObjectIdentifier) -> Unmanaged<Node.InnerStorage>? { get }
-    subscript(parentOf id: Element.ID) -> Unmanaged<Node.LeafStorage>? { get }
+    func contains(id: Element.ID) -> Bool
+    subscript(trackedParentOf id: Element.ID) -> Unmanaged<Node.LeafStorage>? { get }
     
 }
 
@@ -44,9 +48,9 @@ extension SummarizedTreeContext {
 
     @inlinable
     public static var innerCapacity: Slot {
-        #if DEBUG
-            return 3
-        #else
+        //#if DEBUG
+        //    return 3
+        //#else
             if let capacity = innerCapacityCache[ObjectIdentifier(Self.self)] as? Slot {
                 return capacity
             }
@@ -55,14 +59,14 @@ extension SummarizedTreeContext {
             let capacity =  Slot(Swift.max(16, capacityInBytes / MemoryLayout<TreeNode>.stride))
             innerCapacityCache[ObjectIdentifier(Self.self)] = capacity
             return capacity
-        #endif
+        //#endif
     }
     
     @inlinable
     public static var leafCapacity: Slot {
-        #if DEBUG
-            return 3
-        #else
+        //#if DEBUG
+        //    return 3
+        //#else
             if let capacity = leafCapacityCache[ObjectIdentifier(Self.self)] as? Slot {
                 return capacity
             }
@@ -71,7 +75,7 @@ extension SummarizedTreeContext {
             let capacity = Slot(Swift.max(16, capacityInBytes / MemoryLayout<Element>.stride))
             leafCapacityCache[ObjectIdentifier(Self.self)] = capacity
             return capacity
-        #endif
+       // #endif
     }
 
     @inlinable
@@ -87,30 +91,54 @@ extension SummarizedTreeContext {
         set {}
     }
     
+    // Default context performs no tracking.
+    // Tracking is only needed for contexts that support identified items
+    // and need to walk tree backwards to get offset from item.ID.
+    
     @inlinable
     public init(tracking: Node) {
         self.init()
     }
+
+    @inlinable
+    public var isTracking: Bool {
+        rootIdentifier != nil
+    }
+
+    @inlinable
+    public var rootIdentifier: ObjectIdentifier? {
+        get { nil }
+        set {}
+    }
     
     @inlinable
-    public func setRoot(_ rootIdentifier: ObjectIdentifier) {}
-
+    public func isTracking(id: ObjectIdentifier) -> Bool {
+        false
+    }
+    
     @inlinable
-    public func addChildren<C>(_ children: C, to inner: Unmanaged<Node.InnerStorage>) where C: Collection, C.Element == Node {}
-
+    public func reserveCapacity(_ n: Int) {}
+    
     @inlinable
-    public func removeChildren<C>(_ children: C, from inner: Unmanaged<Node.InnerStorage>) where C: Collection, C.Element == Node {}
-
+    public subscript(trackedParentOf id: ObjectIdentifier) -> Unmanaged<Node.InnerStorage>? {
+        get { nil }
+        set { assert(false) }
+    }
+    
     @inlinable
-    public func addElements<C>(_ elements: C, to leaf: Unmanaged<Node.LeafStorage>) where C: Collection, C.Element == Element {}
-
-    @inlinable
-    public func removeElements<C>(_ elements: C, from leaf: Unmanaged<Node.LeafStorage>) where C: Collection, C.Element == Element {}
+    public subscript(trackedParentOf element: Element) -> Unmanaged<Node.LeafStorage>? {
+        get { nil }
+        set { assert(false) }
+    }
     
     @inlinable
     public func validateInsert<C>(_ elements: C, in tree: SummarizedTree<Self>) where C: Collection, C.Element == Element {}
     
     @inlinable
-    public func validateReplace<C>(subrange: Range<Int>, with newElements: C, in tree: SummarizedTree<Self>) where C: Collection, C.Element == Element {}
+    public func validateReplace<C>(
+        subrange: Range<Int>,
+        with newElements: C,
+        in tree: SummarizedTree<Self>
+    ) where C: Collection, C.Element == Element {}
 
 }

@@ -34,19 +34,24 @@ extension SummarizedTree.Node {
     @inline(__always)
     mutating func mutInner<R>(
         isUnique: Bool? = nil,
-        body: (InnerStorage.Handle) throws -> R
+        ctx: inout Context,
+        body: (InnerStorage.Handle, inout Context) throws -> R
     ) rethrows -> R {
-        ensureUnique(isUnique)
+        ensureUnique(isUnique, ctx: &ctx)
         defer { updateFromStorage() }
-        return try inner.mut { try body($0) }
+        return try inner.mut { try body($0, &ctx) }
     }
 
     @inlinable
     @inline(__always)
-    mutating func mutInner<R>(with node: inout Self, body: (InnerStorage.Handle, InnerStorage.Handle) throws -> R) rethrows -> R {
-        try mutInner { handle in
-            try node.mutInner { nodeHandle in
-                return try body(handle, nodeHandle)
+    mutating func mutInner<R>(
+        with node: inout Self,
+        ctx: inout Context,
+        body: (InnerStorage.Handle, InnerStorage.Handle, inout Context) throws -> R
+    ) rethrows -> R {
+        try mutInner(ctx: &ctx) { handle, ctx in
+            try node.mutInner(ctx: &ctx) { nodeHandle, ctx in
+                return try body(handle, nodeHandle, &ctx)
             }
         }
     }
@@ -55,19 +60,24 @@ extension SummarizedTree.Node {
     @inline(__always)
     mutating func mutLeaf<R>(
         isUnique: Bool? = nil,
-        body: (LeafStorage.Handle) throws -> R
+        ctx: inout Context,
+        body: (LeafStorage.Handle, inout Context) throws -> R
     ) rethrows -> R {
-        ensureUnique(isUnique)
+        ensureUnique(isUnique, ctx: &ctx)
         defer { updateFromStorage() }
-        return try leaf.mut { try body($0) }
+        return try leaf.mut { try body($0, &ctx) }
     }
 
     @inlinable
     @inline(__always)
-    mutating func mutLeaf<R>(with node: inout Self, body: (LeafStorage.Handle, LeafStorage.Handle) throws -> R) rethrows -> R {
-        try mutLeaf { handle in
-            try node.mutLeaf { nodeHandle in
-                return try body(handle, nodeHandle)
+    mutating func mutLeaf<R>(
+        with node: inout Self,
+        ctx: inout Context,
+        body: (LeafStorage.Handle, LeafStorage.Handle, inout Context) throws -> R) rethrows -> R
+    {
+        try mutLeaf(ctx: &ctx) { handle, ctx in
+            try node.mutLeaf(ctx: &ctx) { nodeHandle, ctx in
+                return try body(handle, nodeHandle, &ctx)
             }
         }
     }
@@ -93,14 +103,57 @@ extension SummarizedTree.Node {
     }
 
     @inlinable
-    mutating func ensureUnique(_ isUnique: Bool? = nil) {
+    mutating func ensureUnique(_ isUnique: Bool? = nil, ctx: inout Context) {
         if let isUnique = isUnique {
             if !isUnique {
-                self = Self(copying: self)
+                copy(ctx: &ctx)
             }
         } else if !self.isUnique() {
-            self = Self(copying: self)
+            copy(ctx: &ctx)
         }
     }
+
+    //@usableFromInline
+    //var rootIdentifier: ObjectIdentifier?
     
+    //@usableFromInline
+    //var parents: [ObjectIdentifier : Unmanaged<Node.InnerStorage>] = [:]
+    
+    //@usableFromInline
+    //var elementsLookup: [Element.ID : Unmanaged<Node.LeafStorage>] = [:]
+
+    
+    @inlinable
+    mutating func copy(ctx: inout Context) {
+        let id = objectIdentifier
+        let isRoot = ctx.rootIdentifier == id
+        let isTracking = ctx.isTracking(id: id)
+        let parent = ctx[trackedParentOf: id]
+        
+        self = Self(copying: self)
+
+        if isTracking {
+            // Fixup instance change in context
+            
+            if isRoot {
+                ctx.rootIdentifier = objectIdentifier
+            }
+                    
+            ctx[trackedParentOf: id] = nil
+            ctx[trackedParentOf: objectIdentifier] = parent
+            
+            if isInner {
+                let unmanged: Unmanaged = .passUnretained(inner)
+                for each in children {
+                    ctx[trackedParentOf: each.objectIdentifier] = unmanged
+                }
+            } else {
+                let unmanged: Unmanaged = .passUnretained(leaf)
+                for each in elements {
+                    ctx[trackedParentOf: each] = unmanged
+                }
+            }
+        }
+        
+    }
 }

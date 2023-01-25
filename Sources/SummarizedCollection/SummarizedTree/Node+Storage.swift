@@ -16,22 +16,22 @@ public protocol StorageDelegate {
     @inline(__always)
     static func update(
         header: inout Header,
+        adding: Range<Int>,
+        to storage: Unmanaged<Storage>,
+        buffer: UnsafeBufferPointer<StorageElement>,
+        ctx: inout Context
+    )
+
+    @inlinable
+    @inline(__always)
+    static func update(
+        header: inout Header,
         removing: Range<Int>,
         from storage: Unmanaged<Storage>,
         buffer: UnsafeBufferPointer<StorageElement>,
         ctx: inout Context
     )
     
-    @inlinable
-    @inline(__always)
-    static func update(
-        header: inout Header,
-        adding: Range<Int>,
-        from storage: Unmanaged<Storage>,
-        buffer: UnsafeBufferPointer<StorageElement>,
-        ctx: inout Context
-    )
-
 }
 
 extension SummarizedTree.Node {
@@ -383,7 +383,7 @@ extension SummarizedTree.Node.Storage.Handle {
         Delegate.update(
             header: &headerPtr.pointee,
             adding: Int(range.startIndex)..<Int(range.endIndex),
-            from: storage,
+            to: storage,
             buffer: buffer,
             ctx: &ctx
         )
