@@ -495,7 +495,7 @@ extension SummarizedTree.Cursor {
 
     @inlinable
     @inline(__always)
-    public mutating func leaf() -> LeafStorage.SubSequence {
+    mutating func leaf() -> LeafStorage.SubSequence {
         if isBeforeStart {
             resetToStart()
         } else if isAfterEnd {
@@ -506,24 +506,24 @@ extension SummarizedTree.Cursor {
     
     @inlinable
     @inline(__always)
-    public func uncheckedLeaf() -> LeafStorage.SubSequence {
+    func uncheckedLeaf() -> LeafStorage.SubSequence {
         assert(!isBeforeStart)
         assert(!isAfterEnd)
         return stack.last.node.elements
     }
     
     @inlinable
-    public var leafStartIndex: Int {
+    var leafStartIndex: Int {
         position.nodeStart.count
     }
 
     @inlinable
-    public var leafStartSummary: Summary {
+    var leafStartSummary: Summary {
         position.nodeStart
     }
 
     @inlinable
-    public mutating func leafSummary() -> Summary {
+    mutating func leafSummary() -> Summary {
         if isBeforeStart {
             assert(nextLeaf() != nil)
         }
@@ -531,17 +531,17 @@ extension SummarizedTree.Cursor {
     }
 
     @inlinable
-    public func leafStart<D>() -> D where D: CollectionDimension, D.Summary == Summary {
+    func leafStart<D>() -> D where D: CollectionDimension, D.Summary == Summary {
         D.get(position.nodeStart)
     }
     
     @inlinable
-    public mutating func leafEnd<D>() -> D where D: CollectionDimension, D.Summary == Summary {
+    mutating func leafEnd<D>() -> D where D: CollectionDimension, D.Summary == Summary {
         leafStart() + D.get(leafSummary())
     }
     
     @inlinable
-    public func peekPrevLeaf() -> LeafStorage.SubSequence? {
+    func peekPrevLeaf() -> LeafStorage.SubSequence? {
         if stack.depth <= 1 {
             var copy = Cursor(self)
             return copy.prevLeaf()
@@ -557,7 +557,7 @@ extension SummarizedTree.Cursor {
     }
         
     @inlinable
-    public mutating func prevLeaf() -> LeafStorage.SubSequence? {
+    mutating func prevLeaf() -> LeafStorage.SubSequence? {
         if isBeforeStart {
             return nil
         } else if isAtStart {
@@ -592,14 +592,14 @@ extension SummarizedTree.Cursor {
     }
 
     @inlinable
-    public mutating func prevLeafEnd() {
+    mutating func prevLeafEnd() {
         if let leaf = prevLeaf() {
             position.offset = Slot(leaf.count)
         }
     }
     
     @inlinable
-    public func peakNextLeaf() -> LeafStorage.SubSequence? {
+    func peakNextLeaf() -> LeafStorage.SubSequence? {
         if stack.depth <= 1 {
             var copy = Cursor(self)
             return copy.nextLeaf()
@@ -615,7 +615,7 @@ extension SummarizedTree.Cursor {
     }
 
     @inlinable
-    public mutating func nextLeaf() -> LeafStorage.SubSequence? {
+    mutating func nextLeaf() -> LeafStorage.SubSequence? {
         nextLeafInternal()
     }
 
