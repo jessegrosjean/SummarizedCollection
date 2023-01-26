@@ -38,7 +38,7 @@ extension Benchmark {
                 blackHole(list)
             }
         }
-         
+        */
         add(
             title: "List<Int> for each",
             input: [Int].self
@@ -54,7 +54,7 @@ extension Benchmark {
                 blackHole(list)
             }
         }
-        
+        /*
         add(
             title: "List<Int> subscript get, random offsets",
             input: ([Int], [Int]).self
@@ -146,6 +146,7 @@ extension Benchmark {
         }
          */
 
+        /*
         add(
             title: "List<Int> splits",
             input: Int.self
@@ -189,7 +190,7 @@ extension Benchmark {
                 precondition(tree.count == size)
                 blackHole(tree)
             }
-        }
+        }*/
         
     }
     

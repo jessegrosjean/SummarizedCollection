@@ -1,21 +1,3 @@
-@usableFromInline
-enum Distribute {
-
-    case even
-    case compact
-    
-    @inlinable
-    func partitionIndex<Number: BinaryInteger>(total: Number, capacity: Number) -> Number {
-        switch self {
-        case .even:
-            return (total + 1) / 2
-        case .compact:
-            return capacity
-        }
-    }
-
-}
-
 extension SummarizedTree.Node {
     
     @inlinable
@@ -112,16 +94,6 @@ extension SummarizedTree.Node {
             copy(ctx: &ctx)
         }
     }
-
-    //@usableFromInline
-    //var rootIdentifier: ObjectIdentifier?
-    
-    //@usableFromInline
-    //var parents: [ObjectIdentifier : Unmanaged<Node.InnerStorage>] = [:]
-    
-    //@usableFromInline
-    //var elementsLookup: [Element.ID : Unmanaged<Node.LeafStorage>] = [:]
-
     
     @inlinable
     mutating func copy(ctx: inout Context) {

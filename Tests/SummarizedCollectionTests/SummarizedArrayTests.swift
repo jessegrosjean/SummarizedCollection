@@ -1,7 +1,7 @@
 import XCTest
 @testable import SummarizedCollection
 
-final class SummarizedCollectionTests: XCTestCase {
+final class SummarizedArrayTests: XCTestCase {
         
     func testEmpty() throws {
         let empty = OutlineArray(inner: [])

@@ -50,11 +50,11 @@ extension SummarizedTree.Node {
     
     @inlinable
     @inline(__always)
-    public var inner: InnerStorage { _inner.unsafelyUnwrapped }
+    var inner: InnerStorage { _inner.unsafelyUnwrapped }
 
     @inlinable
     @inline(__always)
-    public var leaf: LeafStorage { _leaf.unsafelyUnwrapped }
+    var leaf: LeafStorage { _leaf.unsafelyUnwrapped }
 
     @inlinable
     @inline(__always)
@@ -119,13 +119,6 @@ extension SummarizedTree.Node {
     }
 
     @inlinable
-    init<C>(leaf: C) where C: Collection, C.Element == Element {
-        self.init(leaf: .create(with: Context.leafCapacity) { handle in
-            handle.append(contentsOf: leaf, ctx: &Context.nonTracking)
-        })
-    }
-
-    @inlinable
     init(leaf: LeafStorage) {
         _leaf = leaf
         _header = leaf.header
@@ -155,6 +148,8 @@ extension SummarizedTree.Node {
 }
 
 extension SummarizedTree.Node: Equatable {
+    
+    // Pointer based equatable
     
     public typealias Node = SummarizedTree.Node
 

@@ -129,9 +129,6 @@ extension SummarizedTree.Node.Storage.Handle {
     @usableFromInline
     typealias Slot = SummarizedTree.Node.Slot
     
-    @usableFromInline
-    typealias Summary = SummarizedTree.Summary
-
     @inlinable
     var slotCount: Slot {
         get { headerPtr.pointee.slotCount }
@@ -150,11 +147,6 @@ extension SummarizedTree.Node.Storage.Handle {
     var slotsAvailible: Slot {
         headerPtr.pointee.slotsAvailible
     }
-
-    @inlinable
-    var slotsUnderflowing: Bool {
-        headerPtr.pointee.slotsUnderflowing
-    }
     
     @inlinable
     var buffer: UnsafeBufferPointer<StoredElement> {
@@ -163,12 +155,6 @@ extension SummarizedTree.Node.Storage.Handle {
 
     @inlinable
     subscript(_ range: Range<Slot>) -> UnsafeBufferPointer<StoredElement> {
-        assert(0 <= range.lowerBound && range.upperBound <= slotCount)
-        return .init(start: storedElementsPtr.advanced(by: Int(range.lowerBound)), count: range.count)
-    }
-
-    @inlinable
-    subscript(_ range: Range<Slot>) -> UnsafeRawBufferPointer {
         assert(0 <= range.lowerBound && range.upperBound <= slotCount)
         return .init(start: storedElementsPtr.advanced(by: Int(range.lowerBound)), count: range.count)
     }
@@ -199,7 +185,7 @@ extension SummarizedTree.Node.Storage.Handle {
     }
 
     @inlinable
-    public subscript(_ index: Slot) -> StoredElement {
+    subscript(_ index: Slot) -> StoredElement {
         get {
             assert(0 <= index && index < slotCount)
             return storedElementPointer(at: index).pointee
@@ -283,7 +269,7 @@ extension SummarizedTree.Node.Storage.Handle {
 
     @inlinable
     func insert(_ newElement: StoredElement, at i: Slot, ctx: inout Context) {
-        replaceSubrange(0..<0, with: CollectionOfOne(newElement), ctx: &ctx)
+        replaceSubrange(i..<i, with: CollectionOfOne(newElement), ctx: &ctx)
     }
     
     @inlinable
@@ -402,13 +388,6 @@ extension SummarizedTree.Node.Storage.Handle {
     func storedElementPointer(at index: Slot) -> UnsafeMutablePointer<StoredElement> {
         assert(0 <= index && index < slotCount)
         return storedElementsPtr.advanced(by: Int(index))
-    }
-
-    @inlinable
-    func moveStoredElement(at index: Slot) -> StoredElement {
-        assertMutable()
-        assert(0 <= index && index < slotCount)
-        return storedElementsPtr.advanced(by: Int(index)).move()
     }
 
     @inlinable

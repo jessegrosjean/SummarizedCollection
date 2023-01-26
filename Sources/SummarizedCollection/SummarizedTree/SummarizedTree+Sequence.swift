@@ -20,7 +20,7 @@ extension SummarizedTree: Sequence {
     public struct Iterator: IteratorProtocol {
 
         @usableFromInline
-        let tree: SummarizedTree
+        let retained: SummarizedTree
 
         @usableFromInline
         var cursor: Cursor
@@ -36,7 +36,7 @@ extension SummarizedTree: Sequence {
         
         @inlinable
         init(tree: SummarizedTree, startIndex: Index? = nil, endIndex: Index? = nil) {
-            self.tree = tree
+            self.retained = tree
             self.cursor = startIndex?.cursor ?? tree.cursor()
             self.index = cursor.index
             self.endIndex = endIndex?.offset ?? tree.count

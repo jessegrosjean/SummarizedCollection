@@ -1,12 +1,13 @@
 extension SummarizedTree: IdentifiedCollection where Element: Identifiable, Context: IdentifiedSummarizedTreeContext {
-        
-    typealias UnmanagedNode = Node.UnmanagedNode
     
     @inlinable
     public func contains(id: Element.ID) -> Bool {
-        context.contains(id: id)
+        if context.isTracking {
+            return context.contains(id: id)
+        } else {
+            return offset(id: id) != nil
+        }        
     }
-
     
     @inlinable
     public func offset(id: Element.ID) -> Int? {

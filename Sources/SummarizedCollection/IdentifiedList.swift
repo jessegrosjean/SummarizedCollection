@@ -1,5 +1,7 @@
 import Foundation
 
+public typealias IdentifiedList<Element> = SummarizedTree<IdentifiedListContext<Element>> where Element: Identifiable
+
 public struct IdentifiedListContext<Element: Identifiable>: IdentifiedSummarizedTreeContext {
     
     public typealias Slot = UInt16
@@ -45,7 +47,7 @@ public struct IdentifiedListContext<Element: Identifiable>: IdentifiedSummarized
             return
         }
         
-        // This isn't right, jesse brain to small
+        // This isn't right, jesse brain too small
         
         func logN(base: Double, value: Double) -> Double {
             return log(value) / log(base)
@@ -92,7 +94,7 @@ public struct IdentifiedListContext<Element: Identifiable>: IdentifiedSummarized
     }
     
     @inlinable
-    public func validateInsert<C>(_ elements: C, in tree: SummarizedTree<Self>) where C : Collection, C.Element == Element {
+    public func validateInsert<C>(_ elements: C, in _: SummarizedTree<Self>) where C : Collection, C.Element == Element {
         for each in elements {
             assert(!elementsLookup.keys.contains(each.id))
         }
@@ -119,7 +121,7 @@ public struct IdentifiedListContext<Element: Identifiable>: IdentifiedSummarized
     
 }
 
-//#if DEBUG
+#if DEBUG
 extension IdentifiedListContext: CustomDebugStringConvertible {
     
     public var debugDescription: String {
@@ -140,8 +142,7 @@ extension IdentifiedListContext: CustomDebugStringConvertible {
     }
 
 }
-//#endif
-
+#endif
 
 public struct IdentifiedListSummary<Element: Identifiable>: CollectionSummary {
     
@@ -171,6 +172,5 @@ public struct IdentifiedListSummary<Element: Identifiable>: CollectionSummary {
     public static func - (lhs: Self, rhs: Self) -> Self {
         .init(count: lhs.count - rhs.count)
     }
+    
 }
-
-public typealias IdentifiedList<Element> = SummarizedTree<IdentifiedListContext<Element>> where Element: Identifiable

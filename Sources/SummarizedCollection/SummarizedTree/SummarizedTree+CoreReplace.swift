@@ -3,7 +3,7 @@ extension SummarizedTree {
     @inlinable
     public mutating func replace<C>(_ subrange: Range<Int>, with newElements: C)
         where
-            C: RandomAccessCollection, C.Element == Element
+            C: Collection, C.Element == Element
     {
         context.validateReplace(subrange: subrange, with: newElements, in: self)
         context.reserveCapacity((count - subrange.count) + newElements.count)
@@ -33,7 +33,7 @@ extension SummarizedTree.Node {
         ctx: inout Context
     ) -> Node?
         where
-            C: RandomAccessCollection, C.Element == Element
+            C: Collection, C.Element == Element
     {
         if isInner {
             let (startChild, endChild) = rdInner { handle in
@@ -108,7 +108,7 @@ extension SummarizedTree.Node.Storage.Handle where StoredElement == SummarizedTr
         ctx: inout Context
     ) -> Node?
         where
-            C: RandomAccessCollection, C.Element == SummarizedTree.Element
+            C: Collection, C.Element == SummarizedTree.Element
     {
         assertMutable()
         let slotPtr = storedElementPointer(at: slot)
@@ -136,7 +136,7 @@ extension SummarizedTree.Node.Storage.Handle where StoredElement == SummarizedTr
         ctx: inout Context
     ) -> SummarizedTree.Node?
         where
-            C: RandomAccessCollection, C.Element == StoredElement
+            C: Collection, C.Element == StoredElement
     {
         assertMutable()
         

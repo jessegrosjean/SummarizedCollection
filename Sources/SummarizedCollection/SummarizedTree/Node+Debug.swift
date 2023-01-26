@@ -1,4 +1,4 @@
-//#if DEBUG
+#if DEBUG
 extension SummarizedTree.Node: CustomDebugStringConvertible {
     
     static func debugNode(node: Node, indent: Int, result: inout String) {
@@ -22,7 +22,7 @@ extension SummarizedTree.Node: CustomDebugStringConvertible {
     }
 
 }
-//#endif
+#endif
 
 extension SummarizedTree.Node {
     

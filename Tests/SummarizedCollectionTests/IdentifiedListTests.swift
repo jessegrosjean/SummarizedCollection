@@ -3,16 +3,18 @@ import XCTest
 
 import _CollectionsTestSupport
 
-final class IdentifiedListTests: CollectionTestCase {
-    
-    struct IdentifiedItem: Identifiable {
-        let id: Int
+extension Int: Identifiable {
+    public var id: Int {
+        self
     }
+}
+
+final class IdentifiedListTests: CollectionTestCase {
     
     func testInit() {
         withEvery("size", in: 0..<100) { size in
             withLifetimeTracking { tracker in
-                let list = IdentifiedList(tracker.instances(for: (0..<size).map { IdentifiedItem(id: $0) }))
+                let list = IdentifiedList(tracker.instances(for: 0..<size))
                 
                 list.ensureValid()
                 for (i, each) in list.enumerated() {
@@ -28,7 +30,7 @@ final class IdentifiedListTests: CollectionTestCase {
         withEvery("size", in: [1, 2, 4, 8, 16, 32, 64, 127, 128, 129]) { size in
             withEvery("index", in: 0..<size) { index in
                 withLifetimeTracking { tracker in
-                    var list = IdentifiedList(tracker.instances(for: (0..<size).map { IdentifiedItem(id: $0) }))
+                    var list = IdentifiedList(tracker.instances(for: 0..<size))
                     let split = list.split(index)
                     
                     list.ensureValid()
@@ -51,9 +53,9 @@ final class IdentifiedListTests: CollectionTestCase {
         withEvery("size", in: [1, 2, 4, 8, 16, 32, 64, 127, 128, 129]) { size in
             withEvery("index", in: 0..<size) { index in
                 withLifetimeTracking { tracker in
-                    var list = IdentifiedList(tracker.instances(for: (0..<size).map { IdentifiedItem(id: $0) }))
+                    var list = IdentifiedList(tracker.instances(for: 0..<size))
                     let split = list.split(index)
-                    var new = IdentifiedList<LifetimeTracked<IdentifiedItem>>()
+                    var new = IdentifiedList<LifetimeTracked<Int>>()
                     
                     new.concat(list)
                     new.concat(split)
@@ -82,12 +84,12 @@ final class IdentifiedListTests: CollectionTestCase {
     func testReplace() {
         withEvery("size", in: [1, 2, 4, 8, 16]) { size in
             withLifetimeTracking { tracker in
-                let template = IdentifiedList(tracker.instances(for: (0..<size).map { IdentifiedItem(id: $0) }))
+                let template = IdentifiedList(tracker.instances(for: 0..<size))
                 withEvery("start", in: 0..<size) { start in
                     withEvery("end", in: start..<size) { end in
                         withEvery("insert", in: [0, 1, 2, 3, 5, 9]) { insert in
                             var list = template
-                            list.replace(start..<end, with: tracker.instances(for: (100..<100 + insert).map { IdentifiedItem(id: $0) }))
+                            list.replace(start..<end, with: tracker.instances(for: 100..<100 + insert))
                             XCTAssertEqual(list.count, (template.count - (start..<end).count) + insert)
                             list.ensureValid()
                             for (i, each) in list.enumerated() {

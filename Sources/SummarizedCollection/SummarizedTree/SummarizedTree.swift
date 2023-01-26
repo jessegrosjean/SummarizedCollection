@@ -15,22 +15,6 @@ public struct SummarizedTree<Context: SummarizedTreeContext> {
 
     @inlinable
     @inline(__always)
-    public var height: UInt8 {
-        root.height
-    }
-
-    @inlinable
-    mutating func invalidateIndices() {
-        version &+= 1
-    }
-    
-    @inlinable
-    public func ensureValid() {
-        root.ensureValid(parent: nil, ctx: context)
-    }
-
-    @inlinable
-    @inline(__always)
     public func index(at offset: Int) -> Index {
         index(startIndex, offsetBy: offset)
     }
@@ -49,18 +33,12 @@ public struct SummarizedTree<Context: SummarizedTreeContext> {
 
     @inlinable
     @inline(__always)
-    public func offset(of index: Index) -> Int {
-        distance(from: startIndex, to: index)
-    }
-
-    @inlinable
-    @inline(__always)
     public func offsetRange(from indexRange: Range<Index>) -> Range<Int> {
-        let startIndex = offset(of: indexRange.lowerBound)
+        let startIndex = indexRange.lowerBound.offset
         if indexRange.isEmpty {
             return startIndex..<startIndex
         } else {
-            let endIndex = offset(of: indexRange.upperBound)
+            let endIndex = indexRange.upperBound.offset
             return startIndex..<endIndex
         }
     }
@@ -92,7 +70,23 @@ public struct SummarizedTree<Context: SummarizedTreeContext> {
         return cursor
     }
     
-    // MARK: Balancing Root
+    // MARK: Package
+
+    @inlinable
+    @inline(__always)
+    var height: UInt8 {
+        root.height
+    }
+    
+    @inlinable
+    func ensureValid() {
+        root.ensureValid(parent: nil, ctx: context)
+    }
+
+    @inlinable
+    mutating func invalidateIndices() {
+        version &+= 1
+    }
 
     @inlinable
     mutating func pullUpUnderflowingRoot() {
@@ -130,7 +124,7 @@ public struct SummarizedTree<Context: SummarizedTreeContext> {
         
 }
 
-//#if DEBUG
+#if DEBUG
 extension SummarizedTree: CustomDebugStringConvertible {
     
     public var debugDescription: String {
@@ -141,4 +135,4 @@ extension SummarizedTree: CustomDebugStringConvertible {
     }
 
 }
-//#endif
+#endif

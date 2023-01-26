@@ -4,6 +4,12 @@ import OSLog
 
 import _CollectionsTestSupport
 
+extension Int: Identifiable {
+    public var id: Int {
+        self
+    }
+}
+
 extension Benchmark {
     
     public mutating func addSummarizedTreeIdentifiedListBenchmarks() {
@@ -72,6 +78,7 @@ extension Benchmark {
             }
         }
 
+        /*
         add(
             title: "IdentifiedList<Int> splits",
             input: Int.self
@@ -116,7 +123,7 @@ extension Benchmark {
                 blackHole(tree)
             }
         }
-        
+        */
     }
     
 }

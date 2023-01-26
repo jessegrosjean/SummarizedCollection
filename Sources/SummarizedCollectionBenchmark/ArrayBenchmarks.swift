@@ -1,5 +1,8 @@
 import CollectionsBenchmark
 import SummarizedCollection
+import OSLog
+
+import _CollectionsUtilities
 
 extension Benchmark {
     
@@ -51,7 +54,7 @@ extension Benchmark {
         
          */
         
-        /*
+        
         add(
             title: "Array<Int> successful contains",
             input: Int.self
@@ -71,7 +74,7 @@ extension Benchmark {
         }
 
         add(
-            title: "Array<Int> successful firstIndex(where:)",
+            title: "Array<Int> successful offset(id:)",
             input: Int.self
         ) { count in
             { timer in
@@ -86,7 +89,7 @@ extension Benchmark {
                     OSLog.pointsOfInterest.end(name: "Array<Int> successful firstIndex(where:)")
                 }
             }
-        }*/
+        }
         
         /*
         addSimple(
@@ -240,15 +243,14 @@ extension Benchmark {
                 blackHole(array)
             }
         }
-        
+        */
         add(
-            title: "Array<Int> random insertions, reserving capacity",
+            title: "Array<Int> random insertions",
             input: Insertions.self
         ) { insertions in
             return { timer in
                 let insertions = insertions.values
                 var array: [Int] = []
-                array.reserveCapacity(insertions.count)
                 timer.measure {
                     for i in insertions.indices {
                         array.insert(i, at: insertions[i])
@@ -257,7 +259,7 @@ extension Benchmark {
                 blackHole(array)
             }
         }
-        
+        /*
         add(
             title: "Array<Int> removeLast",
             input: Int.self
@@ -307,6 +309,7 @@ extension Benchmark {
         }
          */
         
+        /*
         add(
             title: "Array<Int> splits",
             input: Int.self
@@ -351,7 +354,7 @@ extension Benchmark {
                 precondition(array.count == size)
                 blackHole(array)
             }
-        }
+        }*/
         
     }
     

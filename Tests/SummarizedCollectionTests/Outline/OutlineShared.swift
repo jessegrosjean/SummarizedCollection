@@ -80,7 +80,7 @@ struct HeightDimension: CollectionDimension {
     static func get(_ summary: Summary) -> Self {
         summary.height
     }
-
+    
     static func measure<C>(_ elements: C) -> Self
         where
             C : BidirectionalCollection, Element == C.Element

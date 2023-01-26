@@ -1,5 +1,7 @@
 @testable import SummarizedCollection
 
+// Used to test inefficient default collection protocol implementations.
+// Real code should be using SummarizedTree
 struct OutlineArray: SummarizedCollection, IdentifiedCollection {
     
     typealias Element = Row

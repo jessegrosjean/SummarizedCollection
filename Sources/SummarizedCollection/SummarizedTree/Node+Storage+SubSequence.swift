@@ -30,6 +30,19 @@ extension SummarizedTree.Node.Storage {
 
 }
 
+extension SummarizedTree.Node.Storage.SubSequence: Equatable {
+    
+    // Pointer based equatable
+    
+    public typealias StorageSubSequence = SummarizedTree<Context>.Node.Storage<StoredElement, Delegate>.SubSequence
+    
+    public static func == (lhs: StorageSubSequence, rhs: StorageSubSequence) -> Bool {
+        lhs.base === rhs.base && lhs.bounds == rhs.bounds
+    }
+    
+}
+
+
 extension SummarizedTree.Node.Storage.SubSequence: Collection {
     
     public typealias Slot = SummarizedTree.Node.Slot
@@ -82,7 +95,8 @@ extension SummarizedTree.Node.Storage.SubSequence: RandomAccessCollection {}
 
 extension SummarizedTree.Node.Storage.SubSequence: Sequence {}
 
-//#if DEBUG
+#if DEBUG
+
 extension SummarizedTree.Node.Storage.SubSequence: CustomDebugStringConvertible {
 
     public var debugDescription: String {
@@ -98,4 +112,5 @@ extension SummarizedTree.Node.Storage.SubSequence: CustomDebugStringConvertible 
     }
 
 }
-//#endif
+
+#endif

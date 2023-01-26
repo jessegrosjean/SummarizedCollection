@@ -1,3 +1,5 @@
+public typealias List<Element> = SummarizedTree<ListContext<Element>>
+
 public struct ListContext<Element>: SummarizedTreeContext {
 
     public typealias Slot = UInt16
@@ -9,6 +11,7 @@ public struct ListContext<Element>: SummarizedTreeContext {
 }
 
 public struct ListSummary<Element>: CollectionSummary {
+    
     public var count: Int
     
     @inlinable
@@ -35,6 +38,5 @@ public struct ListSummary<Element>: CollectionSummary {
     public static func - (lhs: Self, rhs: Self) -> Self {
         .init(count: lhs.count - rhs.count)
     }
+    
 }
-
-public typealias List<Element> = SummarizedTree<ListContext<Element>>

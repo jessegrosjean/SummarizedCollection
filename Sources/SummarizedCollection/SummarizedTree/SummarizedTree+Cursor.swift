@@ -136,6 +136,63 @@ extension SummarizedTree.Cursor {
     
     public typealias Cursor = SummarizedTree.Cursor
 
+    // MARK: State
+    
+    @inlinable
+    public var isSeeking: Bool {
+        !stack.isEmpty
+    }
+    
+    @inlinable
+    public var isBeforeStart: Bool {
+        !isSeeking && !atEnd
+    }
+
+    @inlinable
+    public var isAtStart: Bool {
+        isSeeking && index == 0 && !atEnd
+    }
+
+    @inlinable
+    public var isAtEnd: Bool {
+        isSeeking && index == root.count && atEnd
+    }
+
+    @inlinable
+    public var isAfterEnd: Bool {
+        !isSeeking && index == root.count && atEnd
+    }
+    
+    @inlinable
+    public mutating func resetToBeforeStart() {
+        stack.removeAll()
+        position = .init()
+        atEnd = false
+    }
+
+    @inlinable
+    public mutating func resetToStart() {
+        resetToBeforeStart()
+        descendToFirstLeaf(root)
+        atEnd = root.count == 0
+    }
+
+    @inlinable
+    public mutating func resetToEnd() {
+        resetToBeforeStart()
+        descendToLastLeaf(root)
+        position.offset = Slot(leafSummary().count)
+        atEnd = true
+    }
+
+    @inlinable
+    public mutating func resetToAfterEnd() {
+        stack.removeAll()
+        position = .init()
+        position.nodeStart = root.summary
+        atEnd = true
+    }
+
     // MARK: Elements
     
     @inlinable
@@ -281,13 +338,13 @@ extension SummarizedTree.Cursor {
         }
     }
     
-    func sliceToPrevBoundary<B>(_ type: B.Type) -> LeafStorage.SubSequence? where B: CollectionBoundary, B.Element == Element {
-        fatalError("wrong return type, need to also handle when boundaries span leaves")
-    }
+    //func sliceToPrevBoundary<B>(_ type: B.Type) -> LeafStorage.SubSequence? where B: CollectionBoundary, B.Element == Element {
+    //    fatalError("wrong return type, need to also handle when boundaries span leaves")
+    //}
 
-    func sliceToNextBoundary<B>(_ type: B.Type) -> LeafStorage.SubSequence? where B: CollectionBoundary, B.Element == Element {
-        fatalError("wrong return type, need to also handle when boundaries span leaves")
-    }
+    //func sliceToNextBoundary<B>(_ type: B.Type) -> LeafStorage.SubSequence? where B: CollectionBoundary, B.Element == Element {
+    //    fatalError("wrong return type, need to also handle when boundaries span leaves")
+    //}
 
     // MARK: Position
     
@@ -401,6 +458,7 @@ extension SummarizedTree.Cursor {
 
     }
     
+    @inlinable
     public mutating func point<B, O>() -> CollectionPoint<B, O>
         where
             B: CollectionDimension,
@@ -679,18 +737,6 @@ extension SummarizedTree.Cursor {
                         stackItem.childIndex += 1
                     }
                 }
-
-                /*
-                for child in stackItem.storage.children[stackItem.childIndex...] {
-                    if contains(position.nodeStart, child.summary) {
-                        stack.append(stackItem)
-                        push(node: child, childIndex: 0)
-                        return .seekDescending
-                    } else {
-                        position.moveFoward(nodeSummary: child.summary)
-                        stackItem.childIndex += 1
-                    }
-                }*/
             } else {
                 let leafSummary = stackItem.node.summary
                 if contains(position.nodeStart, leafSummary) {
@@ -738,18 +784,6 @@ extension SummarizedTree.Cursor {
                         position.moveFoward(nodeSummary: child.summary)
                     }
                 }
-
-                /*
-                for (i, child) in storage.children.enumerated() {
-                    let childSummary = child.summary
-                    if contains(position.nodeStart, childSummary) {
-                        push(node: storage, childIndex: Slot(i))
-                        nextStorage = .init(child)
-                        break
-                    } else {
-                        position.moveFoward(nodeSummary: child.summary)
-                    }
-                }*/
             } else {
                 let leafSummary = node.summary
                 if contains(position.nodeStart, leafSummary) {
@@ -801,72 +835,17 @@ extension SummarizedTree.Cursor {
     // MARK: Util
     
     @inlinable
-    public var isSeeking: Bool {
-        !stack.isEmpty
-    }
-    
-    @inlinable
-    public var isBeforeStart: Bool {
-        !isSeeking && !atEnd
-    }
-
-    @inlinable
-    public var isAtStart: Bool {
-        isSeeking && index == 0 && !atEnd
-    }
-
-    @inlinable
-    public var isAtEnd: Bool {
-        isSeeking && index == root.count && atEnd
-    }
-
-    @inlinable
-    public var isAfterEnd: Bool {
-        !isSeeking && index == root.count && atEnd
-    }
-    
-    @inlinable
-    public mutating func resetToBeforeStart() {
-        stack.removeAll()
-        position = .init()
-        atEnd = false
-    }
-
-    @inlinable
-    public mutating func resetToStart() {
-        resetToBeforeStart()
-        descendToFirstLeaf(root)
-        atEnd = root.count == 0
-    }
-
-    @inlinable
-    public mutating func resetToEnd() {
-        resetToBeforeStart()
-        descendToLastLeaf(root)
-        position.offset = Slot(leafSummary().count)
-        atEnd = true
-    }
-
-    @inlinable
-    public mutating func resetToAfterEnd() {
-        stack.removeAll()
-        position = .init()
-        position.nodeStart = root.summary
-        atEnd = true
-    }
-
-    @inlinable
     mutating func push(node: UnmanagedNode, childIndex: Slot) {
         stack.append(.init(node: node, childIndex: childIndex))
     }
 
     @inlinable
-    public func ensureValid(for root: Node, version: Int) {
+    func ensureValid(for root: Node, version: Int) {
         precondition(self.version == version && self.root == root.unmanagedNode)
     }
     
     @inlinable
-    public func ensureValid(with cursor: Cursor) {
+    func ensureValid(with cursor: Cursor) {
         precondition(version == cursor.version && root == cursor.root)
     }
 

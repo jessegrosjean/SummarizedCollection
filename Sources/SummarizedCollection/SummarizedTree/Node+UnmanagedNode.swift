@@ -1,5 +1,4 @@
 extension SummarizedTree.Node {
-
     
     @inlinable
     var unmanagedNode: UnmanagedNode {
@@ -16,7 +15,7 @@ extension SummarizedTree.Node {
         
         case inner(Header, Unmanaged<InnerStorage>)
         case leaf(Header, Unmanaged<LeafStorage>)
-                
+        
         @inlinable
         var isInner: Bool {
             if case .inner = self {
@@ -24,7 +23,7 @@ extension SummarizedTree.Node {
             }
             return false
         }
-
+        
         @inlinable
         var isLeaf: Bool {
             if case .inner = self {
@@ -42,22 +41,22 @@ extension SummarizedTree.Node {
                 return header
             }
         }
-
+        
         @inlinable
         var count: Int {
             header.summary.count
         }
-
+        
         @inlinable
         var slotCount: Slot {
             header.slotCount
         }
-
+        
         @inlinable
         var summary: Summary {
             header.summary
         }
-
+        
         @inlinable
         var children: InnerStorage.SubSequence {
             if case .inner(_, let inner) = self {
@@ -65,7 +64,7 @@ extension SummarizedTree.Node {
             }
             fatalError()
         }
-
+        
         @inlinable
         @inline(__always)
         func child(at slot: Slot) -> Node {
@@ -74,7 +73,7 @@ extension SummarizedTree.Node {
             }
             fatalError()
         }
-
+        
         @inlinable
         @inline(__always)
         func unmanagedChild(at slot: Slot) -> UnmanagedNode {
@@ -83,7 +82,7 @@ extension SummarizedTree.Node {
             }
             fatalError()
         }
-
+        
         @inlinable
         @inline(__always)
         var elements: LeafStorage.SubSequence {
@@ -93,15 +92,8 @@ extension SummarizedTree.Node {
             fatalError()
         }
         
-        @inlinable
-        @inline(__always)
-        func element(at slot: Slot) -> Element {
-            if case .leaf(_, let leaf) = self {
-                return leaf._withUnsafeGuaranteedRef { $0.rd { $0[slot] } }
-            }
-            fatalError()
-        }
     }
+    
 }
 
 extension SummarizedTree.Node.UnmanagedNode: Equatable {

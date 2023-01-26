@@ -55,7 +55,7 @@ extension SummarizedTree.Node {
         }
         
         @inlinable
-        static func removeElements<C>(_ elements: C, from leaf: Unmanaged<Node.LeafStorage>, ctx: inout Context) where C: Collection, C.Element == Element {
+        static func removeElements<C>(_ elements: C, from _: Unmanaged<Node.LeafStorage>, ctx: inout Context) where C: Collection, C.Element == Element {
             for each in elements {
                 ctx[trackedParentOf: each] = nil
             }

@@ -1,7 +1,5 @@
-@testable import SummarizedCollection
-
 extension SummarizedTree {
-
+    
     func testCursorBoundary<B>(_ b: B.Type) where B: CollectionBoundary, B.Element == Element {
         var cursor = cursor()
         
@@ -33,38 +31,5 @@ extension SummarizedTree {
         }
     }
 
-    public func testSplitAndConcat<D>(_ d: D.Type) where D: CollectionDimension, D.Summary == Summary {
-        var cursor = cursor()
-        while let index = cursor.seekNext(d) {
-            var newTree = self
-            let split = newTree.split(index)
-            
-            assert(count == newTree.count + split.count)
-
-            newTree.ensureValid()
-            split.ensureValid()
-            
-            newTree.concat(split)
-            assert(count == newTree.count)
-            newTree.ensureValid()
-        }
-    }
     
 }
-
-
-/*
-
-public func testReplace<N, D>(node: N, dimension: D.Type) where N: NodeProtocol, D: Dimension, N.Summary == D.Summary {
-    
-}
-
-public func testInsert<N, D>(node: N, dimension: D.Type) where N: NodeProtocol, D: Dimension, N.Summary == D.Summary {
-    
-}
-
-public func testRemove<N, D>(node: N, dimension: D.Type) where N: NodeProtocol, D: Dimension, N.Summary == D.Summary {
-    
-}
-
-*/

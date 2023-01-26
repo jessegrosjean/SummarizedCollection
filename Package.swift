@@ -75,6 +75,7 @@ let package = Package(
             name: "SummarizedCollectionBenchmark",
             dependencies: [
                 "SummarizedCollection",
+                "_CollectionsUtilities",
                 .product(name: "CollectionsBenchmark", package: "swift-collections-benchmark"),
             ]),
     ]

@@ -12,19 +12,6 @@ extension SummarizedTree {
 
         @inlinable
         @inline(__always)
-        init(base: Node, bounds: Range<Int>? = nil) {
-            self.base = .init(root: base)
-            if let bounds {
-                self.startIndex = self.base.index(at: bounds.lowerBound)
-                self.endIndex = self.base.index(at: bounds.upperBound)
-            } else {
-                self.startIndex = self.base.startIndex
-                self.endIndex = self.base.endIndex
-            }
-        }
-
-        @inlinable
-        @inline(__always)
         init(base: SummarizedTree, bounds: Range<Index>? = nil) {
             self.base = base
             if let bounds {
@@ -36,6 +23,7 @@ extension SummarizedTree {
             }
         }
 
+        @inlinable
         func ensureValid() {
             base.ensureValid()
         }
@@ -52,6 +40,16 @@ extension SummarizedTree {
         return .init(base: self, bounds: bounds)
     }
 
+}
+
+extension SummarizedTree.SubSequence: Equatable {
+    
+    // Pointer based equatable
+
+    public static func == (lhs: SummarizedTree<Context>.SubSequence, rhs: SummarizedTree<Context>.SubSequence) -> Bool {
+        lhs.base.root == rhs.base.root && lhs.startIndex.offset == rhs.startIndex.offset && lhs.endIndex.offset == rhs.endIndex.offset
+    }
+    
 }
 
 extension SummarizedTree.SubSequence: Sequence {

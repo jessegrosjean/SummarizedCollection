@@ -11,12 +11,12 @@ extension SummarizedTree {
         }
         
         @inlinable
-        public var offset: Int {
+        var offset: Int {
             cursor.index
         }
 
         @inlinable
-        public var summary: Summary {
+        var summary: Summary {
             cursor.summary
         }
 

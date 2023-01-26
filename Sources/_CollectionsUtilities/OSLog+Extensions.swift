@@ -1,7 +1,7 @@
 import OSLog
 import Foundation
 import os
-@_exported import os.log
+import os.log
 
 public extension OSLog {
     
