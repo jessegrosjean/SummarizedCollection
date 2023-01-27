@@ -2,6 +2,8 @@
 
 Swift SummarizedCollection based on b+tree.
 
+Pretty good test coverage and a start at optimization, but no documentation or real world use yet.
+
 Interesting features:
 
 - Generic sum type
