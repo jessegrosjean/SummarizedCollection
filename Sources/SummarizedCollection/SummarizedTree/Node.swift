@@ -14,6 +14,7 @@ extension SummarizedTree {
         
         @usableFromInline
         struct Header {
+            
             @usableFromInline
             var height: UInt8
             
@@ -56,12 +57,7 @@ extension SummarizedTree {
 extension SummarizedTree.Node {
     
     @inlinable
-    @inline(__always)
-    var inner: InnerStorage { _inner.unsafelyUnwrapped }
-
-    @inlinable
-    @inline(__always)
-    var leaf: LeafStorage { _leaf.unsafelyUnwrapped }
+    var isEmpty: Bool { summary.count == 0 }
 
     @inlinable
     @inline(__always)
@@ -88,23 +84,28 @@ extension SummarizedTree.Node {
     @inlinable
     @inline(__always)
     var isInner: Bool { _inner != nil }
-    
-    @inlinable
-    var children: InnerStorage.SubSequence {
-        inner.subSequence
-    }
 
     @inlinable
     @inline(__always)
     var isLeaf: Bool { _leaf != nil }
 
     @inlinable
-    var elements: LeafStorage.SubSequence {
-        leaf.subSequence
+    @inline(__always)
+    var inner: InnerStorage { _inner.unsafelyUnwrapped }
+
+    @inlinable
+    @inline(__always)
+    var leaf: LeafStorage { _leaf.unsafelyUnwrapped }
+
+    @inlinable
+    var children: InnerStorage.SubSequence {
+        inner.subSequence
     }
 
     @inlinable
-    var isEmpty: Bool { summary.count == 0 }
+    var elements: LeafStorage.SubSequence {
+        leaf.subSequence
+    }
 
     @inlinable
     init() {

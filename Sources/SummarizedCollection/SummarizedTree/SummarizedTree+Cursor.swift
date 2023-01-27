@@ -197,6 +197,84 @@ extension SummarizedTree.Cursor {
         atEnd = true
     }
 
+    @inlinable
+    mutating func push(node: UnmanagedNode, childIndex: Slot) {
+        stack.append(.init(node: node, childIndex: childIndex))
+    }
+
+    @inlinable
+    func ensureValid(for root: Node, version: Int) {
+        precondition(self.version == version && self.root == root.unmanagedNode)
+    }
+    
+    @inlinable
+    func ensureValid(with cursor: Cursor) {
+        precondition(version == cursor.version && root == cursor.root)
+    }
+
+    // MARK: Position
+    
+    @inlinable
+    @inline(__always)
+    public var index: Int {
+        position.nodeStart.count + Int(position.offset)
+    }
+
+    @inlinable
+    public var summary: Summary {
+        if isBeforeStart {
+            return .zero
+        } else if isAfterEnd {
+            return root.summary
+        }
+        
+        let nodeStart = position.nodeStart
+        let slice = uncheckedLeaf()[0..<position.offset]
+        return nodeStart + Summary.summarize(elements: slice)
+    }
+
+    @inlinable
+    public mutating func extent<D>() -> D where D: CollectionDimension, D.Summary == Summary {
+        if isAfterEnd {
+            return D.get(root.summary)
+        } else {
+            return D.get(position.nodeStart) + D.measure(leaf()[..<position.offset])
+        }
+    }
+
+    @inlinable
+    public mutating func point<B, O>() -> CollectionPoint<B, O>
+        where
+            B: CollectionDimension,
+            O: CollectionDimension, O.Summary == Summary
+    {
+        let leaf = leaf()
+        let offset = O.measure(leaf[..<position.offset])
+        var point = B.point(from: offset, summary: nil, elements: leaf)
+        
+        if point.base == .zero {
+            var cursor = Cursor(self)
+            while let leaf = cursor.prevLeaf() {
+                let leafSummary = cursor.leafSummary()
+                let leafB = B.get(leafSummary)
+                let leafO = O.get(leafSummary)
+                if leafB == .zero {
+                    point.offset += leafO
+                } else {
+                    let leafP = B.point(from: leafO, summary: leafSummary, elements: leaf)
+                    point.base += cursor.leafStart()
+                    point.base += leafP.base
+                    point.offset += leafP.offset
+                    return point
+                }
+            }
+        } else {
+            point.base += leafStart()
+        }
+        
+        return point
+    }
+    
     // MARK: Elements
     
     @inlinable
@@ -349,36 +427,8 @@ extension SummarizedTree.Cursor {
     //func sliceToNextBoundary<B>(_ type: B.Type) -> LeafStorage.SubSequence? where B: CollectionBoundary, B.Element == Element {
     //    fatalError("wrong return type, need to also handle when boundaries span leaves")
     //}
-
-    // MARK: Position
     
-    @inlinable
-    @inline(__always)
-    public var index: Int {
-        position.nodeStart.count + Int(position.offset)
-    }
-
-    @inlinable
-    public var summary: Summary {
-        if isBeforeStart {
-            return .zero
-        } else if isAfterEnd {
-            return root.summary
-        }
-        
-        let nodeStart = position.nodeStart
-        let slice = uncheckedLeaf()[0..<position.offset]
-        return nodeStart + Summary.summarize(elements: slice)
-    }
-
-    @inlinable
-    public mutating func extent<D>() -> D where D: CollectionDimension, D.Summary == Summary {
-        if isAfterEnd {
-            return D.get(root.summary)
-        } else {
-            return D.get(position.nodeStart) + D.measure(leaf()[..<position.offset])
-        }
-    }
+    // MARK: Seek
 
     @inlinable
     public mutating func seek<B, O>(forward point: CollectionPoint<B, O>) -> Int where B.Summary == Summary {
@@ -426,13 +476,13 @@ extension SummarizedTree.Cursor {
             return seek(to: dimension)
         }
 
-        return seek(
+        return seekInternal(
             contains: { startSummary, nodeSummary in
                 let startD = D.get(startSummary)
                 let endD = startD + D.get(nodeSummary)
                 return dimension <= endD
             },
-            seek: { (startSummary: Summary, nodeSummary: Summary, index: Slot, elements: LeafStorage.SubSequence) -> Slot? in
+            seek: { startSummary, nodeSummary, index, elements in
                 let startD = D.get(startSummary)
                 let target = dimension - startD
                 return D.index(to: target, summary: nodeSummary, elements: elements)
@@ -451,48 +501,171 @@ extension SummarizedTree.Cursor {
             return nil
         }
                 
-        return seek(
+        return seekInternal(
             contains: { startSummary, nodeSummary in
                 D.get(nodeSummary) != .zero
             },
-            seek: { (startSummary: Summary, nodeSummary: Summary, index: Slot, elements: LeafStorage.SubSequence) -> Slot? in
+            seek: { startSummary, nodeSummary, index, elements in
                 D.boundary(after: index, elements: elements)
             }
         )
 
     }
     
+    public typealias ContainsClosure = (_ start: Summary, _ node: Summary) -> Bool
+    public typealias SeekClosure<C> = (_ start: Summary, _ node: Summary, Slot, C) -> Slot? where C: RandomAccessCollection, C.Index == Slot
+
     @inlinable
-    public mutating func point<B, O>() -> CollectionPoint<B, O>
-        where
-            B: CollectionDimension,
-            O: CollectionDimension, O.Summary == Summary
-    {
-        let leaf = leaf()
-        let offset = O.measure(leaf[..<position.offset])
-        var point = B.point(from: offset, summary: nil, elements: leaf)
-        
-        if point.base == .zero {
-            var cursor = Cursor(self)
-            while let leaf = cursor.prevLeaf() {
-                let leafSummary = cursor.leafSummary()
-                let leafB = B.get(leafSummary)
-                let leafO = O.get(leafSummary)
-                if leafB == .zero {
-                    point.offset += leafO
-                } else {
-                    let leafP = B.point(from: leafO, summary: leafSummary, elements: leaf)
-                    point.base += cursor.leafStart()
-                    point.base += leafP.base
-                    point.offset += leafP.offset
-                    return point
-                }
-            }
-        } else {
-            point.base += leafStart()
+    public mutating func seek<C>(contains: ContainsClosure, seek: SeekClosure<C>) -> Int? where C: RandomAccessCollection, C.Index == Slot {
+        seekInternal(contains: contains) { start, node, slot, subsequence in
+            seek(start, node, slot, subsequence as! C)
+        }
+    }
+    
+    // MARK: Seek Internal
+    
+    @inlinable
+    mutating func seekInternal(contains: ContainsClosure, seek: SeekClosure<LeafStorage.SubSequence>) -> Int? {
+        if isAfterEnd {
+            return nil
         }
         
-        return point
+        switch seekInternalAscending(contains: contains, seek: seek) {
+        case .found:
+            break
+        case .notFound:
+            atEnd = true
+            return nil
+        case .seekDescending:
+            seekInternalDescending(contains: contains, seek: seek)
+        }
+        
+        if index == root.count {
+            assert(!stack.isEmpty)
+            atEnd = true
+        }
+        
+        return index
+    }
+    
+    @inlinable
+    @inline(__always)
+    mutating func seekInternalAscending(contains: ContainsClosure, seek: SeekClosure<LeafStorage.SubSequence>) -> SeekAscendingResult {
+        if isBeforeStart && contains(position.nodeStart, root.summary) {
+            push(node: root, childIndex: 0)
+            return .seekDescending
+        }
+        
+        while !stack.isEmpty {
+            var stackItem = stack.pop()
+            if stackItem.node.isInner {
+                stackItem.childIndex += 1
+                let slotCount = stackItem.node.slotCount
+                for i in stackItem.childIndex..<slotCount {
+                    let child = stackItem.node.unmanagedChild(at: i)
+                    if contains(position.nodeStart, child.summary) {
+                        stack.append(stackItem)
+                        push(node: child, childIndex: 0)
+                        return .seekDescending
+                    } else {
+                        position.moveFoward(nodeSummary: child.summary)
+                        stackItem.childIndex += 1
+                    }
+                }
+            } else {
+                let leafSummary = stackItem.node.summary
+                if contains(position.nodeStart, leafSummary) {
+                    stack.append(stackItem)
+                    
+                    if seekInternalLeaf(
+                        seek: seek,
+                        start: position.nodeStart,
+                        summary: leafSummary,
+                        index: position.offset,
+                        leaf: stackItem.node.elements
+                    ) {
+                        return .found
+                    }
+                  
+                    stackItem = stack.pop()
+                } else {
+                    stackItem.childIndex += 1
+                    position.moveFoward(nodeSummary: stackItem.node.summary)
+                }
+            }
+        }
+        
+        return .notFound
+    }
+    
+    @inlinable
+    @inline(__always)
+    mutating func seekInternalDescending(contains: ContainsClosure, seek: SeekClosure<LeafStorage.SubSequence>) {
+        var node = stack.pop().node
+        
+        while true {
+            var nextNode: UnmanagedNode?
+            
+            if node.isInner {
+                let slotCount = node.slotCount
+                for i in 0..<slotCount {
+                    let child = node.unmanagedChild(at: i)
+                    let childSummary = child.summary
+                    if contains(position.nodeStart, childSummary) {
+                        push(node: node, childIndex: Slot(i))
+                        nextNode = child
+                        break
+                    } else {
+                        position.moveFoward(nodeSummary: child.summary)
+                    }
+                }
+            } else {
+                let leafSummary = node.summary
+                if contains(position.nodeStart, leafSummary) {
+                    push(node: node, childIndex: 0)
+                    assert(seekInternalLeaf(
+                        seek: seek,
+                        start: position.nodeStart,
+                        summary: leafSummary,
+                        index: 0,
+                        leaf: node.elements
+                    ))
+                    return
+                } else {
+                    position.moveFoward(nodeSummary: node.summary)
+                }
+            }
+            
+            if let nextStorage = nextNode {
+                node = nextStorage
+            } else {
+                return
+            }
+        }
+    }
+
+    @inlinable
+    mutating func seekInternalLeaf(
+        seek: SeekClosure<LeafStorage.SubSequence>,
+        start: Summary,
+        summary: Summary,
+        index: Slot,
+        leaf: LeafStorage.SubSequence
+    ) -> Bool {
+                
+        if let found = seek(start, summary, index, leaf) {
+            position.offset = found
+            
+            if found == leaf.count {
+                let end = position.nodeStart.count + Int(position.offset)
+                if end < root.count {
+                    _ = nextLeaf()!
+                }
+            }
+            return true
+        } else {
+            return false
+        }
     }
     
     // MARK: Leaves
@@ -517,16 +690,6 @@ extension SummarizedTree.Cursor {
     }
     
     @inlinable
-    var leafStartIndex: Int {
-        position.nodeStart.count
-    }
-
-    @inlinable
-    var leafStartSummary: Summary {
-        position.nodeStart
-    }
-
-    @inlinable
     mutating func leafSummary() -> Summary {
         if isBeforeStart {
             assert(nextLeaf() != nil)
@@ -538,12 +701,7 @@ extension SummarizedTree.Cursor {
     func leafStart<D>() -> D where D: CollectionDimension, D.Summary == Summary {
         D.get(position.nodeStart)
     }
-    
-    @inlinable
-    mutating func leafEnd<D>() -> D where D: CollectionDimension, D.Summary == Summary {
-        leafStart() + D.get(leafSummary())
-    }
-    
+        
     @inlinable
     func peekPrevLeaf() -> LeafStorage.SubSequence? {
         if stack.depth <= 1 {
@@ -687,173 +845,7 @@ extension SummarizedTree.Cursor {
         }
 
     }
-
-    // MARK: Seeking Internal
-
-    public typealias ContainsClosure = (_ start: Summary, _ node: Summary) -> Bool
-    public typealias SeekClosure<C> = (_ start: Summary, _ node: Summary, Slot, C) -> Slot? where C: RandomAccessCollection, C.Index == Slot
-
-    @inlinable
-    public mutating func seek<C>(contains: ContainsClosure, seek: SeekClosure<C>) -> Int? where C: RandomAccessCollection, C.Index == Slot {
-        if isAfterEnd {
-            return nil
-        }
-        
-        switch seekInternalAscending(contains: contains, seek: seek) {
-        case .found:
-            break
-        case .notFound:
-            atEnd = true
-            return nil
-        case .seekDescending:
-            seekInternalDescending(contains: contains, seek: seek)
-        }
-        
-        if index == root.count {
-            assert(!stack.isEmpty)
-            atEnd = true
-        }
-        
-        return index
-    }
     
-    @inlinable
-    @inline(__always)
-    mutating func seekInternalAscending<C>(contains: ContainsClosure, seek: SeekClosure<C>) -> SeekAscendingResult where C: RandomAccessCollection, C.Index == Slot {
-        if isBeforeStart && contains(position.nodeStart, root.summary) {
-            push(node: root, childIndex: 0)
-            return .seekDescending
-        }
-        
-        while !stack.isEmpty {
-            var stackItem = stack.pop()
-            if stackItem.node.isInner {
-                stackItem.childIndex += 1
-                let slotCount = stackItem.node.slotCount
-                for i in stackItem.childIndex..<slotCount {
-                    let child = stackItem.node.unmanagedChild(at: i)
-                    if contains(position.nodeStart, child.summary) {
-                        stack.append(stackItem)
-                        push(node: child, childIndex: 0)
-                        return .seekDescending
-                    } else {
-                        position.moveFoward(nodeSummary: child.summary)
-                        stackItem.childIndex += 1
-                    }
-                }
-            } else {
-                let leafSummary = stackItem.node.summary
-                if contains(position.nodeStart, leafSummary) {
-                    stack.append(stackItem)
-                    
-                    if seekInternalLeaf(
-                        seek: seek,
-                        start: position.nodeStart,
-                        summary: leafSummary,
-                        index: position.offset,
-                        leaf: stackItem.node.elements
-                    ) {
-                        return .found
-                    }
-                  
-                    stackItem = stack.pop()
-                } else {
-                    stackItem.childIndex += 1
-                    position.moveFoward(nodeSummary: stackItem.node.summary)
-                }
-            }
-        }
-        
-        return .notFound
-    }
-    
-    @inlinable
-    @inline(__always)
-    mutating func seekInternalDescending<C>(contains: ContainsClosure, seek: SeekClosure<C>) where C: RandomAccessCollection, C.Index == Slot {
-        var node = stack.pop().node
-        
-        while true {
-            var nextNode: UnmanagedNode?
-            
-            if node.isInner {
-                let slotCount = node.slotCount
-                for i in 0..<slotCount {
-                    let child = node.unmanagedChild(at: i)
-                    let childSummary = child.summary
-                    if contains(position.nodeStart, childSummary) {
-                        push(node: node, childIndex: Slot(i))
-                        nextNode = child
-                        break
-                    } else {
-                        position.moveFoward(nodeSummary: child.summary)
-                    }
-                }
-            } else {
-                let leafSummary = node.summary
-                if contains(position.nodeStart, leafSummary) {
-                    push(node: node, childIndex: 0)
-                    assert(seekInternalLeaf(
-                        seek: seek,
-                        start: position.nodeStart,
-                        summary: leafSummary,
-                        index: 0,
-                        leaf: node.elements
-                    ))
-                    return
-                } else {
-                    position.moveFoward(nodeSummary: node.summary)
-                }
-            }
-            
-            if let nextStorage = nextNode {
-                node = nextStorage
-            } else {
-                return
-            }
-        }
-    }
-
-    @inlinable
-    mutating func seekInternalLeaf<C>(
-        seek: SeekClosure<C>,
-        start: Summary,
-        summary: Summary,
-        index: Slot,
-        leaf: LeafStorage.SubSequence
-    ) -> Bool where C: RandomAccessCollection, C.Index == Slot {
-                
-        if let found = seek(start, summary, index, leaf as! C) {
-            position.offset = found
-            
-            if found == leaf.count {
-                let end = position.nodeStart.count + Int(position.offset)
-                if end < root.count {
-                    _ = nextLeaf()!
-                }
-            }
-            return true
-        } else {
-            return false
-        }
-    }
-    
-    // MARK: Util
-    
-    @inlinable
-    mutating func push(node: UnmanagedNode, childIndex: Slot) {
-        stack.append(.init(node: node, childIndex: childIndex))
-    }
-
-    @inlinable
-    func ensureValid(for root: Node, version: Int) {
-        precondition(self.version == version && self.root == root.unmanagedNode)
-    }
-    
-    @inlinable
-    func ensureValid(with cursor: Cursor) {
-        precondition(version == cursor.version && root == cursor.root)
-    }
-
 }
 
 extension SummarizedTree.Cursor: Comparable {

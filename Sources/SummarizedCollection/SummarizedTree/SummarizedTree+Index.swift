@@ -49,6 +49,7 @@ extension SummarizedTree {
         func ensureValid(with index: Index) {
             cursor.ensureValid(with: index.cursor)
         }
+        
     }
 
 }

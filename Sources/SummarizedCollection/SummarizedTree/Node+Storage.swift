@@ -4,7 +4,6 @@ protocol StorageDelegate {
     associatedtype Context: SummarizedTreeContext
     associatedtype StorageElement
 
-    typealias Slot = Context.Slot
     typealias Header = Context.Node.Header
     typealias Summary = Context.Summary
     typealias Storage = SummarizedTree<Context>.Node.Storage<StorageElement, Self>
