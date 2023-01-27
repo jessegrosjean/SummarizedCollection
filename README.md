@@ -2,7 +2,7 @@
 
 Swift SummarizedCollection based on b+tree.
 
-Pretty good test coverage and a start at optimization, but no documentation or real world use yet.
+Pretty good test coverage and a start at optimization, but no documentation or real world use yet. I plan to use this in my own apps, I don't plan to work to hard on furthur documentaion or polish. Might still be useful if this is the structure you need. Feedback and enhancements welcome.
 
 Interesting features:
 
