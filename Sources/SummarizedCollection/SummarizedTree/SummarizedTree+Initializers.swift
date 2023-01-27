@@ -8,7 +8,7 @@ extension SummarizedTree {
     @inlinable
     public init<C>(_ c: C) where Element == C.Element, C : Collection {
         var builder = Builder()
-        builder.append(contentsOf: ContiguousArray(c))
+        builder.append(contentsOf: c)
         self = builder.build()
         context = .init(tracking: root)
     }
