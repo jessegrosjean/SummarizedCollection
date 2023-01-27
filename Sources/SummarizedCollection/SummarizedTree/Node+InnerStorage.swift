@@ -1,21 +1,26 @@
 extension SummarizedTree.Node {
     
-    public typealias InnerStorage = Storage<Self, InnerStorageDelegate>
+    @usableFromInline
+    typealias InnerStorage = Storage<Self, InnerStorageDelegate>
     
-    public struct InnerStorageDelegate: StorageDelegate {
+    @usableFromInline
+    struct InnerStorageDelegate: StorageDelegate {
         
-        public typealias Context = SummarizedTree.Context
-        public typealias StorageElement = Node
+        @usableFromInline
+        typealias Context = SummarizedTree.Context
+
+        @usableFromInline
+        typealias StorageElement = Node
 
         @inlinable
         @inline(__always)
-        public static func summarize(_ element: SummarizedTree<Context>.Node.Node) -> Summary {
+        static func summarize(_ element: SummarizedTree<Context>.Node.Node) -> Summary {
             element.summary
         }
         
         @inlinable
         @inline(__always)
-        public static func update(
+        static func update(
             header: inout Header,
             adding: Range<Int>,
             to storage: Unmanaged<InnerStorage>,
@@ -36,7 +41,7 @@ extension SummarizedTree.Node {
         @inlinable
         static func addChildren<C>(_ children: C, to inner: Unmanaged<Node.InnerStorage>, ctx: inout Context) where C: Collection, C.Element == Node {
             for each in children {
-                ctx[trackedParentOf: each.objectIdentifier] = inner
+                ctx[trackedParentOf: each.objectIdentifier] = .init(inner: inner)
                 
                 if each.isInner {
                     addChildren(each.children, to: .passUnretained(each.inner), ctx: &ctx)
@@ -48,7 +53,7 @@ extension SummarizedTree.Node {
 
         @inlinable
         @inline(__always)
-        public static func update(
+        static func update(
             header: inout Header,
             removing: Range<Int>,
             from storage: Unmanaged<InnerStorage>,

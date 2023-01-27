@@ -1,9 +1,13 @@
 extension SummarizedTree.Node.Storage {
     
-    public typealias Slot = SummarizedTree.Node.Slot
-    public typealias Base = SummarizedTree.Node.Storage<StoredElement, Delegate>
+    @usableFromInline
+    typealias Slot = SummarizedTree.Node.Slot
+    
+    @usableFromInline
+    typealias Base = SummarizedTree.Node.Storage<StoredElement, Delegate>
 
-    public struct SubSequence {
+    @usableFromInline
+    struct SubSequence {
         
         @usableFromInline
         var bounds: Range<Slot>
@@ -19,12 +23,12 @@ extension SummarizedTree.Node.Storage {
     }
 
     @inlinable
-    public var subSequence: SubSequence {
+    var subSequence: SubSequence {
         return SubSequence(base: self, bounds: 0..<header.slotCount)
     }
 
     @inlinable
-    public subscript(bounds: Range<Slot>) -> SubSequence {
+    subscript(bounds: Range<Slot>) -> SubSequence {
         return SubSequence(base: self, bounds: bounds)
     }
 
@@ -34,9 +38,11 @@ extension SummarizedTree.Node.Storage.SubSequence: Equatable {
     
     // Pointer based equatable
     
-    public typealias StorageSubSequence = SummarizedTree<Context>.Node.Storage<StoredElement, Delegate>.SubSequence
+    @usableFromInline
+    typealias StorageSubSequence = SummarizedTree<Context>.Node.Storage<StoredElement, Delegate>.SubSequence
     
-    public static func == (lhs: StorageSubSequence, rhs: StorageSubSequence) -> Bool {
+    @inlinable
+    static func == (lhs: StorageSubSequence, rhs: StorageSubSequence) -> Bool {
         lhs.base === rhs.base && lhs.bounds == rhs.bounds
     }
     
@@ -45,31 +51,37 @@ extension SummarizedTree.Node.Storage.SubSequence: Equatable {
 
 extension SummarizedTree.Node.Storage.SubSequence: Collection {
     
-    public typealias Slot = SummarizedTree.Node.Slot
-    public typealias Element = StoredElement
+    @usableFromInline
+    typealias Slot = SummarizedTree.Node.Slot
+
+    @usableFromInline
+    typealias Element = StoredElement
+    
+    @usableFromInline
+    typealias Index = Slot
 
     @inlinable
-    public var startIndex: Slot {
+    var startIndex: Slot {
         bounds.startIndex
     }
     
     @inlinable
-    public var endIndex: Slot {
+    var endIndex: Slot {
         bounds.endIndex
     }
 
     @inlinable
-    public var indices: Range<Slot> {
+    var indices: Range<Slot> {
         startIndex..<endIndex
     }
     
     @inlinable
-    public func index(after i: Slot) -> Slot {
+    func index(after i: Slot) -> Slot {
         i + 1
     }
 
     @inlinable
-    public subscript(index: Slot) -> StoredElement {
+    subscript(index: Slot) -> StoredElement {
         get {
             base.withUnsafeMutablePointerToElements { elementsPtr in
                 elementsPtr.advanced(by: Int(index)).pointee
@@ -81,13 +93,13 @@ extension SummarizedTree.Node.Storage.SubSequence: Collection {
 
 extension SummarizedTree.Node.Storage.SubSequence: BidirectionalCollection {
     
-    public typealias Storage = SummarizedTree.Node.Storage
+    typealias Storage = SummarizedTree.Node.Storage
 
     @inlinable
-    public func index(before i: Slot) -> Slot { i - 1 }
+    func index(before i: Slot) -> Slot { i - 1 }
     
     @inlinable
-    public func index(_ i: Slot, offsetBy distance: Int) -> Slot { Slot(Int(i) + distance) }
+    func index(_ i: Slot, offsetBy distance: Int) -> Slot { Slot(Int(i) + distance) }
 
 }
 
@@ -99,7 +111,8 @@ extension SummarizedTree.Node.Storage.SubSequence: Sequence {}
 
 extension SummarizedTree.Node.Storage.SubSequence: CustomDebugStringConvertible {
 
-    public var debugDescription: String {
+    @usableFromInline
+    var debugDescription: String {
         var result = "<Storage.SubSequence>["
         for i in indices {
             if i != startIndex {

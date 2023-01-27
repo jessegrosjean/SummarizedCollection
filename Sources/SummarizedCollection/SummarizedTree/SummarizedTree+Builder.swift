@@ -3,7 +3,9 @@ extension SummarizedTree {
     public struct Builder {
         
         public typealias Slot = Context.Slot
-        public typealias LeafStorage = SummarizedTree.Node.LeafStorage
+        
+        @usableFromInline
+        typealias LeafStorage = SummarizedTree.Node.LeafStorage
 
         @usableFromInline
         var root: SummarizedTree
@@ -21,7 +23,7 @@ extension SummarizedTree {
         }
         
         @inlinable
-        public mutating func append(_ node: Node) {
+        mutating func append(_ node: Node) {
             root.concat(node)
         }
                 

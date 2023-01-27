@@ -59,11 +59,6 @@ extension SummarizedTreeContext {
     // and need to walk tree backwards to get offset from item.ID.
     
     @inlinable
-    public init(tracking: Node) {
-        self.init()
-    }
-
-    @inlinable
     public var isTracking: Bool {
         rootIdentifier != nil
     }
@@ -83,13 +78,13 @@ extension SummarizedTreeContext {
     public func reserveCapacity(_ n: Int) {}
     
     @inlinable
-    public subscript(trackedParentOf id: ObjectIdentifier) -> Unmanaged<Node.InnerStorage>? {
+    public subscript(trackedParentOf id: ObjectIdentifier) -> TrackedParent? {
         get { nil }
         set { assert(false) }
     }
     
     @inlinable
-    public subscript(trackedParentOf element: Element) -> Unmanaged<Node.LeafStorage>? {
+    public subscript(trackedLeafOf element: Element) -> TrackedLeaf? {
         get { nil }
         set { assert(false) }
     }

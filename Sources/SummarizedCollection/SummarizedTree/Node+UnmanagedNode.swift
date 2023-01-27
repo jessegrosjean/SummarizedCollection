@@ -98,10 +98,11 @@ extension SummarizedTree.Node {
 
 extension SummarizedTree.Node.UnmanagedNode: Equatable {
     
-    public typealias UnmanagedNode = SummarizedTree.Node.UnmanagedNode
+    @usableFromInline
+    typealias UnmanagedNode = SummarizedTree.Node.UnmanagedNode
 
     @inlinable
-    public static func ==(lhs: UnmanagedNode, rhs: UnmanagedNode) -> Bool {
+    static func ==(lhs: UnmanagedNode, rhs: UnmanagedNode) -> Bool {
         switch (lhs, rhs) {
         case (.inner(_, let lstore), .inner(_, let rstore)):
             return lstore.toOpaque() == rstore.toOpaque()

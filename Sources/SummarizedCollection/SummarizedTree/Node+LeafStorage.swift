@@ -1,21 +1,26 @@
 extension SummarizedTree.Node {
     
-    public typealias LeafStorage = Storage<Element, LeafStorageDelegate>
+    @usableFromInline
+    typealias LeafStorage = Storage<Element, LeafStorageDelegate>
 
-    public struct LeafStorageDelegate: StorageDelegate {
+    @usableFromInline
+    struct LeafStorageDelegate: StorageDelegate {
         
-        public typealias Context = SummarizedTree.Context
-        public typealias StorageElement = Element
+        @usableFromInline
+        typealias Context = SummarizedTree.Context
+
+        @usableFromInline
+        typealias StorageElement = Element
         
         @inlinable
         @inline(__always)
-        public static func summarize(_ element: SummarizedTree<Context>.Node.Element) -> Summary {
+        static func summarize(_ element: SummarizedTree<Context>.Node.Element) -> Summary {
             Summary.summarize(element: element)
         }
         
         @inlinable
         @inline(__always)
-        public static func update(
+        static func update(
             header: inout Header,
             adding: Range<Int>,
             to storage: Unmanaged<LeafStorage>,
@@ -33,13 +38,13 @@ extension SummarizedTree.Node {
         @inlinable
         static func addElements<C>(_ elements: C, to leaf: Unmanaged<Node.LeafStorage>, ctx: inout Context) where C: Collection, C.Element == Element {
             for each in elements {
-                ctx[trackedParentOf: each] = leaf
+                ctx[trackedLeafOf: each] = .init(inner: leaf)
             }
         }
         
         @inlinable
         @inline(__always)
-        public static func update(
+        static func update(
             header: inout Header,
             removing: Range<Int>,
             from storage: Unmanaged<LeafStorage>,
@@ -57,7 +62,7 @@ extension SummarizedTree.Node {
         @inlinable
         static func removeElements<C>(_ elements: C, from _: Unmanaged<Node.LeafStorage>, ctx: inout Context) where C: Collection, C.Element == Element {
             for each in elements {
-                ctx[trackedParentOf: each] = nil
+                ctx[trackedLeafOf: each] = nil
             }
         }
 

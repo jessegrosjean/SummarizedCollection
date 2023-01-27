@@ -15,7 +15,8 @@ extension SummarizedTree.Node: CustomDebugStringConvertible {
         }
     }
     
-    public var debugDescription: String {
+    @usableFromInline
+    var debugDescription: String {
         var result = ""
         Node.debugNode(node: self, indent: 0, result: &result)
         return result
@@ -30,7 +31,7 @@ extension SummarizedTree.Node {
     func ensureValid(parent: Node?, ctx: Context) {
         if ctx.isTracking {
             let trackedParent = ctx[trackedParentOf: objectIdentifier]
-            assert(trackedParent?.takeUnretainedValue() === parent?.inner)
+            assert(trackedParent?.inner.takeUnretainedValue() === parent?.inner)
         }
         
         if isLeaf {
@@ -40,8 +41,8 @@ extension SummarizedTree.Node {
             
             if ctx.isTracking {
                 for each in leaf.subSequence {
-                    let trackedParent = ctx[trackedParentOf: each]
-                    assert(trackedParent?.takeUnretainedValue() === leaf)
+                    let trackedParent = ctx[trackedLeafOf: each]
+                    assert(trackedParent?.inner.takeUnretainedValue() === leaf)
                 }
             }
         } else {

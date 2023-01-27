@@ -1,12 +1,19 @@
 extension SummarizedTree {
 
-    public struct Node {
+    @usableFromInline
+    struct Node {
         
-        public typealias Element = Context.Element
-        public typealias Summary = Context.Summary
-        public typealias Slot = Context.Slot
+        @usableFromInline
+        typealias Element = Context.Element
+
+        @usableFromInline
+        typealias Summary = Context.Summary
+
+        @usableFromInline
+        typealias Slot = Context.Slot
         
-        public struct Header {
+        @usableFromInline
+        struct Header {
             @usableFromInline
             var height: UInt8
             
@@ -151,10 +158,11 @@ extension SummarizedTree.Node: Equatable {
     
     // Pointer based equatable
     
-    public typealias Node = SummarizedTree.Node
+    @usableFromInline
+    typealias Node = SummarizedTree.Node
 
     @inlinable
-    public static func ==(lhs: Node, rhs: Node) -> Bool {
+    static func ==(lhs: Node, rhs: Node) -> Bool {
         lhs._leaf === rhs._leaf && lhs._inner === rhs._inner
     }
     

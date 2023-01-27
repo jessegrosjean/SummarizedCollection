@@ -20,7 +20,7 @@ extension SummarizedTree: IdentifiedCollection where Element: Identifiable, Cont
             return nil
         }
         
-        guard let leaf = context[trackedParentOf: id]?.takeUnretainedValue() else {
+        guard let leaf = context[trackedLeafOf: id]?.inner.takeUnretainedValue() else {
             return nil
         }
         
@@ -29,7 +29,7 @@ extension SummarizedTree: IdentifiedCollection where Element: Identifiable, Cont
         var parent = context[trackedParentOf: leafId]
         var child = leafId
 
-        while let p = parent?.takeUnretainedValue() {
+        while let p = parent?.inner.takeUnretainedValue() {
             /*for each in p.subSequence {
                 if each.objectIdentifier == child {
                     break

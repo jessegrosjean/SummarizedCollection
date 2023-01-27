@@ -10,25 +10,14 @@ public struct IdentifiedListContext<Element: Identifiable>: IdentifiedSummarized
     public var rootIdentifier: ObjectIdentifier?
     
     @usableFromInline
-    var parents: [ObjectIdentifier : Unmanaged<Node.InnerStorage>] = [:]
+    var parents: [ObjectIdentifier : TrackedParent] = [:]
     
     @usableFromInline
-    var elementsLookup: [Element.ID : Unmanaged<Node.LeafStorage>] = [:]
+    var elementsLookup: [Element.ID : TrackedLeaf] = [:]
 
     @inlinable
     public init() {
         rootIdentifier = nil
-    }
-
-    @inlinable
-    public init(tracking root: Node) {
-        self.rootIdentifier = root.objectIdentifier
-        self.reserveCapacity(root.count)
-        if root.isInner {
-            SummarizedTree<Self>.Node.InnerStorageDelegate.addChildren(root.children, to: .passUnretained(root.inner), ctx: &self)
-        } else {
-            SummarizedTree<Self>.Node.LeafStorageDelegate.addElements(root.elements, to: .passUnretained(root.leaf), ctx: &self)
-        }
     }
     
     @inlinable
@@ -64,7 +53,7 @@ public struct IdentifiedListContext<Element: Identifiable>: IdentifiedSummarized
     }
 
     @inlinable
-    public subscript(trackedParentOf id: ObjectIdentifier) -> Unmanaged<Node.InnerStorage>? {
+    public subscript(trackedParentOf id: ObjectIdentifier) -> TrackedParent? {
         get {
             parents[id]
         }
@@ -74,7 +63,7 @@ public struct IdentifiedListContext<Element: Identifiable>: IdentifiedSummarized
     }
     
     @inlinable
-    public subscript(trackedParentOf element: Element) -> Unmanaged<Node.LeafStorage>? {
+    public subscript(trackedLeafOf element: Element) -> TrackedLeaf? {
         get {
             elementsLookup[element.id]
         }
@@ -84,7 +73,7 @@ public struct IdentifiedListContext<Element: Identifiable>: IdentifiedSummarized
     }
 
     @inlinable
-    public subscript(trackedParentOf id: Element.ID) -> Unmanaged<Node.LeafStorage>? {
+    public subscript(trackedLeafOf id: Element.ID) -> TrackedLeaf? {
         get {
             elementsLookup[id]
         }
@@ -128,13 +117,13 @@ extension IdentifiedListContext: CustomDebugStringConvertible {
         var result = ""
         result += "parents: {\n"
         for each in parents.keys {
-            result += "  \(each): \(parents[each]!.toOpaque())\n"
+            result += "  \(each): \(parents[each]!.inner.toOpaque())\n"
         }
         result += "}\n"
 
         result += "elements: {\n"
         for each in elementsLookup.keys {
-            result += "  \(each): \(elementsLookup[each]!.toOpaque())\n"
+            result += "  \(each): \(elementsLookup[each]!.inner.toOpaque())\n"
         }
         result += "}"
 

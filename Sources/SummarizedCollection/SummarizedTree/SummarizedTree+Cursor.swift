@@ -5,9 +5,13 @@ extension SummarizedTree {
         public typealias Slot = Context.Slot
         public typealias Element = Context.Element
         public typealias Summary = Context.Summary
-        public typealias Node = SummarizedTree.Node
-        public typealias LeafStorage = Node.LeafStorage
         public typealias IndexDimension = CollectionIndexDimension<Summary>
+
+        @usableFromInline
+        typealias Node = SummarizedTree.Node
+
+        @usableFromInline
+        typealias LeafStorage = Node.LeafStorage
 
         @usableFromInline
         typealias UnmanagedNode = Node.UnmanagedNode
@@ -421,14 +425,14 @@ extension SummarizedTree.Cursor {
             resetToStart()
             return seek(to: dimension)
         }
-        
+
         return seek(
             contains: { startSummary, nodeSummary in
                 let startD = D.get(startSummary)
                 let endD = startD + D.get(nodeSummary)
                 return dimension <= endD
             },
-            seek: { startSummary, nodeSummary, index, elements in
+            seek: { (startSummary: Summary, nodeSummary: Summary, index: Slot, elements: LeafStorage.SubSequence) -> Slot? in
                 let startD = D.get(startSummary)
                 let target = dimension - startD
                 return D.index(to: target, summary: nodeSummary, elements: elements)
@@ -446,12 +450,12 @@ extension SummarizedTree.Cursor {
             stack.removeAll()
             return nil
         }
-        
+                
         return seek(
             contains: { startSummary, nodeSummary in
                 D.get(nodeSummary) != .zero
             },
-            seek: { startSummary, nodeSummary, index, elements in
+            seek: { (startSummary: Summary, nodeSummary: Summary, index: Slot, elements: LeafStorage.SubSequence) -> Slot? in
                 D.boundary(after: index, elements: elements)
             }
         )
@@ -687,10 +691,10 @@ extension SummarizedTree.Cursor {
     // MARK: Seeking Internal
 
     public typealias ContainsClosure = (_ start: Summary, _ node: Summary) -> Bool
-    public typealias SeekClosure = (_ start: Summary, _ node: Summary, Slot, LeafStorage.SubSequence) -> Slot?
+    public typealias SeekClosure<C> = (_ start: Summary, _ node: Summary, Slot, C) -> Slot? where C: RandomAccessCollection, C.Index == Slot
 
     @inlinable
-    public mutating func seek(contains: ContainsClosure, seek: SeekClosure) -> Int? {
+    public mutating func seek<C>(contains: ContainsClosure, seek: SeekClosure<C>) -> Int? where C: RandomAccessCollection, C.Index == Slot {
         if isAfterEnd {
             return nil
         }
@@ -715,7 +719,7 @@ extension SummarizedTree.Cursor {
     
     @inlinable
     @inline(__always)
-    mutating func seekInternalAscending(contains: ContainsClosure, seek: SeekClosure) -> SeekAscendingResult {
+    mutating func seekInternalAscending<C>(contains: ContainsClosure, seek: SeekClosure<C>) -> SeekAscendingResult where C: RandomAccessCollection, C.Index == Slot {
         if isBeforeStart && contains(position.nodeStart, root.summary) {
             push(node: root, childIndex: 0)
             return .seekDescending
@@ -765,7 +769,7 @@ extension SummarizedTree.Cursor {
     
     @inlinable
     @inline(__always)
-    mutating func seekInternalDescending(contains: ContainsClosure, seek: SeekClosure) {
+    mutating func seekInternalDescending<C>(contains: ContainsClosure, seek: SeekClosure<C>) where C: RandomAccessCollection, C.Index == Slot {
         var node = stack.pop().node
         
         while true {
@@ -810,14 +814,15 @@ extension SummarizedTree.Cursor {
     }
 
     @inlinable
-    mutating func seekInternalLeaf(
-        seek: SeekClosure,
+    mutating func seekInternalLeaf<C>(
+        seek: SeekClosure<C>,
         start: Summary,
         summary: Summary,
         index: Slot,
         leaf: LeafStorage.SubSequence
-    ) -> Bool {
-        if let found = seek(start, summary, index, leaf) {
+    ) -> Bool where C: RandomAccessCollection, C.Index == Slot {
+                
+        if let found = seek(start, summary, index, leaf as! C) {
             position.offset = found
             
             if found == leaf.count {

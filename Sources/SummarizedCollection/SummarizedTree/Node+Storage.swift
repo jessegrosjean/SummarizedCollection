@@ -1,4 +1,5 @@
-public protocol StorageDelegate {
+@usableFromInline
+protocol StorageDelegate {
     
     associatedtype Context: SummarizedTreeContext
     associatedtype StorageElement
@@ -36,7 +37,8 @@ public protocol StorageDelegate {
 
 extension SummarizedTree.Node {
     
-    public final class Storage<StoredElement, Delegate: StorageDelegate>: ManagedBuffer<Header, StoredElement>
+    @usableFromInline
+    final class Storage<StoredElement, Delegate: StorageDelegate>: ManagedBuffer<Header, StoredElement>
         where Delegate.Context == Context, Delegate.StorageElement == StoredElement
     {
         

@@ -117,12 +117,12 @@ extension SummarizedTree.Node {
             if isInner {
                 let unmanged: Unmanaged = .passUnretained(inner)
                 for each in children {
-                    ctx[trackedParentOf: each.objectIdentifier] = unmanged
+                    ctx[trackedParentOf: each.objectIdentifier] = .init(inner: unmanged)
                 }
             } else {
                 let unmanged: Unmanaged = .passUnretained(leaf)
                 for each in elements {
-                    ctx[trackedParentOf: each] = unmanged
+                    ctx[trackedLeafOf: each] = .init(inner: unmanged)
                 }
             }
         }
