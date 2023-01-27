@@ -1,0 +1,106 @@
+{
+    "kind": "group",
+    "title": "SummaryTree Benchmarks",
+    "directory": "Results",
+    "contents": [
+        {
+            "kind": "chart",
+            "title": "init",
+            "tasks": [
+                "List<Int> init from range",
+                "IdentifiedList<Int> init from range",
+                "Array<Int> init from range"
+            ]
+        },
+        {
+            "kind": "chart",
+            "title": "for each",
+            "tasks": [
+                "List<Int> sequential iteration",
+                "Array<Int> sequential iteration"
+            ]
+        },
+        {
+            "kind": "chart",
+            "title": "subscript access",
+            "tasks": [
+                "List<Int> subscript get, random offsets",
+                "Array<Int> subscript get, random offsets"
+            ]
+        },
+        {
+            "kind": "chart",
+            "title": "contains",
+            "tasks": [
+                "List<Int> contains",
+                "IdentifiedList<Int> contains",
+                "Array<Int> contains"
+            ]
+        },
+        {
+            "kind": "chart",
+            "title": "offset of id",
+            "tasks": [
+                "IdentifiedList<Int> offset of id",
+                "Array<Int> offset of id"
+            ]
+        },
+        {
+            "kind": "chart",
+            "title": "core mutate",
+            "tasks": [
+                "List<Int> split",
+                "List<Int> concat"
+            ]
+        },
+        {
+            "kind": "chart",
+            "title": "append",
+            "tasks": [
+                "List<Int> append",
+                "Array<Int> append"
+            ]
+        },
+        {
+            "kind": "chart",
+            "title": "prepend",
+            "tasks": [
+                "List<Int> prepend",
+                "Array<Int> prepend"
+            ]
+        },
+        {
+            "kind": "chart",
+            "title": "random insert",
+            "tasks": [
+                "List<Int> random insertions",
+                "IdentifiedList<Int> random insertions",
+                "Array<Int> random insertions"
+            ]
+        },
+        {
+            "kind": "chart",
+            "title": "remove first",
+            "tasks": [
+                "List<Int> removeFirst",
+                "Array<Int> removeFirst"
+            ]
+        },
+        {
+            "kind": "chart",
+            "title": "remove last",
+            "tasks": [
+                "List<Int> removeLast",
+                "Array<Int> removeLast"
+            ]
+        },
+        {
+            "kind": "chart",
+            "title": "random remove",
+            "tasks": [
+                "List<Int> random remove",
+                "Array<Int> random remove"
+            ]
+        }
+    ]
+}

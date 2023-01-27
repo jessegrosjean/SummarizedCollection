@@ -43,7 +43,7 @@ extension Benchmark {
         }
 
         add(
-            title: "IdentifiedList<Int> offset(id:)",
+            title: "IdentifiedList<Int> offset of id",
             input: Int.self
         ) { count in
             { timer in
@@ -51,11 +51,11 @@ extension Benchmark {
                 let shuffled = (0..<count).shuffled()[0..<count / 10]
                 
                 timer.measure {
-                    OSLog.pointsOfInterest.begin(name: "IdentifiedList<Int> offset(id:)")
+                    OSLog.pointsOfInterest.begin(name: "IdentifiedList<Int> offset of id")
                     for i in shuffled {
                         precondition(list.offset(id: i) == i)
                     }
-                    OSLog.pointsOfInterest.end(name: "IdentifiedList<Int> offset(id:)")
+                    OSLog.pointsOfInterest.end(name: "IdentifiedList<Int> offset of id")
                 }
             }
         }
@@ -78,52 +78,6 @@ extension Benchmark {
             }
         }
 
-        /*
-        add(
-            title: "IdentifiedList<Int> splits",
-            input: Int.self
-        ) { size in
-            return { timer in
-                var tree = IdentifiedList(0 ..< size)
-                timer.measure {
-                    OSLog.pointsOfInterest.begin(name: "IdentifiedList<Int> splits")
-                    while tree.count > 1 {
-                        tree = tree.split(tree.count / 2)
-                    }
-                    OSLog.pointsOfInterest.end(name: "IdentifiedList<Int> splits")
-                }
-                precondition(tree.count == 1)
-                blackHole(tree)
-            }
-        }
-        
-        add(
-            title: "IdentifiedList<Int> concats",
-            input: Int.self
-        ) { size in
-            return { timer in
-                var tree = IdentifiedList(0 ..< size)
-                
-                var splits: [IdentifiedList<Int>] = []
-                while tree.count > 1 {
-                    splits.append(tree.split(tree.count / 2))
-                }
-                
-                splits.shuffle()
-                
-                timer.measure {
-                    OSLog.pointsOfInterest.begin(name: "IdentifiedList<Int> concats")
-                    for each in splits {
-                        tree.concat(each)
-                    }
-                    OSLog.pointsOfInterest.end(name: "IdentifiedList<Int> concats")
-                }
-                
-                precondition(tree.count == size)
-                blackHole(tree)
-            }
-        }
-        */
     }
     
 }

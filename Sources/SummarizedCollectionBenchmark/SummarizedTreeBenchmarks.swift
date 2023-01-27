@@ -17,8 +17,6 @@ extension Benchmark {
             OSLog.pointsOfInterest.end(name: "List<Int> init from range")
             blackHole(list)
         }
-
-        /*
         
         add(
             title: "List<Int> sequential iteration",
@@ -27,34 +25,16 @@ extension Benchmark {
             { timer in
                 let list = List(input)
                 timer.measure {
-                    let end = list.endIndex
-                    var i = list.startIndex
                     OSLog.pointsOfInterest.begin(name: "List<Int> sequential iteration")
-                    while i != end {
-                        list.formIndex(after: &i)
+                    for e in list {
+                        blackHole(e)
                     }
                     OSLog.pointsOfInterest.end(name: "List<Int> sequential iteration")
                 }
                 blackHole(list)
             }
         }
-        */
-        add(
-            title: "List<Int> for each",
-            input: [Int].self
-        ) { input in
-            { timer in
-                let list = List(input)
-                timer.measure {
-                    OSLog.pointsOfInterest.begin(name: "List<Int> for each")
-                    for _ in list {
-                    }
-                    OSLog.pointsOfInterest.end(name: "List<Int> for each")
-                }
-                blackHole(list)
-            }
-        }
-        /*
+
         add(
             title: "List<Int> subscript get, random offsets",
             input: ([Int], [Int]).self
@@ -71,21 +51,20 @@ extension Benchmark {
                 blackHole(list)
             }
         }
-        
+
         add(
-            title: "List<Int> prepend",
-            input: [Int].self
-        ) { input in
+            title: "List<Int> contains",
+            input: ([Int], [Int]).self
+        ) { input, lookups in
             { timer in
-                var list = List<Int>()
+                let list = List(input)
                 timer.measure {
-                    OSLog.pointsOfInterest.begin(name: "List<Int> prepend")
-                    for i in input {
-                        list.insert(i, at: list.startIndex)
+                    OSLog.pointsOfInterest.begin(name: "List<Int> contains")
+                    for i in lookups {
+                        precondition(list.contains(i))
                     }
-                    OSLog.pointsOfInterest.end(name: "List<Int> prepend")
+                    OSLog.pointsOfInterest.end(name: "List<Int> contains")
                 }
-                assert(list.count == input.count)
                 blackHole(list)
             }
         }
@@ -107,7 +86,24 @@ extension Benchmark {
                 blackHole(list)
             }
         }
-         */
+        
+        add(
+            title: "List<Int> prepend",
+            input: [Int].self
+        ) { input in
+            { timer in
+                var list = List<Int>()
+                timer.measure {
+                    OSLog.pointsOfInterest.begin(name: "List<Int> prepend")
+                    for i in input {
+                        list.replace(0..<0, with: CollectionOfOne(i))
+                    }
+                    OSLog.pointsOfInterest.end(name: "List<Int> prepend")
+                }
+                assert(list.count == input.count)
+                blackHole(list)
+            }
+        }
 
         add(
             title: "List<Int> random insertions",
@@ -126,29 +122,64 @@ extension Benchmark {
                 blackHole(list)
             }
         }
-        /*
-        
+
         add(
-            title: "List<Int> endIndex",
+            title: "List<Int> removeLast",
             input: Int.self
         ) { size in
-            { timer in
-                let list = List<Int>(0..<size)
+            return { timer in
+                var list = List<Int>(0..<size)
                 timer.measure {
-                    OSLog.pointsOfInterest.begin(name: "List<Int> endIndex")
-                    for _ in 0..<10000 {
-                        _ = list.endIndex
+                    OSLog.pointsOfInterest.begin(name: "List<Int> removeLast")
+                    for _ in 0..<size {
+                        list.removeLast()
                     }
-                    OSLog.pointsOfInterest.end(name: "List<Int> endIndex")
+                    OSLog.pointsOfInterest.end(name: "List<Int> removeLast")
                 }
+                precondition(list.isEmpty)
                 blackHole(list)
             }
         }
-         */
 
-        /*
         add(
-            title: "List<Int> splits",
+            title: "List<Int> removeFirst",
+            input: Int.self
+        ) { size in
+            return { timer in
+                var list = List<Int>(0..<size)
+                timer.measure {
+                    OSLog.pointsOfInterest.begin(name: "List<Int> removeFirst")
+                    for _ in 0..<size {
+                        list.removeFirst()
+                    }
+                    OSLog.pointsOfInterest.end(name: "List<Int> removeFirst")
+                }
+                precondition(list.isEmpty)
+                blackHole(list)
+            }
+        }
+
+        add(
+            title: "List<Int> random remove",
+            input: Insertions.self
+        ) { insertions in
+            let removals = insertions.values.reversed()
+            return { timer in
+                var list = List(0 ..< removals.count)
+                timer.measure {
+                    OSLog.pointsOfInterest.begin(name: "List<Int> random removals")
+                    for i in removals {
+                        list.replace(i..<i + 1, with: EmptyCollection())
+                    }
+                    OSLog.pointsOfInterest.end(name: "List<Int> random removals")
+                }
+                precondition(list.isEmpty)
+                blackHole(list)
+            }
+        }
+
+        add(
+            title: "List<Int> split",
             input: Int.self
         ) { size in
             return { timer in
@@ -166,7 +197,7 @@ extension Benchmark {
         }
         
         add(
-            title: "List<Int> concats",
+            title: "List<Int> concat",
             input: Int.self
         ) { size in
             return { timer in
@@ -190,7 +221,7 @@ extension Benchmark {
                 precondition(tree.count == size)
                 blackHole(tree)
             }
-        }*/
+        }
         
     }
     

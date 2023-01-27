@@ -161,5 +161,5 @@ extension SummarizedTree: SummarizedCollection {
             yield index.element
         }
     }
-
+        
 }
