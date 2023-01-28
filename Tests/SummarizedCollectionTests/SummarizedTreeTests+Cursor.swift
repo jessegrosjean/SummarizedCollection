@@ -133,7 +133,7 @@ extension SummarizedTreeTests {
         multiLeaf.testCursorDimension(UTF16Dimension.self)
     }
     
-    func testCursorDimensionsProblemCase() {
+    func testCursorDimensionsTrailingZeros() {
         
         let elements = [
             Row(line: "", height: 0),

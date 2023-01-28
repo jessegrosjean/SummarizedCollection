@@ -35,21 +35,18 @@ public struct IdentifiedListContext<Element: Identifiable>: IdentifiedSummarized
         guard isTracking && elementsLookup.capacity < n else {
             return
         }
-        
-        // This isn't right, jesse brain too small
-        
-        func logN(base: Double, value: Double) -> Double {
-            return log(value) / log(base)
-        }
-        
-        let innerCapacity = Double(Self.innerCapacity)
-        let leaves = (Double(n) / Double(Self.leafCapacity)).rounded(.awayFromZero)
-        let height = logN(base: innerCapacity, value: leaves).rounded(.down) + 1
-        let nodes = (pow(innerCapacity, height)) - 1
-        let total = Int(leaves + nodes)
-        
-        parents.reserveCapacity(total)
+
         elementsLookup.reserveCapacity(n)
+
+        // This will under reserve if the tree isn't balanced,
+        // might be better to just let parents grow capacity on own...
+        // but this should help when building tree which is what we want
+        // fast in first place.
+        let branchFactor = Double(Self.innerCapacity)
+        let leaves = (Double(n) / Double(Self.leafCapacity)).rounded(.awayFromZero)
+        let inner = (leaves - 1) / (branchFactor - 1)
+        let nodes = (leaves + inner).rounded(.awayFromZero)
+        parents.reserveCapacity(Int(nodes))
     }
 
     @inlinable

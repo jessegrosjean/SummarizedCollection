@@ -44,8 +44,6 @@ extension SummarizedTree {
 
 extension SummarizedTree.SubSequence: Equatable {
     
-    // Pointer based equatable
-
     public static func == (lhs: SummarizedTree<Context>.SubSequence, rhs: SummarizedTree<Context>.SubSequence) -> Bool {
         lhs.base.root == rhs.base.root && lhs.startIndex.offset == rhs.startIndex.offset && lhs.endIndex.offset == rhs.endIndex.offset
     }

@@ -420,13 +420,15 @@ extension SummarizedTree.Cursor {
         }
     }
     
-    //func sliceToPrevBoundary<B>(_ type: B.Type) -> LeafStorage.SubSequence? where B: CollectionBoundary, B.Element == Element {
-    //    fatalError("wrong return type, need to also handle when boundaries span leaves")
-    //}
+    /*
+    func sliceToPrevBoundary<B>(_ type: B.Type) -> LeafStorage.SubSequence? where B: CollectionBoundary, B.Element == Element {
+        fatalError("wrong return type, need to also handle when boundaries span leaves")
+    }
 
-    //func sliceToNextBoundary<B>(_ type: B.Type) -> LeafStorage.SubSequence? where B: CollectionBoundary, B.Element == Element {
-    //    fatalError("wrong return type, need to also handle when boundaries span leaves")
-    //}
+    func sliceToNextBoundary<B>(_ type: B.Type) -> LeafStorage.SubSequence? where B: CollectionBoundary, B.Element == Element {
+        fatalError("wrong return type, need to also handle when boundaries span leaves")
+    }
+    */
     
     // MARK: Seek
 

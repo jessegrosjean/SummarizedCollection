@@ -70,7 +70,7 @@ public struct SummarizedTree<Context: SummarizedTreeContext> {
         return cursor
     }
     
-    // MARK: Package
+    // MARK: Internal
 
     @inlinable
     @inline(__always)

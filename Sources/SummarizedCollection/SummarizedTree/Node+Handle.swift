@@ -98,14 +98,15 @@ extension SummarizedTree.Node {
     @inlinable
     mutating func copy(ctx: inout Context) {
         let id = objectIdentifier
-        let isRoot = ctx.rootIdentifier == id
         let isTracking = ctx.isTracking(id: id)
-        let parent = ctx[trackedParentOf: id]
         
         self = Self(copying: self)
 
         if isTracking {
-            // Fixup instance change in context
+            // Updated context with new instance
+            
+            let isRoot = ctx.rootIdentifier == id
+            let parent = ctx[trackedParentOf: id]
             
             if isRoot {
                 ctx.rootIdentifier = objectIdentifier

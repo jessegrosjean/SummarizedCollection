@@ -4,7 +4,7 @@ import XCTest
 import _CollectionsTestSupport
 
 final class SummarizedTreeTests: CollectionTestCase {
-
+    
     func testInit() {
         withEvery("size", in: 0..<100) { size in
             withLifetimeTracking { tracker in

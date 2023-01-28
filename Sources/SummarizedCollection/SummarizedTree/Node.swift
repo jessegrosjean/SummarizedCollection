@@ -157,8 +157,6 @@ extension SummarizedTree.Node {
 
 extension SummarizedTree.Node: Equatable {
     
-    // Pointer based equatable
-    
     @usableFromInline
     typealias Node = SummarizedTree.Node
 

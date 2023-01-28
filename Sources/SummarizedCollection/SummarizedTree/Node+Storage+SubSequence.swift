@@ -36,8 +36,6 @@ extension SummarizedTree.Node.Storage {
 
 extension SummarizedTree.Node.Storage.SubSequence: Equatable {
     
-    // Pointer based equatable
-    
     @usableFromInline
     typealias StorageSubSequence = SummarizedTree<Context>.Node.Storage<StoredElement, Delegate>.SubSequence
     
