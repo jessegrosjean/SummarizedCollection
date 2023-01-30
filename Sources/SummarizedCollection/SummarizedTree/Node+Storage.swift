@@ -129,7 +129,28 @@ extension SummarizedTree.Node.Storage.Handle {
         
     @usableFromInline
     typealias Slot = SummarizedTree.Node.Slot
-    
+
+    @usableFromInline
+    typealias Summary = SummarizedTree.Summary
+
+    @inlinable
+    var height: UInt8 {
+        get { headerPtr.pointee.height }
+        nonmutating set {
+            assertMutable()
+            headerPtr.pointee.height = newValue
+        }
+    }
+
+    @inlinable
+    var summary: Summary {
+        get { headerPtr.pointee.summary }
+        nonmutating set {
+            assertMutable()
+            headerPtr.pointee.summary = newValue
+        }
+    }
+
     @inlinable
     var slotCount: Slot {
         get { headerPtr.pointee.slotCount }
@@ -148,7 +169,12 @@ extension SummarizedTree.Node.Storage.Handle {
     var slotsAvailible: Slot {
         headerPtr.pointee.slotsAvailible
     }
-    
+
+    @inlinable
+    var slotsUnderflowing: Bool {
+        headerPtr.pointee.slotsUnderflowing
+    }
+
     @inlinable
     var buffer: UnsafeBufferPointer<StoredElement> {
         .init(start: storedElementsPtr, count: Int(slotCount))
@@ -196,9 +222,9 @@ extension SummarizedTree.Node.Storage.Handle {
             assertMutable()
             assert(0 <= index && index < slotCount)
             var value = storedElementPointer(at: index).move()
-            headerPtr.pointee.summary -= Delegate.summarize(value)
+            summary -= Delegate.summarize(value)
             yield &value
-            headerPtr.pointee.summary += Delegate.summarize(value)
+            summary += Delegate.summarize(value)
             storedElementPointer(at: index).initialize(to: value)
         }
     }
@@ -218,7 +244,7 @@ extension SummarizedTree.Node.Storage.Handle {
                 )
 
                 handle.slotCount = slotCount - index
-                handle.didAdd(0..<handle.slotCount, ctx: &ctx)
+                handle.didAdd(0..<handle.slotCount, ctx: &.nonTracking)
 
                 slotCount = index
             }
@@ -232,27 +258,31 @@ extension SummarizedTree.Node.Storage.Handle {
             total: total,
             capacity: slotCapacity
         )
+
+        // Self and handle are siblings, we are distributing slot elements between.
+        // Make sure to pass .nonTracking context into the removeSubrange phase
+        // otherwise they will be removed from context instead of just moved to
+        // sibling node.
         
         if partitionIndex < slotCount {
             // self to other
             handle.replaceSubrange(0..<0, with: self[partitionIndex..<slotCount], ctx: &ctx)
-            removeSubrange(partitionIndex..<slotCount, ctx: &ctx)
+            removeSubrange(partitionIndex..<slotCount, ctx: &.nonTracking)
         } else if partitionIndex > slotCount {
             // other to self
             let otherEnd = partitionIndex - slotCount
             replaceSubrange(slotCount..<slotCount, with: handle[0..<otherEnd], ctx: &ctx)
-            handle.removeSubrange(0..<otherEnd, ctx: &ctx)
+            handle.removeSubrange(0..<otherEnd, ctx: &.nonTracking)
         }
     }
     
     @inlinable
-    func mergeOrDistributeStoredElements(with handle: Self, distribute: Distribute, ctx: inout Context) -> Bool {
+    func mergeOrDistributeStoredElements(with handle: Self, distribute: Distribute, ctx: inout Context) {
         if slotsAvailible >= handle.slotCount {
             append(contentsOf: handle, ctx: &ctx)
-            return true
+            handle.removeSubrange(0..<handle.slotCount, ctx: &.nonTracking)
         } else {
             distributeStoredElements(with: handle, distribute: distribute, ctx: &ctx)
-            return false
         }
     }
     
@@ -313,6 +343,10 @@ extension SummarizedTree.Node.Storage.Handle {
     func replaceSubrange<C>(_ subrange: Range<Slot>, with newElements: C, ctx: inout Context)
         where C : Collection, C.Element == StoredElement
     {
+        if subrange.isEmpty && newElements.isEmpty {
+            return
+        }
+        
         let changeInLength = newElements.count - subrange.count
         let endLength = Slot(Int(slotCount) + changeInLength)
         
