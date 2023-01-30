@@ -116,7 +116,7 @@ extension SummarizedTree.Node {
     @inlinable
     init<C>(inner: C) where C: Collection, C.Element == Node {
         self.init(inner: InnerStorage.create(with: Context.innerCapacity) { handle in
-            handle.append(contentsOf: inner, ctx: &Context.nonTracking)
+            handle.append(contentsOf: inner, ctx: &.nonTracking)
         })
     }
 
