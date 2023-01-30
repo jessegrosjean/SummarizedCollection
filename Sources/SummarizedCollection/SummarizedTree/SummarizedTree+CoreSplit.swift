@@ -12,6 +12,7 @@ extension SummarizedTree {
             return .init()
         } else {
             var splitNode = root.split(index, ctx: &context)
+            
             root.zipFixRight(ctx: &context)
             splitNode.zipFixLeft(ctx: &context)
         
@@ -31,7 +32,7 @@ extension SummarizedTree.Node {
     mutating func split(_ index: Int, ctx: inout Context) -> Self {
         if isInner {
             return mutInner(ctx: &ctx) { handle, ctx in
-                let child = handle.findChild(containing: index)
+                let child = handle.findChild(containing: index, bias: .right)
                 
                 if index == child.start {
                     return .init(inner: handle.split(at: child.index, ctx: &ctx))
@@ -42,7 +43,7 @@ extension SummarizedTree.Node {
                     let splitNode = handle[child.index].split(index - child.start, ctx: &ctx)
                     
                     splitChildren.mut { handle in
-                        handle.headerPtr.pointee.height = splitNode.height + 1
+                        handle.height = splitNode.height + 1
                         handle.insert(splitNode, at: 0, ctx: &ctx)
                     }
                     
@@ -98,8 +99,14 @@ extension SummarizedTree.Node.Storage.Handle where StoredElement == SummarizedTr
         }
     }
 
+    @usableFromInline
+    enum SeekBias {
+        case left
+        case right
+    }
+    
     @inlinable
-    func findChild(containing index: Int) -> Child {
+    func findChild(containing index: Int, bias: SeekBias) -> Child {
         let slotCount = slotCount
         var startIndex = 0
         var eachCount = 0
@@ -107,7 +114,7 @@ extension SummarizedTree.Node.Storage.Handle where StoredElement == SummarizedTr
         for i in 0..<slotCount {
             eachCount = self[i].count
             let endIndex = startIndex + eachCount
-            if index < endIndex {
+            if index < endIndex || (index == endIndex && bias == .left) {
                 return .init(
                     index: i,
                     start: startIndex,
@@ -133,11 +140,11 @@ extension SummarizedTree.Node.Storage.Handle where StoredElement == SummarizedTr
     func zipFixLeft(ctx: inout Context) -> Bool {
         assertMutable()
 
-        var didStuff = false
+        var didMerge = false
         
         while true {
             if slotCount > 1 && self[0].slotsUnderflowing {
-                didStuff = mergeOrDistributeSiblingChildren(slot1: 0, slot2: 1, ctx: &ctx) || didStuff
+                didMerge = mergeOrDistributeSiblingChildren(slot1: 0, slot2: 1, ctx: &ctx) || didMerge
             }
             
             if !self[0].zipFixLeft(ctx: &ctx) {
@@ -145,19 +152,19 @@ extension SummarizedTree.Node.Storage.Handle where StoredElement == SummarizedTr
             }
         }
                 
-        return didStuff
+        return didMerge
     }
 
     @inlinable
     func zipFixRight(ctx: inout Context) -> Bool {
         assertMutable()
         
-        var didStuff = false
+        var didMerge = false
         
         while true {
             let last = slotCount - 1
             if slotCount > 1 && self[last].slotsUnderflowing {
-                didStuff = mergeOrDistributeSiblingChildren(slot1: last - 1, slot2: last, ctx: &ctx) || didStuff
+                didMerge = mergeOrDistributeSiblingChildren(slot1: last - 1, slot2: last, ctx: &ctx) || didMerge
             }
             
             if !self[slotCount - 1].zipFixRight(ctx: &ctx) {
@@ -165,7 +172,7 @@ extension SummarizedTree.Node.Storage.Handle where StoredElement == SummarizedTr
             }
         }
                 
-        return didStuff
+        return didMerge
     }
     
     @inlinable
@@ -174,19 +181,17 @@ extension SummarizedTree.Node.Storage.Handle where StoredElement == SummarizedTr
         assert(slot2 < slotCount)
         assertMutable()
 
-        let removeSlot2 = {
-            if headerPtr.pointee.height > 1 {
-                return self[slot1].mutInner(with: &self[slot2], ctx: &ctx) { h1, h2, ctx in
-                    h1.mergeOrDistributeStoredElements(with: h2, distribute: .even, ctx: &ctx)
-                }
-            } else {
-                return self[slot1].mutLeaf(with: &self[slot2], ctx: &ctx) { h1, h2, ctx in
-                    h1.mergeOrDistributeStoredElements(with: h2, distribute: .even, ctx: &ctx)
-                }
+        if height > 1 {
+            self[slot1].mutInner(with: &self[slot2], ctx: &ctx) { h1, h2, ctx in
+                h1.mergeOrDistributeStoredElements(with: h2, distribute: .even, ctx: &ctx)
             }
-        }()
-        
-        if removeSlot2 {
+        } else {
+            self[slot1].mutLeaf(with: &self[slot2], ctx: &ctx) { h1, h2, ctx in
+                h1.mergeOrDistributeStoredElements(with: h2, distribute: .even, ctx: &ctx)
+            }
+        }
+
+        if self[slot2].isEmpty {
             _ = remove(at: slot2, ctx: &ctx)
             return true
         } else {
