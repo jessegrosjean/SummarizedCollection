@@ -64,32 +64,34 @@ extension SummarizedTreeTests {
     
     func testCursorMultiLeafSeekTo() {
         #if !DEBUG
-        return // because test depends on leaf size of 3
+        return // because test depends on leaf size of 4
         #endif
 
         let elements: [Row] = [
             .init(line: "one", height: 10),
             .init(line: "two", height: 10),
             .init(line: "three", height: 10),
-            .init(line: "four", height: 10)
+            .init(line: "four", height: 10),
+            .init(line: "five", height: 10)
         ]
         
         let multi = OutlineSummarizedTree(elements)
         var cursor = multi.cursor()
-        let leaf1 = elements[..<3]
-        let leaf2 = elements[3...]
+        let leaf1 = elements[..<4]
+        let leaf2 = elements[4...]
 
         XCTAssertEqual(cursor.seek(to: IndexDim(0)), .zero)
         XCTAssertEqual(cursor.seek(to: IndexDim(1)), 1)
         XCTAssertEqual(cursor.seek(to: IndexDim(2)), 2)
+        XCTAssertEqual(cursor.seek(to: IndexDim(3)), 3)
         XCTAssertEqual(Array(cursor.leaf())[...], leaf1)
 
-        XCTAssertEqual(cursor.seek(to: IndexDim(3)), 3)
-        XCTAssertEqual(Array(cursor.leaf())[...], leaf2)
         XCTAssertEqual(cursor.seek(to: IndexDim(4)), 4)
         XCTAssertEqual(Array(cursor.leaf())[...], leaf2)
-        XCTAssertEqual(cursor.index, 4)
-        XCTAssertEqual(cursor.point(), .init(base: IndexDim(4), offset: IndexDim(0)))
+        XCTAssertEqual(cursor.seek(to: IndexDim(5)), 5)
+        XCTAssertEqual(Array(cursor.leaf())[...], leaf2)
+        XCTAssertEqual(cursor.index, 5)
+        XCTAssertEqual(cursor.point(), .init(base: IndexDim(5), offset: IndexDim(0)))
     }
 
     func testCursorDimensions() {

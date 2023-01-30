@@ -12,7 +12,7 @@ extension SummarizedTreeContext {
     @inlinable
     public static var innerCapacity: Slot {
         #if DEBUG
-            return 3
+            return 4
         #else
             if let capacity = innerCapacityCache[ObjectIdentifier(Self.self)] as? Slot {
                 return capacity
@@ -28,7 +28,7 @@ extension SummarizedTreeContext {
     @inlinable
     public static var leafCapacity: Slot {
         #if DEBUG
-            return 3
+            return 4
         #else
             if let capacity = leafCapacityCache[ObjectIdentifier(Self.self)] as? Slot {
                 return capacity
