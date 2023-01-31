@@ -32,7 +32,7 @@ extension SummarizedTree: Sequence {
         var endIndex: Int
 
         @usableFromInline
-        var leafIterator: IndexingIterator<SummarizedTree<Context>.Node.LeafStorage.SubSequence>?
+        var leafIterator: IndexingIterator<ElementsBuffer>?
         
         @inlinable
         init(tree: SummarizedTree, startIndex: Index? = nil, endIndex: Index? = nil) {

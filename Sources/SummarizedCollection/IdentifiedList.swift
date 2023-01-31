@@ -38,14 +38,12 @@ public struct IdentifiedListContext<Element: Identifiable>: IdentifiedSummarized
 
         elementsLookup.reserveCapacity(n)
 
-        // This will under reserve if the tree isn't balanced,
-        // might be better to just let parents grow capacity on own...
-        // but this should help when building tree which is what we want
-        // fast in first place.
-        let branchFactor = Double(Self.innerCapacity)
-        let leaves = (Double(n) / Double(Self.leafCapacity)).rounded(.awayFromZero)
+        // Capacities / 2 to assume minimally filled case
+        let branchFactor = Double(Self.innerCapacity / 2)
+        let leaves = (Double(n) / Double(Self.leafCapacity / 2)).rounded(.awayFromZero)
         let inner = (leaves - 1) / (branchFactor - 1)
         let nodes = (leaves + inner).rounded(.awayFromZero)
+        
         parents.reserveCapacity(Int(nodes))
     }
 
