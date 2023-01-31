@@ -39,6 +39,10 @@ extension SummarizedTree.Node {
             assert(count > 0 || parent == nil)
             assert(summary == Summary.summarize(elements: leaf.subSequence))
             
+            if let parent, parent.slotCount > 1 {
+                assert(!slotsUnderflowing)
+            }
+            
             if ctx.isTracking {
                 for each in leaf.subSequence {
                     let trackedParent = ctx[trackedLeafOf: each]

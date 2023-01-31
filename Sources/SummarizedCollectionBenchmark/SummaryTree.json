@@ -50,7 +50,9 @@
             "title": "core mutate",
             "tasks": [
                 "List<Int> split",
-                "List<Int> concat"
+                "List<Int> concat",
+                "IdentifiedList<Int> split",
+                "IdentifiedList<Int> concat"
             ]
         },
         {
@@ -58,6 +60,7 @@
             "title": "append",
             "tasks": [
                 "List<Int> append",
+                "IdentifiedList<Int> append",
                 "Array<Int> append"
             ]
         },
@@ -66,6 +69,7 @@
             "title": "prepend",
             "tasks": [
                 "List<Int> prepend",
+                "IdentifiedList<Int> prepend",
                 "Array<Int> prepend"
             ]
         },
@@ -83,6 +87,7 @@
             "title": "remove first",
             "tasks": [
                 "List<Int> removeFirst",
+                "IdentifiedList<Int> removeFirst",
                 "Array<Int> removeFirst"
             ]
         },
@@ -91,6 +96,7 @@
             "title": "remove last",
             "tasks": [
                 "List<Int> removeLast",
+                "IdentifiedList<Int> removeLast",
                 "Array<Int> removeLast"
             ]
         },
@@ -99,6 +105,7 @@
             "title": "random remove",
             "tasks": [
                 "List<Int> random remove",
+                "IdentifiedList<Int> random remove",
                 "Array<Int> random remove"
             ]
         }

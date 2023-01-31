@@ -1,11 +1,10 @@
-import XCTest
+/*import XCTest
 import OSLog
 
 @testable import SummarizedCollection
 
 import _CollectionsTestSupport
 
-/*
 final class PerformanceTests: CollectionTestCase {
     
     let count = 100000
@@ -15,7 +14,7 @@ final class PerformanceTests: CollectionTestCase {
         @usableFromInline
         let id: Int
     }
-
+    
     func testPerformanceIdentifiedList() {
         let list = IdentifiedList((0..<count).map { IdentifiedItem(id: $0) })
         let shuffled = (0..<count).shuffled()
@@ -42,4 +41,5 @@ final class PerformanceTests: CollectionTestCase {
         OSLog.pointsOfInterest.end(name: "testPerformanceArray")
     }
     
-}*/
+}
+*/

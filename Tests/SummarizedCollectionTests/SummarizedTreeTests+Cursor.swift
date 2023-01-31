@@ -77,16 +77,15 @@ extension SummarizedTreeTests {
         
         let multi = OutlineSummarizedTree(elements)
         var cursor = multi.cursor()
-        let leaf1 = elements[..<4]
-        let leaf2 = elements[4...]
+        let leaf1 = elements[..<3]
+        let leaf2 = elements[3...]
 
         XCTAssertEqual(cursor.seek(to: IndexDim(0)), .zero)
         XCTAssertEqual(cursor.seek(to: IndexDim(1)), 1)
         XCTAssertEqual(cursor.seek(to: IndexDim(2)), 2)
-        XCTAssertEqual(cursor.seek(to: IndexDim(3)), 3)
         XCTAssertEqual(Array(cursor.leaf())[...], leaf1)
 
-        XCTAssertEqual(cursor.seek(to: IndexDim(4)), 4)
+        XCTAssertEqual(cursor.seek(to: IndexDim(3)), 3)
         XCTAssertEqual(Array(cursor.leaf())[...], leaf2)
         XCTAssertEqual(cursor.seek(to: IndexDim(5)), 5)
         XCTAssertEqual(Array(cursor.leaf())[...], leaf2)

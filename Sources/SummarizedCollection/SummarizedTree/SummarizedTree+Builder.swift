@@ -57,11 +57,15 @@ extension SummarizedTree {
                     }
                     
                     stack[stack.count - 1].append(node)
+                    
                     if stack.last!.count < innerCapacity {
                         break
                     }
                     
                     node = .init(inner: stack.popLast()!)
+                    _ = node.mutInner(ctx: &null) { handle, ctx in
+                        handle.mergeOrDistribute(at: handle.slotCount - 1, ctx: &ctx)
+                    }
                 }
                 
                 i = j

@@ -25,7 +25,7 @@ final class IdentifiedListTests: CollectionTestCase {
             }
         }
     }
-    
+
     func testSplit() {
         withEvery("size", in: [1, 2, 4, 8, 16, 32, 64, 127, 128, 129]) { size in
             withEvery("index", in: 0..<size) { index in
@@ -101,5 +101,5 @@ final class IdentifiedListTests: CollectionTestCase {
             }
         }
     }
-    
+
 }

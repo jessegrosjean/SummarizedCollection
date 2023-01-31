@@ -101,7 +101,7 @@ final class SummarizedTreeTests: CollectionTestCase {
     }
 
     func testReplace() {
-        withEvery("size", in: [1, 2, 4, 8, 16]) { size in
+        withEvery("size", in: [1, 2, 4, 8, 16, 32, 64, 127, 128, 129]) { size in
             withLifetimeTracking { tracker in
                 let template = List(tracker.instances(for: 0..<size))
                 withEvery("start", in: 0..<size) { start in

@@ -11,12 +11,15 @@ extension SummarizedTree {
         } else if index == count {
             return .init()
         } else {
-            var splitNode = root.split(index, ctx: &context)
-            
-            root.zipFixRight(ctx: &context)
-            splitNode.zipFixLeft(ctx: &context)
+            let splitNode = root.split(index, ctx: &context)
         
-            var splitTree = SummarizedTree(root: splitNode)
+            pullUpUnderflowingRoot()
+            root.zipFixRightEdge(ctx: &context)
+            
+            var splitTree = SummarizedTree(untracked: splitNode)
+            splitTree.pullUpUnderflowingRoot()
+            splitTree.root.zipFixLeftEdge(ctx: &context)
+        
             splitTree.pullUpUnderflowingRoot()
             pullUpUnderflowingRoot()
             
@@ -57,9 +60,9 @@ extension SummarizedTree.Node {
     
     @inlinable
     @discardableResult
-    mutating func zipFixLeft(ctx: inout Context) -> Bool {
+    mutating func zipFixLeftEdge(ctx: inout Context) -> Bool {
         if isInner && slotCount > 1 {
-            return mutInner(ctx: &ctx) { $0.zipFixLeft(ctx: &$1) }
+            return mutInner(ctx: &ctx) { $0.zipFixLeftEdge(ctx: &$1) }
         } else {
             return false
         }
@@ -67,9 +70,9 @@ extension SummarizedTree.Node {
 
     @inlinable
     @discardableResult
-    mutating func zipFixRight(ctx: inout Context) -> Bool {
+    mutating func zipFixRightEdge(ctx: inout Context) -> Bool {
         if isInner && slotCount > 1 {
-            return mutInner(ctx: &ctx) { $0.zipFixRight(ctx: &$1) }
+            return mutInner(ctx: &ctx) { $0.zipFixRightEdge(ctx: &$1) }
         } else {
             return false
         }
@@ -137,7 +140,7 @@ extension SummarizedTree.Node.Storage.Handle where StoredElement == SummarizedTr
     }
 
     @inlinable
-    func zipFixLeft(ctx: inout Context) -> Bool {
+    func zipFixLeftEdge(ctx: inout Context) -> Bool {
         assertMutable()
 
         var didMerge = false
@@ -147,7 +150,7 @@ extension SummarizedTree.Node.Storage.Handle where StoredElement == SummarizedTr
                 didMerge = mergeOrDistributeSiblingChildren(slot1: 0, slot2: 1, ctx: &ctx) || didMerge
             }
             
-            if !self[0].zipFixLeft(ctx: &ctx) {
+            if !self[0].zipFixLeftEdge(ctx: &ctx) {
                 break
             }
         }
@@ -156,7 +159,7 @@ extension SummarizedTree.Node.Storage.Handle where StoredElement == SummarizedTr
     }
 
     @inlinable
-    func zipFixRight(ctx: inout Context) -> Bool {
+    func zipFixRightEdge(ctx: inout Context) -> Bool {
         assertMutable()
         
         var didMerge = false
@@ -167,12 +170,27 @@ extension SummarizedTree.Node.Storage.Handle where StoredElement == SummarizedTr
                 didMerge = mergeOrDistributeSiblingChildren(slot1: last - 1, slot2: last, ctx: &ctx) || didMerge
             }
             
-            if !self[slotCount - 1].zipFixRight(ctx: &ctx) {
+            if !self[slotCount - 1].zipFixRightEdge(ctx: &ctx) {
                 break
             }
         }
                 
         return didMerge
+    }
+
+    @inlinable
+    func mergeOrDistribute(at slot: Slot, ctx: inout Context) -> Bool {
+        guard self[slot].slotsUnderflowing else {
+            return false
+        }
+
+        if slot > 0 {
+            return mergeOrDistributeSiblingChildren(slot1: slot - 1, slot2: slot, ctx: &ctx)
+        } else if slot + 1 < slotCount {
+            return mergeOrDistributeSiblingChildren(slot1: slot, slot2: slot + 1, ctx: &ctx)
+        } else {
+            return false
+        }
     }
     
     @inlinable

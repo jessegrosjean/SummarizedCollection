@@ -72,7 +72,7 @@ extension SummarizedTree.Node {
         } else {
             if slotsAvailible >= node.slotCount {
                 mutLeaf(ctx: &ctx) { $0.append(contentsOf: node.leaf, ctx: &$1) }
-            } else if slotsUnderflowing {
+            } else if slotsUnderflowing || node.slotsUnderflowing {
                 var node = node
                 mutLeaf(with: &node, ctx: &ctx) { $0.distributeStoredElements(with: $1, distribute: .even, ctx: &$2) }
                 return node

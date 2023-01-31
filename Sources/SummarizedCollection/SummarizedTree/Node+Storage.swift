@@ -302,6 +302,42 @@ extension SummarizedTree.Node.Storage.Handle {
     func insert(_ newElement: StoredElement, at i: Slot, ctx: inout Context) {
         replaceSubrange(i..<i, with: CollectionOfOne(newElement), ctx: &ctx)
     }
+
+    @inlinable
+    func insert<C>(contentsOf newElements: C, at i: Slot, ctx: inout Context) where C : Collection, C.Element == StoredElement {
+        replaceSubrange(i..<i, with: newElements, ctx: &ctx)
+    }
+    
+    @inlinable
+    func insertWithOverflow(_ elements: [StoredElement], at slot: Slot, ctx: inout Context) -> Storage? {
+        assert(elements.count <= slotCapacity)
+        
+        if slotsAvailible >= elements.count {
+            insert(contentsOf: elements, at: slot, ctx: &ctx)
+            return nil
+        }
+        
+        var elements = elements
+        
+        return Storage.create(with: slotCapacity) { overflow in
+            var slotsNeeded = Slot(elements.count) - slotsAvailible
+
+            while slotsNeeded > 0 && slotCount > slot {
+                overflow.append(remove(at: slotCount - 1, ctx: &ctx), ctx: &ctx)
+                slotsNeeded -= 1
+            }
+
+            if slotsNeeded > 0 {
+                let childrenOverflowRange = elements.count - Int(slotsNeeded)..<elements.count
+                overflow.insert(contentsOf:elements[childrenOverflowRange] , at: 0, ctx: &ctx)
+                elements.removeSubrange(childrenOverflowRange)
+            }
+            
+            for (i, each) in elements.enumerated() {
+                insert(each, at: slot + Slot(i), ctx: &ctx)
+            }
+        }
+    }
     
     @inlinable
     func append(_ newElement: StoredElement, ctx: inout Context) {
