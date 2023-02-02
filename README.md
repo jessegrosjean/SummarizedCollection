@@ -48,3 +48,9 @@ If you are building a user facing Mac app
 - [Ropey](https://github.com/cessen/ropey)
 - [BTree](https://github.com/attaswift/BTree/)
 - [Swift Collections](https://github.com/apple/swift-collections)
+
+### <a name="future">Future</a>
+
+I'm hopeful that the Swift Collections project will release a similar data structure in the future. It will probably be better implemented and will certainly be better documented and supported.
+
+It also is unlikely to be quite as tailored to my own wants as this project. My expectation is that I'll copy any better parts into this project while also keeping the funky levers and customizations that I want for my own use.
