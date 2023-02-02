@@ -40,8 +40,6 @@ As more elements are inserted the tree they eventually overflow into multiple le
 
 Array will always be faster for a small number of elements, and "small" is likely in the 1000's. But for most mutating operations (and search) there is eventually a crossover point where the b+tree is faster and the array starts becoming exponentially slower. [Benchmarks](https://github.com/jessegrosjean/SummarizedCollection/tree/main/Sources/SummarizedCollectionBenchmark) can give you an idea of when those crossover points happen.
 
-If you are building a user facing Mac app 
-
 ### <a name="inspiration">Inspiration</a>
 
 - [Xi Editor](https://xi-editor.io/)
