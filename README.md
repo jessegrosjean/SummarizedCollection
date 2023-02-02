@@ -2,7 +2,11 @@
 
 ### <a name="status">Status</a>
 
-Good test coverage and benchmarks. No documentation or real world use. Plan to use for my own projects, would love any ideas or feedback you might have.
+Good test coverage and benchmarks. No documentation or real world use. Plan to use for my own projects.
+
+Unless you are already interested in b+trees you probably don't want to use this project. At the same time I think the foundation is good and can do things that aren't possible in Swift world without duplicating much of this effort.
+
+Would love any ideas or feedback.
 
 ### <a name="overview">Overview</a>
 
@@ -35,6 +39,8 @@ As more elements are inserted the tree they eventually overflow into multiple le
 ### <a name="what">When B+Trees?</a>
 
 Array will always be faster for a small number of elements, and "small" is likely in the 1000's. But for most mutating operations (and search) there is eventually a crossover point where the b+tree is faster and the array starts becoming exponentially slower. [Benchmarks](https://github.com/jessegrosjean/SummarizedCollection/tree/main/Sources/SummarizedCollectionBenchmark) can give you an idea of when those crossover points happen.
+
+If you are building a user facing Mac app 
 
 ### <a name="inspiration">Inspiration</a>
 
