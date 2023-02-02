@@ -34,7 +34,7 @@ As more elements are inserted the tree they will eventually overflow into multip
 
 ### <a name="what">When B+Trees?</a>
 
-Array will always be faster for a small number of elements, and "small" is likely in the 1000's. But for most operations there is eventually a crossover point where the b+tree is faster and the array starts becoming exponentially slower. [Benchmarks](./SummarizedCollectionBenchmark/) can give you an idea of when those crossover points happen.
+Array will always be faster for a small number of elements, and "small" is likely in the 1000's. But for most operations there is eventually a crossover point where the b+tree is faster and the array starts becoming exponentially slower. [Benchmarks](https://github.com/jessegrosjean/SummarizedCollection/tree/main/Sources/SummarizedCollectionBenchmark) can give you an idea of when those crossover points happen.
 
 ### <a name="inspiration">Inspiration</a>
 
