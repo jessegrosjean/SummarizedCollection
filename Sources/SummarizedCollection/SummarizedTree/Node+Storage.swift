@@ -313,16 +313,14 @@ extension SummarizedTree.Node.Storage.Handle {
     }
     
     @inlinable
-    func insertWithOverflow(_ elements: [StoredElement], at slot: Slot, ctx: inout Context) -> Storage? {
+    func insertWithOverflow<C>(_ elements: C, at slot: Slot, ctx: inout Context) -> Storage? where C : Collection, C.Element == StoredElement {
         assert(elements.count <= slotCapacity)
         
         if slotsAvailible >= elements.count {
             insert(contentsOf: elements, at: slot, ctx: &ctx)
             return nil
         }
-        
-        var elements = elements
-        
+                
         return Storage.create(with: slotCapacity) { overflow in
             var slotsNeeded = Slot(elements.count) - slotsAvailible
 
@@ -331,13 +329,15 @@ extension SummarizedTree.Node.Storage.Handle {
                 slotsNeeded -= 1
             }
 
+            var splitIndex = elements.endIndex
+            
             if slotsNeeded > 0 {
-                let childrenOverflowRange = elements.count - Int(slotsNeeded)..<elements.count
+                splitIndex = elements.index(elements.endIndex, offsetBy: -Int(slotsNeeded))
+                let childrenOverflowRange = splitIndex..<elements.endIndex
                 overflow.insert(contentsOf:elements[childrenOverflowRange] , at: 0, ctx: &ctx)
-                elements.removeSubrange(childrenOverflowRange)
             }
             
-            for (i, each) in elements.enumerated() {
+            for (i, each) in elements[elements.startIndex..<splitIndex].enumerated() {
                 insert(each, at: slot + Slot(i), ctx: &ctx)
             }
         }
