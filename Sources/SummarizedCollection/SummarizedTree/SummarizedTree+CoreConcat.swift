@@ -1,13 +1,13 @@
 extension SummarizedTree {
         
-    public mutating func concat(_ tree: SummarizedTree) {
+    public mutating func concat(_ tree: __owned SummarizedTree) {
         context.validateInsert(tree, in: self)
         invalidateIndices()
         concat(tree.root)
     }
     
     @inlinable
-    mutating func concat(_ node: Node) {
+    mutating func concat(_ node: __owned Node) {
         guard !node.isEmpty else {
             return
         }
@@ -41,7 +41,7 @@ extension SummarizedTree {
 extension SummarizedTree.Node {
     
     @inlinable
-    mutating func concat(_ node: Self, ctx: inout Context) -> Self? {
+    mutating func concat(_ node: __owned Self, ctx: inout Context) -> Self? {
         let height = height
         let concatHeight = node.height
         let heightDelta = height - concatHeight

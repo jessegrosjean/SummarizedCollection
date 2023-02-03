@@ -6,7 +6,7 @@ extension SummarizedTree {
         var cursor: Cursor
         
         @inlinable
-        init(cursor: Cursor) {
+        init(cursor: __owned Cursor) {
             self.cursor = cursor
         }
         

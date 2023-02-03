@@ -303,17 +303,17 @@ extension SummarizedTree.Node.Storage.Handle {
     }
 
     @inlinable
-    func insert(_ newElement: StoredElement, at i: Slot, ctx: inout Context) {
+    func insert(_ newElement: __owned StoredElement, at i: Slot, ctx: inout Context) {
         replaceSubrange(i..<i, with: CollectionOfOne(newElement), ctx: &ctx)
     }
 
     @inlinable
-    func insert<C>(contentsOf newElements: C, at i: Slot, ctx: inout Context) where C : Collection, C.Element == StoredElement {
+    func insert<C>(contentsOf newElements: __owned C, at i: Slot, ctx: inout Context) where C : Collection, C.Element == StoredElement {
         replaceSubrange(i..<i, with: newElements, ctx: &ctx)
     }
     
     @inlinable
-    func insertWithOverflow<C>(_ elements: C, at slot: Slot, ctx: inout Context) -> Storage? where C : Collection, C.Element == StoredElement {
+    func insertWithOverflow<C>(_ elements: __owned C, at slot: Slot, ctx: inout Context) -> Storage? where C : Collection, C.Element == StoredElement {
         assert(elements.count <= slotCapacity)
         
         if slotsAvailible >= elements.count {
@@ -344,7 +344,7 @@ extension SummarizedTree.Node.Storage.Handle {
     }
     
     @inlinable
-    func append(_ newElement: StoredElement, ctx: inout Context) {
+    func append(_ newElement: __owned StoredElement, ctx: inout Context) {
         storedElementsPtr.advanced(by: Int(slotCount)).initialize(to: newElement)
         slotCount += 1
         didAdd(slotCount - 1..<slotCount, ctx: &ctx)
@@ -367,7 +367,7 @@ extension SummarizedTree.Node.Storage.Handle {
     }
 
     @inlinable
-    func append<S>(contentsOf newElements: S, ctx: inout Context) where S : Sequence, S.Element == StoredElement {
+    func append<S>(contentsOf newElements: __owned S, ctx: inout Context) where S : Sequence, S.Element == StoredElement {
         let start = slotCount
         var ptr = storedElementsPtr.advanced(by: Int(slotCount))
         for each in newElements {
@@ -380,7 +380,7 @@ extension SummarizedTree.Node.Storage.Handle {
     }
 
     @inlinable
-    func replaceSubrange<C>(_ subrange: Range<Slot>, with newElements: C, ctx: inout Context)
+    func replaceSubrange<C>(_ subrange: Range<Slot>, with newElements: __owned C, ctx: inout Context)
         where C : Collection, C.Element == StoredElement
     {
         if subrange.isEmpty && newElements.isEmpty {

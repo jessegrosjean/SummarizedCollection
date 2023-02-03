@@ -35,7 +35,7 @@ extension SummarizedTree: Sequence {
         var leafIterator: IndexingIterator<ElementsBuffer>?
         
         @inlinable
-        init(tree: SummarizedTree, startIndex: Index? = nil, endIndex: Index? = nil) {
+        init(tree: __owned SummarizedTree, startIndex: __owned Index? = nil, endIndex: __owned Index? = nil) {
             self.retained = tree
             self.cursor = startIndex?.cursor ?? tree.cursor()
             self.index = cursor.index

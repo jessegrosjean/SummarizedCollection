@@ -23,12 +23,12 @@ extension SummarizedTree {
         }
         
         @inlinable
-        mutating func append(_ node: Node) {
+        mutating func append(_ node: __owned Node) {
             root.concat(node)
         }
                 
         @inlinable
-        public mutating func append<C>(contentsOf elements: C) where C: Collection, C.Element == Element {
+        public mutating func append<C>(contentsOf elements: __owned C) where C: Collection, C.Element == Element {
             if elements.count <= leafCapacity {
                 root.append(contentsOf: elements)
                 return

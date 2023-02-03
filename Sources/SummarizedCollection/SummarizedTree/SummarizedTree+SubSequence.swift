@@ -12,7 +12,7 @@ extension SummarizedTree {
 
         @inlinable
         @inline(__always)
-        init(base: SummarizedTree, bounds: Range<Index>? = nil) {
+        init(base: __owned SummarizedTree, bounds: Range<Index>? = nil) {
             self.base = base
             if let bounds {
                 self.startIndex = bounds.lowerBound
@@ -161,7 +161,7 @@ extension SummarizedTree.SubSequence: RangeReplaceableCollection {
         self.init(base: empty, bounds: empty.startIndex..<empty.endIndex)
     }
     
-    public mutating func replaceSubrange<C>(_ subrange: Range<Index>, with newElements: C) where C : Collection, Element == C.Element {
+    public mutating func replaceSubrange<C>(_ subrange: Range<Index>, with newElements: __owned C) where C : Collection, Element == C.Element {
         // Don't know if this is right...
         // Deal with it when some code actually uses it...
         if true {

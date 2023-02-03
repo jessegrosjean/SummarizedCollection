@@ -1,7 +1,7 @@
 extension SummarizedTree {
      
     @inlinable
-    public mutating func replace<C>(_ subrange: Range<Int>, with newElements: C)
+    public mutating func replace<C>(_ subrange: Range<Int>, with newElements: __owned C)
         where
             C: Collection, C.Element == Element
     {
@@ -274,7 +274,7 @@ extension SummarizedTree.Node.Storage.Handle where Storage == SummarizedTree.Nod
     }
  
     @inlinable
-    func insertNodesWithOverflowAndBalance<C>(_ nodes: C, at slot: Slot, ctx: inout Context) -> Node?
+    func insertNodesWithOverflowAndBalance<C>(_ nodes: __owned C, at slot: Slot, ctx: inout Context) -> Node?
         where C: Collection, C.Element == Node
     {
         let overflow = insertWithOverflow(nodes, at: slot, ctx: &ctx)

@@ -114,20 +114,20 @@ extension SummarizedTree.Node {
     }
 
     @inlinable
-    init<C>(inner: C) where C: Collection, C.Element == Node {
+    init<C>(inner: __owned C) where C: Collection, C.Element == Node {
         self.init(inner: InnerStorage.create(with: Context.innerCapacity) { handle in
             handle.append(contentsOf: inner, ctx: &.nonTracking)
         })
     }
 
     @inlinable
-    init(inner: InnerStorage) {
+    init(inner: __owned InnerStorage) {
         _inner = inner
         _header = inner.header
     }
 
     @inlinable
-    init(leaf: LeafStorage) {
+    init(leaf: __owned LeafStorage) {
         _leaf = leaf
         _header = leaf.header
     }

@@ -106,7 +106,7 @@ public struct SummarizedTree<Context: SummarizedTreeContext> {
     }
 
     @inlinable
-    mutating func pushDownOverflowingRoot(overflow: Node) {
+    mutating func pushDownOverflowingRoot(overflow: __owned Node) {
         assert(root.height == overflow.height)
         let pushed = root
         
