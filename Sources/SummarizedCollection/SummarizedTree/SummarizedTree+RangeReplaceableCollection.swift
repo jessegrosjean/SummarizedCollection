@@ -25,7 +25,7 @@ extension SummarizedTree: RangeReplaceableCollection {
     public mutating func replaceSubrange<C>(_ subrange: Range<Index>, with newElements: C)
         where C: Collection, C.Element == Element
     {
-        replace(subrange.lowerBound.offset..<subrange.upperBound.offset, with: ContiguousArray(newElements))
+        replace(subrange.lowerBound.offset..<subrange.upperBound.offset, with: newElements)
     }
     
 }
