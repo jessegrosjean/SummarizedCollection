@@ -318,11 +318,20 @@ extension SummarizedTree.Node.Storage.Handle where StoredElement == SummarizedTr
                     mergeOrDistributeStoredElements(with: trailingHandle, distribute: .even, ctx: &ctx)
                 }
             }
-            
-            var builder = SummarizedTree.Builder()
-            builder.append(contentsOf: newElements.suffix(newElements.count - take))
-            builder.append(contentsOf: trailing.subSequence)
-            return builder.build().root
+
+            let overflow = newElements.suffix(newElements.count - take)
+            if overflow.count + trailing.subSequence.count <= slotCapacity {
+                var nonTracking = Context.nonTracking
+                return .Node(leaf: .create(with: slotCapacity) { handle in
+                    handle.append(contentsOf: overflow, ctx: &nonTracking)
+                    handle.append(contentsOf: trailing.subSequence, ctx: &nonTracking)
+                })
+            } else {
+                var builder = SummarizedTree.Builder()
+                builder.append(contentsOf: newElements.suffix(newElements.count - take))
+                builder.append(contentsOf: trailing.subSequence)
+                return builder.build().root
+            }
         }
     }
     
