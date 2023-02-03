@@ -4,13 +4,13 @@
 
 Good test coverage and benchmarks. No documentation or real world use. Plan to use for my own projects.
 
-Unless you are already interested in b+trees you probably don't want to use this project. At the same time I think the foundation is good and can do things that aren't possible in Swift world without duplicating much of this effort.
+Unless you are already interested in b+trees you probably don't want to use this project. At the same time I think the foundation is good and can do things that aren't possible in Swift without duplicating much of this effort.
 
 Would love any ideas or feedback.
 
 ### <a name="overview">Overview</a>
 
-This project provides an efficient in-memory b+tree implementation in pure Swift, and two useful collection types that use b+trees for their underlying storage.
+This project provides an in memory positional (keyless) b+tree implementation in Swift. The project also includes two useful collection types that use the b+tree as their underlying storage.
 
 - `List<Element>` implements a random-access collection of arbitrary elements. It is like Array in the standard library, but lookup, insertion and removal, and copy on write all have logarithmic complexity.
 
@@ -26,7 +26,7 @@ This project provides an efficient in-memory b+tree implementation in pure Swift
 
 ### <a name="what">Why B+Trees?</a>
 
-In memory b+trees are a compromise between the fast contiguous memory of an Array and the logarithmic properties of a tree. In a b+tree all elements are stored in buffers of contiguous memory in the leaf level of the tree. A small b+tree will store all elements in a single buffer, like an array.
+In memory b+trees are a compromise between the fast contiguous memory of an Array and the logarithmic properties of a tree. In a b+tree all elements are stored in buffers of contiguous memory in the leaf level of the tree. A small b+tree will store all elements in a single buffer.
 
 As more elements are inserted the tree they eventually overflow into multiple leaves. Internal nodes are added to create a balanced tree. This splitting and tree management add overhead, but also allow for the following properties:
 
@@ -38,7 +38,9 @@ As more elements are inserted the tree they eventually overflow into multiple le
 
 ### <a name="what">When B+Trees?</a>
 
-Array will always be faster for a small number of elements, and "small" is likely in the 1000's. But for most mutating operations (and search) there is eventually a crossover point where the b+tree is faster and the array starts becoming exponentially slower. [Benchmarks](https://github.com/jessegrosjean/SummarizedCollection/tree/main/Sources/SummarizedCollectionBenchmark) can give you an idea of when those crossover points happen.
+Array will always be faster for a small number of elements, and "small" is likely in the 1000's. For most mutating operations (and search) there is eventually a crossover point where the b+tree becomes faster. 
+
+[Benchmarks](https://github.com/jessegrosjean/SummarizedCollection/tree/main/Sources/SummarizedCollectionBenchmark) can give you an idea of when those crossover points happen.
 
 ### <a name="inspiration">Inspiration</a>
 

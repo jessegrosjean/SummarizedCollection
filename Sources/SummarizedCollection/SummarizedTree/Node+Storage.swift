@@ -313,7 +313,10 @@ extension SummarizedTree.Node.Storage.Handle {
     }
     
     @inlinable
-    func insertWithOverflow<C>(_ elements: __owned C, at slot: Slot, ctx: inout Context) -> Storage? where C : Collection, C.Element == StoredElement {
+    func insertWithOverflow<C>(_ elements: __owned C, at slot: Slot, ctx: inout Context) -> Storage?
+        where
+            C : Collection, C.Element == StoredElement
+    {
         assert(elements.count <= slotCapacity)
         
         if slotsAvailible >= elements.count {
