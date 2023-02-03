@@ -58,7 +58,7 @@ extension SummarizedTree.Node {
     @inlinable
     mutating func replace<C>(
         _ subrange: Range<Int>,
-        with newElements: C,
+        with newElements: __owned C,
         ctx: inout Context
     ) -> Node?
         where
@@ -99,7 +99,7 @@ extension SummarizedTree.Node {
     mutating func replaceInSingleChild<C>(
         childSlot: Slot,
         childElementRange: Range<Int>,
-        with newElements: C,
+        with newElements: __owned C,
         ctx: inout Context
     ) -> Node?
         where
@@ -153,7 +153,7 @@ extension SummarizedTree.Node {
     mutating func replaceInChildRange<C>(
         childSlotRange: Range<Slot>,
         childElementRange: Range<Int>,
-        with newElements: C,
+        with newElements: __owned C,
         ctx: inout Context
     ) -> Node?
         where
@@ -212,7 +212,7 @@ extension SummarizedTree.Node.Storage.Handle where Storage == SummarizedTree.Nod
     func innerReplaceWithOverflow<C>(
         at slot: Slot,
         subrange: Range<Int>,
-        with newElements: C,
+        with newElements: __owned C,
         ctx: inout Context
     ) -> (Node?, Bool)
         where
@@ -232,7 +232,7 @@ extension SummarizedTree.Node.Storage.Handle where Storage == SummarizedTree.Nod
     }
 
     // Inserts node at slot and balances that node. Node may be overflowing or underflowing.
-    @inlinable func insertAndBalanceNode(_ node: Node, at slot: Slot, ctx: inout Context) -> Node? {
+    @inlinable func insertAndBalanceNode(_ node: __owned Node, at slot: Slot, ctx: inout Context) -> Node? {
         assertMutable()
 
         if node.isEmpty {
@@ -243,9 +243,9 @@ extension SummarizedTree.Node.Storage.Handle where Storage == SummarizedTree.Nod
         let insertHeight = node.height
 
         if insertHeight == height {
-            return insertNodesWithOverflowAndBalance(Array(node.children), at: slot, ctx: &ctx)
+            return insertNodesWithOverflowAndBalance(node.children, at: slot, ctx: &ctx)
         } else if insertHeight == height - 1 {
-            return insertNodesWithOverflowAndBalance([node], at: slot, ctx: &ctx)
+            return insertNodesWithOverflowAndBalance(CollectionOfOne(node), at: slot, ctx: &ctx)
         } else {
             
             // Node isn't correct height. To fix build tree and:
@@ -274,7 +274,9 @@ extension SummarizedTree.Node.Storage.Handle where Storage == SummarizedTree.Nod
     }
  
     @inlinable
-    func insertNodesWithOverflowAndBalance(_ nodes: [Node], at slot: Slot, ctx: inout Context) -> Node? {
+    func insertNodesWithOverflowAndBalance<C>(_ nodes: C, at slot: Slot, ctx: inout Context) -> Node?
+        where C: Collection, C.Element == Node
+    {
         let overflow = insertWithOverflow(nodes, at: slot, ctx: &ctx)
         _ = mergeOrDistribute(at: min(slotCount, slot + Slot(nodes.count)) - 1, ctx: &ctx)
         if nodes.count > 1 {
@@ -290,7 +292,7 @@ extension SummarizedTree.Node.Storage.Handle where StoredElement == SummarizedTr
     @inlinable
     func leafReplaceWithUnlimitedOverflow<C>(
         in subrange: Range<Slot>,
-        with newElements: C,
+        with newElements: __owned C,
         ctx: inout Context
     ) -> SummarizedTree.Node?
         where

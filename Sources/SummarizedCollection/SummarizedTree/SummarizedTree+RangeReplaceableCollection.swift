@@ -18,7 +18,7 @@ extension SummarizedTree: RangeReplaceableCollection {
     
     @inlinable
     public mutating func removeSubrange(_ bounds: Range<Index>) {
-        replace(bounds.lowerBound.offset..<bounds.upperBound.offset, with: [])
+        replace(bounds.lowerBound.offset..<bounds.upperBound.offset, with: EmptyCollection())
     }
 
     @inlinable
