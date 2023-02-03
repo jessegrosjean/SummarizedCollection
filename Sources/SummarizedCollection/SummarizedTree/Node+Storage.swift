@@ -10,6 +10,10 @@ protocol StorageDelegate {
 
     @inlinable
     @inline(__always)
+    static func header(with capacity: Context.Slot) -> Header
+
+    @inlinable
+    @inline(__always)
     static func summarize(_ element: StorageElement) -> Summary
 
     @inlinable
@@ -75,7 +79,7 @@ extension SummarizedTree.Node {
         @inlinable
         static func create(with capacity: Slot) -> Self {
             unsafeDowncast(Self.create(minimumCapacity: Int(capacity)) { storage in
-                .init(slotCapacity: capacity)
+                Delegate.header(with: capacity)
             }, to: Self.self)
         }
         

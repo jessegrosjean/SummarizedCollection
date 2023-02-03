@@ -14,6 +14,12 @@ extension SummarizedTree.Node {
         
         @inlinable
         @inline(__always)
+        static func header(with capacity: Context.Slot) -> Header {
+            .init(height: 0, summary: .zero, slotCount: 0, slotCapacity: capacity)
+        }
+
+        @inlinable
+        @inline(__always)
         static func summarize(_ element: SummarizedTree<Context>.Node.Element) -> Summary {
             Summary.summarize(element: element)
         }
