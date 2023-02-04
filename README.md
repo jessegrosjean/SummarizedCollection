@@ -26,9 +26,9 @@ This project provides an in memory positional (keyless) b+tree implementation in
 
 ### <a name="what">Why B+Trees?</a>
 
-In memory b+trees are a compromise between the fast contiguous memory of an Array and the logarithmic properties of a tree. In a b+tree all elements are stored in buffers of contiguous memory in the leaf level of the tree. A small b+tree will store all elements in a single buffer.
+In memory b+trees are a compromise between the fast contiguous memory of an Array and the logarithmic properties of a tree. In a b+tree all elements are stored in buffers of contiguous memory in the tree's leaves. A small b+tree will have a single leaf and store all elements in one buffer.
 
-As more elements are inserted the tree they eventually overflow into multiple leaves. Internal nodes are added to create a balanced tree. This splitting and tree management add overhead, but also allow for the following properties:
+As more elements are inserted the leaf will eventually overflow into multiple leaves. Internal nodes are added to create a balanced tree. This splitting and tree management add overhead, but also allow for the following properties:
 
 1. Insertion and removal take logarithmic time.
 2. Split and concat take logarithmic time and space.
@@ -38,9 +38,7 @@ As more elements are inserted the tree they eventually overflow into multiple le
 
 ### <a name="what">When B+Trees?</a>
 
-Array will always be faster for a small number of elements, and "small" is likely in the 1000's. For most mutating operations (and search) there is eventually a crossover point where the b+tree becomes faster. 
-
-[Benchmarks](https://github.com/jessegrosjean/SummarizedCollection/tree/main/Sources/SummarizedCollectionBenchmark) can give you an idea of when those crossover points happen.
+Array will always be faster for a small number of elements, and "small" is likely in the 1000's. For most mutating operations (and search) there is eventually a crossover point where the b+tree becomes faster. These [Benchmarks](http://htmlpreview.github.io/?https://github.com/jessegrosjean/SummarizedCollection/blob/main/Sources/SummarizedCollectionBenchmark/results.html) can give you an idea of when those crossover points happen.
 
 ### <a name="inspiration">Inspiration</a>
 
@@ -51,6 +49,6 @@ Array will always be faster for a small number of elements, and "small" is likel
 
 ### <a name="future">Future</a>
 
-I'm hopeful that the Swift Collections project will release a similar data structure in the future. It will probably be better implemented and will certainly be better documented and supported.
+I'm hopeful that the Swift Collections ([here's a start](https://github.com/apple/swift-collections/pull/264)!) project will release a similar data structure. It will probably be better implemented, documented, and supported.
 
-It also is unlikely to be quite as tailored to my own wants as this project. My expectation is that I'll copy any better parts into this project while also keeping the funky levers and customizations that I want for my own use.
+It's also likely that it won't be as tailored to my own wants as this project. My expectation is that I'll keep this project going for my own use and try to copy over any improvements from the Swift Collections code.
