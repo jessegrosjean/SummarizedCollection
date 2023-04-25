@@ -36,7 +36,7 @@ extension SummarizedTree {
             
             root.reserveCapacity(root.count + elements.count)
 
-            var null = Context.nonTracking
+            var nonTracking = Context.nonTracking
             var stack: [ContiguousArray<Node>] = []
             let count = elements.count
             var i = 0
@@ -46,8 +46,11 @@ extension SummarizedTree {
                 let startIndex = elements.index(elements.startIndex, offsetBy: i)
                 let endIndex = elements.index(startIndex, offsetBy: j - i)
 
-                var node: Node = .init(leaf: LeafStorage.create(with: Slot(leafCapacity)) { handle in
-                    handle.append(contentsOf: elements[startIndex..<endIndex], ctx: &null)
+                var node: Node = .init(leaf: .create(with: Slot(leafCapacity)) { handle in
+                    handle.append(
+                        contentsOf: elements[startIndex..<endIndex],
+                        ctx: &nonTracking
+                    )
                 })
                 
                 while true {
@@ -63,7 +66,7 @@ extension SummarizedTree {
                     }
                     
                     node = .init(inner: stack.popLast()!)
-                    _ = node.mutInner(ctx: &null) { handle, ctx in
+                    _ = node.mutInner(ctx: &nonTracking) { handle, ctx in
                         handle.mergeOrDistribute(at: handle.slotCount - 1, ctx: &ctx)
                     }
                 }
