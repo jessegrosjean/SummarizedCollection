@@ -17,7 +17,8 @@
             "title": "for each",
             "tasks": [
                 "List<Int> sequential iteration",
-                "Array<Int> sequential iteration"
+                "Array<Int> sequential iteration",
+                "List<Row> sequential iteration"
             ]
         },
         {
@@ -61,7 +62,9 @@
             "tasks": [
                 "List<Int> append",
                 "IdentifiedList<Int> append",
-                "Array<Int> append"
+                "Array<Int> append",
+                "List<Int> copy on write append",
+                "Array<Int> copy on write append"
             ]
         },
         {
