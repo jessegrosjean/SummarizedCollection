@@ -2,10 +2,25 @@ import SummarizedCollection
 import CollectionsBenchmark
 import OSLog
 
-import _CollectionsTestSupport
-
 extension Benchmark {
     
+    public typealias RowLevel = UInt8
+
+    public struct Row: Identifiable, Equatable {
+        
+        public let id: String
+        public let level: RowLevel
+        public let content: String
+        public let attributes: [String: String] = [:]
+
+        public init(id: String, level: RowLevel, content: String) {
+            self.id = id
+            self.level = level
+            self.content = content
+        }
+
+    }
+
     public mutating func addSummarizedTreeBenchmarks() {
         
         addSimple(
@@ -35,6 +50,23 @@ extension Benchmark {
             }
         }
 
+        add(
+            title: "List<Row> sequential iteration",
+            input: [Int].self
+        ) { input in
+            { timer in
+                let list = List(input.map { Row(id: "\($0)", level: 0, content: "\($0)") })
+                timer.measure {
+                    OSLog.pointsOfInterest.begin(name: "List<Int> sequential iteration")
+                    for e in list {
+                        blackHole(e)
+                    }
+                    OSLog.pointsOfInterest.end(name: "List<Int> sequential iteration")
+                }
+                blackHole(list)
+            }
+        }
+        
         add(
             title: "List<Int> subscript get, random offsets",
             input: ([Int], [Int]).self
@@ -81,6 +113,24 @@ extension Benchmark {
                         list.append(i)
                     }
                     OSLog.pointsOfInterest.end(name: "List<Int> append")
+                }
+                assert(list.count == input.count)
+                blackHole(list)
+            }
+        }
+
+        add(
+            title: "List<Int> copy on write append",
+            input: [Int].self
+        ) { input in
+            { timer in
+                let list = List(input)
+                timer.measure {
+                    OSLog.pointsOfInterest.begin(name: "List<Int> copy on write append")
+                    var copy = list
+                    copy.append(0)
+                    blackHole(copy)
+                    OSLog.pointsOfInterest.end(name: "List<Int> copy on write append")
                 }
                 assert(list.count == input.count)
                 blackHole(list)

@@ -2,8 +2,6 @@ import SummarizedCollection
 import CollectionsBenchmark
 import OSLog
 
-import _CollectionsTestSupport
-
 extension Int: Identifiable {
     public var id: Int {
         self
