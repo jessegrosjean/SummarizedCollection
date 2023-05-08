@@ -63,7 +63,18 @@ extension Benchmark {
             precondition(array.count == input.count)
             blackHole(array)
         }
-        
+
+        addSimple(
+            title: "Array<Int> copy on write append",
+            input: [Int].self
+        ) { input in
+            let array = input
+            var copy = array
+            copy.append(0)
+            blackHole(copy)
+            blackHole(array)
+        }
+
         addSimple(
             title: "Array<Int> prepend",
             input: [Int].self
