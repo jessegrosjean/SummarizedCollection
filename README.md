@@ -2,7 +2,7 @@
 
 ### <a name="status">Status</a>
 
-Good test coverage and benchmarks. No documentation or real world use. Plan to use for my own projects.
+Good test coverage and benchmarks. No documentation or real world use. Plan to use for my own projects. API Breaking changes likely.
 
 Unless you are already interested in b+trees you probably don't want to use this project. At the same time I think the foundation is good and can do things that aren't possible in Swift without duplicating much of this effort.
 

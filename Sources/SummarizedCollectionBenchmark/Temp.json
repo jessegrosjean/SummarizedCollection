@@ -1,0 +1,16 @@
+{
+    "kind": "group",
+    "title": "SummaryTree Benchmarks",
+    "directory": "Results",
+    "contents": [
+        {
+            "kind": "chart",
+            "title": "for each",
+            "tasks": [
+                "Array<Row> sequential iteration",
+                "List<Row> sequential iteration",
+                "List<Row> forEach iteration"
+            ]
+        },
+    ]
+}
